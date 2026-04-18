@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTH & USER
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  fullName      String?
+  avatarUrl     String?
+  gradeLevel    Int?      // 6-12
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile        StudentProfile?
+  enrollments    Enrollment[]
+  progress       LessonProgress[]
+  quizAttempts   QuizAttempt[]
+  aiConversations AICo[]
+}
+
+model StudentProfile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goals       String[]
+  strengths   String[]
+  weaknesses  String[]
+  streakDays  Int       @default(0)
+  lastActive  DateTime?
+}
+
+// ============================================
+// SUBJECTS & COURSES
+// ============================================
+
+model Subject {
+  id          String   @id @default(cuid())
+  name        String   // Toán, Tiếng Anh, Vật Lý...
+  slug        String   @unique
+  description String?
+  icon        String?
+  color       String?
+  createdAt   DateTime @default(now())
+
+  semesters Semester[]
+}
+
+model Semester {
+  id          String   @id @default(cuid())
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  name        String   // Học kì 1, Học kì 2
+  order       Int      @default(1)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons     Lesson[]
+  courses     Course[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  semesterId  String
+  semester    Semester @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  subjectId   String
+  title       String
+  slug        String   @unique
+  description String?
+  thumbnail   String?
+  pdfUrl      String?
+  gradeLevel  Int
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  enrollments Enrollment[]
+  pdfPages    PDFPage[]
+}
+
+model PDFPage {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  pageNumber Int
+  imageUrl  String
+  ocrText   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@unique([courseId, pageNumber])
+}
+
+model Lesson {
+  id        String   @id @default(cuid())
+  semesterId String
+  semester  Semester @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  title     String
+  content   String   @db.Text // Markdown
+  videoUrl  String?
+  pdfUrl    String?
+  order     Int
+  duration  Int?     // minutes
+  type      String   @default("theory") // theory, exercise, quiz
+  isPublished Boolean @default(true)
+
+  quizzes        Quiz[]
+  progress       LessonProgress[]
+  aiConversations AICo[]
+}
+
+// ============================================
+// QUIZ & ASSESSMENT
+// ============================================
+
+model Quiz {
+  id       String  @id @default(cuid())
+  lessonId String
+  lesson   Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  title    String?
+
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+}
+
+model QuizQuestion {
+  id          String  @id @default(cuid())
+  quizId      String
+  quiz        Quiz    @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question    String  @db.Text
+  options     Json    // [{text: string, isCorrect: boolean}]
+  explanation String? @db.Text
+  order       Int
+}
+
+model QuizAttempt {
+  id           String    @id @default(cuid())
+  quizId       String
+  quiz         Quiz      @relation(fields: [quizId], references: [id])
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  score        Int
+  totalQuestions Int
+  answers      Json      // [{questionId, selectedOption, isCorrect}]
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+}
+
+// ============================================
+// PROGRESS & ENROLLMENT
+// ============================================
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  lessonId    String
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  @@unique([lessonId, userId])
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrolledAt DateTime @default(now())
+
+  @@unique([courseId, userId])
+}
+
+// ============================================
+// AI TUTOR
+// ============================================
+
+model AICo {
+  id        String   @id @default(cuid())
+  lessonId  String?
+  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  AIMessage[]
+  createdAt DateTime @default(now())
+}
+
+model AIMessage {
+  id              String       @id @default(cuid())
+  conversationId  String
+  conversation    AICo        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            String       // "user" | "assistant"
+  content         String       @db.Text
+  createdAt       DateTime     @default(now())
+}
+
+// ============================================
+// ONBOARDING & DIAGNOSTIC
+// ============================================
+
+model DiagnosticQuiz {
+  id        String   @id @default(cuid())
+  subjectId String
+  gradeLevel Int
+  questions Json     // [{question, options, correctAnswer, topic}]
+  createdAt DateTime @default(now())
+}
+
+model DiagnosticAttempt {
+  id            String   @id @default(cuid())
+  userId        String
+  subjectId     String
+  answers       Json
+  score         Int
+  weakTopics    String[]
+  createdAt     DateTime @default(now())
+}
