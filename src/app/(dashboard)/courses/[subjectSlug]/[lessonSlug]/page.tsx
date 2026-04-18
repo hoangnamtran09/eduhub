@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PDFViewer } from "@/components/pdf-viewer";
 import { cn } from "@/lib/utils";
+import { useSidebarStore } from "@/stores/sidebar-store";
 import {
   ArrowLeft,
   Send,
@@ -69,7 +70,13 @@ export default function LearningPage({
   params: { subjectSlug: string; lessonSlug: string };
 }) {
   const router = useRouter();
+  const { setCollapsed } = useSidebarStore();
   const [loading, setLoading] = useState(true);
+
+  // Collapse sidebar to maximize content area when entering learning page
+  useEffect(() => {
+    setCollapsed(true);
+  }, [setCollapsed]);
   const [subject, setSubject] = useState<Subject | null>(null);
   const [currentLesson, setCurrentLesson] = useState<LessonItem | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -412,18 +419,6 @@ export default function LearningPage({
                 <X className="w-4 h-4" />
               </Button>
             </div>
-          </div>
-
-          {/* QR Code Section */}
-          <div className="p-4 border-b border-slate-100 bg-slate-50">
-            <div className="flex items-center justify-center">
-              <div className="w-24 h-24 bg-slate-200 flex items-center justify-center">
-                <QrCode className="w-12 h-12 text-slate-400" />
-              </div>
-            </div>
-            <p className="text-[10px] text-center text-slate-400 mt-2">
-              Mã QR tổng
-            </p>
           </div>
 
           {/* Messages Area */}

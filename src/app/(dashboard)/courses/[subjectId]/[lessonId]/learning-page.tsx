@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PDFViewer } from "@/components/pdf-viewer";
 import { cn } from "@/lib/utils";
+import { useSidebarStore } from "@/stores/sidebar-store";
 import {
   ArrowLeft,
   Send,
@@ -12,7 +13,6 @@ import {
   RefreshCw,
   FileText,
   Eye,
-  QrCode,
   Plus,
   History,
   X,
@@ -67,7 +67,13 @@ export default function LearningPage({
   params: { subjectId: string; lessonId: string };
 }) {
   const router = useRouter();
+  const { setCollapsed } = useSidebarStore();
   const [loading, setLoading] = useState(true);
+
+  // Collapse sidebar to maximize content area when entering learning page
+  useEffect(() => {
+    setCollapsed(true);
+  }, [setCollapsed]);
   const [subject, setSubject] = useState<Subject | null>(null);
   const [currentLesson, setCurrentLesson] = useState<LessonItem | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -317,9 +323,6 @@ export default function LearningPage({
                         <span>{lesson.duration} phút</span>
                       </div>
                     </div>
-                    <div className="w-8 h-8 bg-slate-100 rounded flex items-center justify-center">
-                      <QrCode className="w-4 h-4 text-slate-400" />
-                    </div>
                   </div>
                 </div>
               ))
@@ -329,20 +332,6 @@ export default function LearningPage({
 
         {/* ==================== CENTER CONTENT ==================== */}
         <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden">
-          {/* Content Header - Title */}
-          <div className="p-4 bg-white border-b border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-lg font-semibold text-slate-900">
-                  {currentLesson?.title || "Bài học"}
-                </h1>
-                <p className="text-xs text-slate-500 mt-1">
-                  {currentLesson?.duration || 45} phút • Bài {currentLesson?.order || 1}
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Content Area - Tài liệu học tập */}
           <div className="flex-1 p-4 overflow-auto">
             {pdfUrl ? (
@@ -389,18 +378,6 @@ export default function LearningPage({
                 <X className="w-4 h-4" />
               </Button>
             </div>
-          </div>
-
-          {/* QR Code Section */}
-          <div className="p-4 border-b border-slate-100 bg-slate-50">
-            <div className="flex items-center justify-center">
-              <div className="w-24 h-24 bg-slate-200 flex items-center justify-center">
-                <QrCode className="w-12 h-12 text-slate-400" />
-              </div>
-            </div>
-            <p className="text-[10px] text-center text-slate-400 mt-2">
-              Mã QR tổng
-            </p>
           </div>
 
           {/* Messages Area */}
