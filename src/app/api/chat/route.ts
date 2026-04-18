@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { beeknoeeClient } from "@/lib/beeknoee/client";
+import { getModel } from "@/lib/ai/models";
 
 interface ChatRequest {
   messages: { role: string; content: string }[];
@@ -27,7 +28,7 @@ Chỉ trả lời bằng tiếng Việt.`
       ...messages,
     ];
 
-    const selectedModel = model || "glm-4.7-flash";
+    const selectedModel = model || getModel("chat");
 
     const response = await beeknoeeClient.chat.completions.create({
       model: selectedModel,

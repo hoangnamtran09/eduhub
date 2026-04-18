@@ -214,17 +214,6 @@ export default function LearningPage({
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-2 text-xs border-slate-200"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Tải lại item
-          </Button>
-          <span className="text-xs text-slate-400">FCT3_11THOC</span>
-        </div>
       </div>
 
       {/* Main 3-Column Layout */}
