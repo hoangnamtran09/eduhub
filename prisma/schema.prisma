@@ -54,6 +54,9 @@ model Subject {
   createdAt   DateTime @default(now())
 
   semesters Semester[]
+
+  // Generate slug from name if not provided
+  @@index([slug])
 }
 
 model Semester {
@@ -106,6 +109,7 @@ model Lesson {
   semesterId String
   semester  Semester @relation(fields: [semesterId], references: [id], onDelete: Cascade)
   title     String
+  slug      String?  // URL-friendly slug generated from title (nullable for migration)
   content   String   @db.Text // Markdown
   videoUrl  String?
   pdfUrl    String?
@@ -117,6 +121,8 @@ model Lesson {
   quizzes        Quiz[]
   progress       LessonProgress[]
   aiConversations AICo[]
+
+  @@index([semesterId])
 }
 
 // ============================================
