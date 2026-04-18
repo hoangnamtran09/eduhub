@@ -15,9 +15,9 @@ class Settings(BaseSettings):
     BEEKNOEE_BASE_URL: str = "https://platform.beeknoee.com/api/v1"
     
     # Models
-    MODEL_VISION: str = "gpt-4o"
-    MODEL_SUMMARY: str = "gpt-4o-mini"
-    MODEL_CHAT: str = "deepseek-chat"
+    MODEL_VISION: str = "claude-sonnet-4-6"
+    MODEL_SUMMARY: str = "claude-sonnet-4-6"
+    MODEL_CHAT: str = "claude-sonnet-4-6"
     
     # Tools
     TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")

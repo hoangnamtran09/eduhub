@@ -2,12 +2,13 @@
 
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Upload, FileText, X, CheckCircle2, Loader2,
   ChevronRight, BookOpen, FileQuestion, FileCheck,
-  Sparkles
+  Sparkles, ImageIcon, Brain
 } from "lucide-react";
 
 interface ParsedLesson {
@@ -37,6 +38,20 @@ interface PdfUploadModalProps {
   onSuccess: (result: ParsedResult) => void;
 }
 
+type UploadStep = "idle" | "uploading" | "ocr" | "analyzing" | "creating" | "done" | "error";
+
+const STEPS = [
+  { key: "uploading", label: "Đang tải file lên...", icon: Upload },
+  { key: "ocr", label: "Đang nhận diện văn bản từ PDF...", icon: ImageIcon },
+  { key: "analyzing", label: "Đang phân tích cấu trúc bài học...", icon: Brain },
+  { key: "creating", label: "Đang tạo bài học...", icon: BookOpen },
+];
+
+const getStepIndex = (step: UploadStep): number => {
+  const order: UploadStep[] = ["uploading", "ocr", "analyzing", "creating"];
+  return order.indexOf(step);
+};
+
 const getTypeIcon = (type: string) => {
   switch (type) {
     case "theory": return <BookOpen className="w-4 h-4" />;
@@ -63,6 +78,8 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
   const [result, setResult] = useState<ParsedResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState<UploadStep>("idle");
+  const [progress, setProgress] = useState(0);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -91,6 +108,8 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
     try {
       setUploading(true);
       setError(null);
+      setCurrentStep("uploading");
+      setProgress(10);
 
       // Upload file to server
       const formData = new FormData();
@@ -107,10 +126,23 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
       }
 
       const uploadData = await uploadRes.json();
+      setProgress(30);
+      setCurrentStep("ocr");
 
-      // Process PDF and extract lessons
+      // Process PDF and extract lessons - OCR step
       setUploading(false);
       setProcessing(true);
+
+      setProgress(40);
+
+      // Simulate progress for OCR (since we can't track real progress from backend)
+      const ocrInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev < 60) return prev + 5;
+          clearInterval(ocrInterval);
+          return prev;
+        });
+      }, 500);
 
       const processRes = await fetch("/api/process-pdf", {
         method: "POST",
@@ -121,18 +153,30 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
         }),
       });
 
+      clearInterval(ocrInterval);
+
       if (!processRes.ok) {
         throw new Error("Processing failed");
       }
 
+      setProgress(70);
+      setCurrentStep("analyzing");
+
       const processData: ParsedResult = await processRes.json();
+      
+      setProgress(85);
+      setCurrentStep("creating");
+
       setResult(processData);
+      setProgress(100);
+      setCurrentStep("done");
       setProcessing(false);
 
     } catch (err) {
       setError("Đã xảy ra lỗi. Vui lòng thử lại.");
       setUploading(false);
       setProcessing(false);
+      setCurrentStep("error");
     }
   };
 
@@ -141,6 +185,83 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
       onSuccess(result);
       onClose();
     }
+  };
+
+  const renderProgress = () => {
+    const stepIndex = getStepIndex(currentStep);
+    const totalProgress = currentStep === "uploading" ? 25 : 
+                          currentStep === "ocr" ? 50 : 
+                          currentStep === "analyzing" ? 75 : 
+                          currentStep === "creating" ? 90 : 
+                          currentStep === "done" ? 100 : progress;
+
+    return (
+      <div className="space-y-4">
+        {/* Progress Steps */}
+        <div className="flex items-center justify-between">
+          {STEPS.map((step, index) => {
+            const Icon = step.icon;
+            const isActive = index === stepIndex;
+            const isCompleted = index < stepIndex;
+            
+            return (
+              <div key={step.key} className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className={`
+                    w-10 h-10 rounded-full flex items-center justify-center transition-all
+                    ${isCompleted ? "bg-emerald-500 text-white" : 
+                      isActive ? "bg-blue-500 text-white animate-pulse" : 
+                      "bg-slate-200 text-slate-400"}
+                  `}>
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <Icon className="w-5 h-5" />
+                    )}
+                  </div>
+                  <p className={`
+                    text-xs mt-2 text-center max-w-[80px]
+                    ${isActive ? "text-blue-600 font-medium" : 
+                      isCompleted ? "text-emerald-600" : "text-slate-400"}
+                  `}>
+                    {step.label.split(" ")[0]}
+                  </p>
+                </div>
+                {index < STEPS.length - 1 && (
+                  <div className={`
+                    w-12 h-0.5 mx-2
+                    ${index < stepIndex ? "bg-emerald-500" : "bg-slate-200"}
+                  `} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-600">
+              {STEPS[stepIndex]?.label || "Đang xử lý..."}
+            </span>
+            <span className="text-blue-600 font-medium">{totalProgress}%</span>
+          </div>
+          <Progress value={totalProgress} className="h-2" />
+        </div>
+
+        {/* Current Step Detail */}
+        <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+          <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+          <p className="text-sm text-blue-700">
+            {currentStep === "uploading" && "Đang upload file PDF lên server..."}
+            {currentStep === "ocr" && "Đang quét từng trang PDF để trích xuất văn bản..."}
+            {currentStep === "analyzing" && "Đang phân tích AI để tách chương và bài học..."}
+            {currentStep === "creating" && "Đang tạo cấu trúc bài học trong database..."}
+            {currentStep === "done" && "Hoàn tất! Đang chuyển sang xem kết quả..."}
+          </p>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -164,7 +285,12 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[60vh]">
-          {!result ? (
+          {/* Show progress when processing */}
+          {(uploading || processing) && currentStep !== "idle" ? (
+            <div className="py-8">
+              {renderProgress()}
+            </div>
+          ) : !result ? (
             <>
               {/* Upload Area */}
               <div
@@ -288,12 +414,7 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
               disabled={!file || uploading || processing}
               className="gap-2 bg-gradient-to-r from-blue-500 to-cyan-400"
             >
-              {uploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Đang tải lên...
-                </>
-              ) : processing ? (
+              {uploading || processing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Đang xử lý...
