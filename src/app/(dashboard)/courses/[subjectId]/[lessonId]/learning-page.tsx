@@ -14,7 +14,6 @@ import {
   BookOpen,
   RefreshCw,
   FileText,
-  Eye,
   Plus,
   History,
   X,
@@ -43,17 +42,11 @@ interface LessonItem {
   hasQuiz: boolean;
 }
 
-interface Semester {
-  id: string;
-  name: string;
-  lessons: LessonItem[];
-}
-
 interface Subject {
   id: string;
   name: string;
   icon: string;
-  semesters: Semester[];
+  lessons: LessonItem[];
 }
 
 interface ChatMessage {
@@ -83,7 +76,6 @@ export default function LearningPage({
   const [subject, setSubject] = useState<Subject | null>(null);
   const [currentLesson, setCurrentLesson] = useState<LessonItem | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -143,14 +135,11 @@ export default function LearningPage({
           const data = await response.json();
           setSubject(data);
 
-          for (const semester of data.semesters || []) {
-            const lesson = semester.lessons.find(
-              (l: LessonItem) => l.id === params.lessonId
-            );
-            if (lesson) {
-              setCurrentLesson(lesson);
-              break;
-            }
+          const lesson = (data.lessons || []).find(
+            (l: LessonItem) => l.id === params.lessonId
+          );
+          if (lesson) {
+            setCurrentLesson(lesson);
           }
         }
 
@@ -389,9 +378,10 @@ export default function LearningPage({
     }
   };
 
-  const filteredLessons = (semester: Semester) => {
-    if (activeFilter === "all") return semester.lessons;
-    return semester.lessons.filter((lesson) => {
+  const filteredLessons = () => {
+    const allLessons = subject?.lessons || [];
+    if (activeFilter === "all") return allLessons;
+    return allLessons.filter((lesson) => {
       if (activeFilter === "file") return lesson.hasPdf || lesson.hasVideo;
       if (activeFilter === "question") return lesson.hasQuiz;
       return true;
@@ -493,8 +483,7 @@ export default function LearningPage({
 
           {/* Lesson List */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {subject?.semesters?.map((semester) =>
-              filteredLessons(semester).map((lesson) => (
+            {filteredLessons().map((lesson) => (
                 <div
                   key={lesson.id}
                   onClick={() =>
@@ -538,8 +527,7 @@ export default function LearningPage({
                     </div>
                   </div>
                 </div>
-              ))
-            )}
+              ))}
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -14,14 +14,10 @@ import {
   Loader2,
   X,
   GraduationCap,
-  Calendar,
   FileText,
-  CheckCircle2,
-  AlertCircle,
   Save,
   Upload,
-  File,
-  Check
+  File
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,22 +33,13 @@ interface Lesson {
   pdfUrl?: string | null;
 }
 
-interface Semester {
-  id: string;
-  name: string;
-  description: string | null;
-  order: number;
-  lessons: Lesson[];
-}
-
 interface Subject {
   id: string;
   name: string;
   description: string | null;
   icon: string | null;
   color: string | null;
-  semesters: Semester[];
-  totalLessons: number;
+  lessons: Lesson[];
 }
 
 const COLORS = [
@@ -76,15 +63,11 @@ export default function AdminSubjectsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSubjects, setExpandedSubjects] = useState<Set<string>>(new Set());
-  const [expandedSemesters, setExpandedSemesters] = useState<Set<string>>(new Set());
   const [showSubjectModal, setShowSubjectModal] = useState(false);
-  const [showSemesterModal, setShowSemesterModal] = useState(false);
   const [showLessonModal, setShowLessonModal] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
-  const [editingSemester, setEditingSemester] = useState<Semester | null>(null);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
-  const [selectedSemesterId, setSelectedSemesterId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Form states
@@ -93,12 +76,6 @@ export default function AdminSubjectsPage() {
     description: "",
     icon: "📐",
     color: "blue",
-  });
-
-  const [semesterForm, setSemesterForm] = useState({
-    name: "",
-    description: "",
-    order: 1,
   });
 
   const [lessonForm, setLessonForm] = useState({
@@ -138,16 +115,6 @@ export default function AdminSubjectsPage() {
       newExpanded.add(id);
     }
     setExpandedSubjects(newExpanded);
-  };
-
-  const toggleSemester = (id: string) => {
-    const newExpanded = new Set(expandedSemesters);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedSemesters(newExpanded);
   };
 
   // Subject CRUD
@@ -210,74 +177,9 @@ export default function AdminSubjectsPage() {
     }
   };
 
-  // Semester CRUD
-  const openSemesterModal = (subjectId: string, semester?: Semester) => {
-    setSelectedSubjectId(subjectId);
-    if (semester) {
-      setEditingSemester(semester);
-      setSemesterForm({
-        name: semester.name,
-        description: semester.description || "",
-        order: semester.order,
-      });
-    } else {
-      setEditingSemester(null);
-      setSemesterForm({
-        name: "",
-        description: "",
-        order: 1,
-      });
-    }
-    setShowSemesterModal(true);
-  };
-
-  const handleSaveSemester = async () => {
-    if (!semesterForm.name.trim() || !selectedSubjectId) return;
-    
-    setSaving(true);
-    try {
-      const url = editingSemester 
-        ? `/api/admin/subjects/${selectedSubjectId}/semesters?id=${editingSemester.id}`
-        : `/api/admin/subjects/${selectedSubjectId}/semesters`;
-      const method = editingSemester ? "PUT" : "POST";
-      
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(semesterForm),
-      });
-
-      if (res.ok) {
-        setShowSemesterModal(false);
-        loadSubjects();
-      }
-    } catch (err) {
-      console.error("Failed to save semester:", err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteSemester = async (subjectId: string, semesterId: string) => {
-    if (!confirm("Bạn có chắc muốn xóa học kì này?")) return;
-    
-    try {
-      const res = await fetch(
-        `/api/admin/subjects/${subjectId}/semesters?id=${semesterId}`, 
-        { method: "DELETE" }
-      );
-      if (res.ok) {
-        loadSubjects();
-      }
-    } catch (err) {
-      console.error("Failed to delete semester:", err);
-    }
-  };
-
   // Lesson CRUD
-  const openLessonModal = (subjectId: string, semesterId: string, lesson?: Lesson) => {
+  const openLessonModal = (subjectId: string, lesson?: Lesson) => {
     setSelectedSubjectId(subjectId);
-    setSelectedSemesterId(semesterId);
     setPdfFile(null);
     setUploadSuccess(false);
     setSaving(false);
@@ -305,13 +207,13 @@ export default function AdminSubjectsPage() {
   };
 
   const handleSaveLesson = async () => {
-    if (!lessonForm.title.trim() || !selectedSubjectId || !selectedSemesterId) return;
+    if (!lessonForm.title.trim() || !selectedSubjectId) return;
     
     setSaving(true);
     try {
       const url = editingLesson 
-        ? `/api/admin/subjects/${selectedSubjectId}/semesters/${selectedSemesterId}/lessons?id=${editingLesson.id}`
-        : `/api/admin/subjects/${selectedSubjectId}/semesters/${selectedSemesterId}/lessons`;
+        ? `/api/admin/subjects/${selectedSubjectId}/lessons?id=${editingLesson.id}`
+        : `/api/admin/subjects/${selectedSubjectId}/lessons`;
       const method = editingLesson ? "PUT" : "POST";
       
       const res = await fetch(url, {
@@ -325,6 +227,22 @@ export default function AdminSubjectsPage() {
       });
 
       if (res.ok) {
+        const savedLesson = await res.json();
+        
+        // Handle PDF upload if needed
+        if (pdfFile && savedLesson.id) {
+          setUploading(true);
+          const formData = new FormData();
+          formData.append("file", pdfFile);
+          
+          // Note: We need to update this PDF upload route too
+          await fetch(`/api/admin/subjects/${selectedSubjectId}/lessons/${savedLesson.id}/pdf`, {
+            method: "POST",
+            body: formData,
+          });
+          setUploading(false);
+        }
+
         setShowLessonModal(false);
         loadSubjects();
       }
@@ -335,12 +253,12 @@ export default function AdminSubjectsPage() {
     }
   };
 
-  const handleDeleteLesson = async (subjectId: string, semesterId: string, lessonId: string) => {
+  const handleDeleteLesson = async (subjectId: string, lessonId: string) => {
     if (!confirm("Bạn có chắc muốn xóa bài học này?")) return;
     
     try {
       const res = await fetch(
-        `/api/admin/subjects/${subjectId}/semesters/${semesterId}/lessons?id=${lessonId}`, 
+        `/api/admin/subjects/${subjectId}/lessons?id=${lessonId}`, 
         { method: "DELETE" }
       );
       if (res.ok) {
@@ -386,7 +304,7 @@ export default function AdminSubjectsPage() {
               Quản lý Môn học
             </h1>
             <p className="text-slate-500 mt-1">
-              Tạo môn học, học kì và bài học cho hệ thống
+              Tạo môn học và bài học cho hệ thống
             </p>
           </div>
           <Button 
@@ -431,7 +349,7 @@ export default function AdminSubjectsPage() {
                       <div>
                         <h3 className="text-lg font-bold">{subject.name}</h3>
                         <p className="text-white/80 text-sm">
-                          {subject.semesters.length} học kì • {subject.totalLessons} bài học
+                          {subject.lessons?.length || 0} bài học
                         </p>
                       </div>
                     </div>
@@ -442,11 +360,11 @@ export default function AdminSubjectsPage() {
                         className="text-white hover:bg-white/20"
                         onClick={(e) => {
                           e.stopPropagation();
-                          openSemesterModal(subject.id);
+                          openLessonModal(subject.id);
                         }}
                       >
                         <Plus className="w-4 h-4 mr-1" />
-                        Học kì
+                        Bài học
                       </Button>
                       <Button
                         size="sm"
@@ -479,143 +397,66 @@ export default function AdminSubjectsPage() {
                   </div>
                 </div>
 
-                {/* Semesters */}
+                {/* Lessons */}
                 {expandedSubjects.has(subject.id) && (
                   <CardContent className="p-4 bg-white">
-                    {subject.semesters.length === 0 ? (
+                    {!subject.lessons || subject.lessons.length === 0 ? (
                       <div className="text-center py-8 text-slate-400">
-                        <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p>Chưa có học kì nào</p>
+                        <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>Chưa có bài học nào</p>
                         <Button
                           size="sm"
                           variant="outline"
                           className="mt-2"
-                          onClick={() => openSemesterModal(subject.id)}
+                          onClick={() => openLessonModal(subject.id)}
                         >
                           <Plus className="w-4 h-4 mr-1" />
-                          Thêm học kì đầu tiên
+                          Thêm bài học đầu tiên
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        {subject.semesters.map((semester) => (
-                          <div key={semester.id} className="border border-slate-200 rounded-xl overflow-hidden">
-                            {/* Semester Header */}
-                            <div 
-                              className="flex items-center justify-between p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
-                              onClick={() => toggleSemester(semester.id)}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center">
-                                  <Calendar className="w-4 h-4 text-brand-600" />
+                      <div className="space-y-2">
+                        {subject.lessons.map((lesson, index) => (
+                          <div 
+                            key={lesson.id}
+                            className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 group transition-colors"
+                          >
+                            <div className="flex items-center gap-4">
+                              <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-500">
+                                {index + 1}
+                              </span>
+                              <div>
+                                <h4 className="font-semibold text-slate-900">{lesson.title}</h4>
+                                <div className="flex items-center gap-3 mt-1">
+                                  <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider", getLessonTypeColor(lesson.type))}>
+                                    {LESSON_TYPES.find(t => t.value === lesson.type)?.label}
+                                  </span>
+                                  {lesson.duration && (
+                                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                                      {lesson.duration} phút
+                                    </span>
+                                  )}
                                 </div>
-                                <div>
-                                  <h4 className="font-semibold text-slate-900">{semester.name}</h4>
-                                  <p className="text-xs text-slate-500">
-                                    {semester.lessons.length} bài học
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openLessonModal(subject.id, semester.id);
-                                  }}
-                                >
-                                  <Plus className="w-4 h-4 mr-1" />
-                                  Bài học
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openSemesterModal(subject.id, semester);
-                                  }}
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteSemester(subject.id, semester.id);
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                                {expandedSemesters.has(semester.id) ? (
-                                  <ChevronDown className="w-4 h-4" />
-                                ) : (
-                                  <ChevronRight className="w-4 h-4" />
-                                )}
                               </div>
                             </div>
-
-                            {/* Lessons */}
-                            {expandedSemesters.has(semester.id) && (
-                              <div className="p-3 bg-white border-t border-slate-100">
-                                {semester.lessons.length === 0 ? (
-                                  <div className="text-center py-6 text-slate-400">
-                                    <FileText className="w-6 h-6 mx-auto mb-1 opacity-50" />
-                                    <p className="text-sm">Chưa có bài học nào</p>
-                                  </div>
-                                ) : (
-                                  <div className="space-y-2">
-                                    {semester.lessons.map((lesson, index) => (
-                                      <div 
-                                        key={lesson.id}
-                                        className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 group"
-                                      >
-                                        <div className="flex items-center gap-3">
-                                          <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-500">
-                                            {index + 1}
-                                          </span>
-                                          <div>
-                                            <p className="font-medium text-slate-900">{lesson.title}</p>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                              <span className={cn("px-2 py-0.5 rounded text-xs font-medium", getLessonTypeColor(lesson.type))}>
-                                                {LESSON_TYPES.find(t => t.value === lesson.type)?.label}
-                                              </span>
-                                              {lesson.duration && (
-                                                <span className="text-xs text-slate-400">
-                                                  {lesson.duration} phút
-                                                </span>
-                                              )}
-                                            </div>
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-7 w-7 p-0"
-                                            onClick={() => openLessonModal(subject.id, semester.id, lesson)}
-                                          >
-                                            <Edit2 className="w-3 h-3" />
-                                          </Button>
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                            onClick={() => handleDeleteLesson(subject.id, semester.id, lesson.id)}
-                                          >
-                                            <Trash2 className="w-3 h-3" />
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                                onClick={() => openLessonModal(subject.id, lesson)}
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
+                                onClick={() => handleDeleteLesson(subject.id, lesson.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -714,66 +555,6 @@ export default function AdminSubjectsPage() {
         </div>
       )}
 
-      {/* Semester Modal */}
-      {showSemesterModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-bold text-slate-900">
-                {editingSemester ? "Sửa học kì" : "Thêm học kì mới"}
-              </h2>
-              <button 
-                onClick={() => setShowSemesterModal(false)}
-                className="p-2 rounded-lg hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Tên học kì</label>
-                <Input
-                  value={semesterForm.name}
-                  onChange={(e) => setSemesterForm({...semesterForm, name: e.target.value})}
-                  placeholder="VD: Học kì 1, Học kì 2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Mô tả</label>
-                <textarea
-                  value={semesterForm.description}
-                  onChange={(e) => setSemesterForm({...semesterForm, description: e.target.value})}
-                  placeholder="Mô tả ngắn về học kì..."
-                  className="w-full h-20 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Thứ tự</label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={semesterForm.order}
-                  onChange={(e) => setSemesterForm({...semesterForm, order: parseInt(e.target.value) || 1})}
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-3 p-6 border-t bg-slate-50">
-              <Button variant="outline" onClick={() => setShowSemesterModal(false)}>
-                Hủy
-              </Button>
-              <Button 
-                onClick={handleSaveSemester}
-                disabled={saving || !semesterForm.name.trim()}
-                className="gap-2"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Lưu
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Lesson Modal */}
       {showLessonModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -789,7 +570,7 @@ export default function AdminSubjectsPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Tên bài học</label>
                 <Input
@@ -828,16 +609,16 @@ export default function AdminSubjectsPage() {
                     placeholder="45"
                   />
                 </div>
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Video URL</label>
                   <Input
                     value={lessonForm.videoUrl}
                     onChange={(e) => setLessonForm({...lessonForm, videoUrl: e.target.value})}
                     placeholder="https://..."
                   />
-                </div>
+                </div> */}
               </div>
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Nội dung</label>
                 <textarea
                   value={lessonForm.content}
@@ -845,7 +626,7 @@ export default function AdminSubjectsPage() {
                   placeholder="Nội dung bài học (Markdown)..."
                   className="w-full h-32 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                 />
-              </div>
+              </div> */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">File PDF bài học</label>
                 <div className={cn(
@@ -888,17 +669,6 @@ export default function AdminSubjectsPage() {
                     )}
                   </label>
                 </div>
-                {pdfFile && (
-                  <div className="mt-2 flex items-center gap-2 text-xs">
-                    <div className={cn(
-                      "w-2 h-2 rounded-full",
-                      uploadSuccess ? "bg-emerald-500" : "bg-amber-500"
-                    )} />
-                    <span className={uploadSuccess ? "text-emerald-600" : "text-amber-600"}>
-                      {uploadSuccess ? "PDF đã được chọn và sẽ được upload khi lưu" : "PDF sẽ được upload cùng lúc với bài học"}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
             <div className="flex items-center justify-end gap-3 p-6 border-t bg-slate-50">
@@ -906,129 +676,12 @@ export default function AdminSubjectsPage() {
                 Hủy
               </Button>
               <Button 
-                onClick={async () => {
-                  if (!lessonForm.title.trim() || !selectedSubjectId || !selectedSemesterId) return;
-                  
-                  setSaving(true);
-                  setUploadSuccess(false);
-                  try {
-                    // Build the lesson data
-                    const lessonData = {
-                      title: lessonForm.title,
-                      content: lessonForm.content || "",
-                      videoUrl: lessonForm.videoUrl || null,
-                      duration: lessonForm.duration ? parseInt(lessonForm.duration) : null,
-                      type: lessonForm.type || "theory",
-                    };
-
-                    let savedLesson = null;
-
-                    if (editingLesson) {
-                      // Update existing lesson
-                      const res = await fetch(
-                        `/api/admin/subjects/${selectedSubjectId}/semesters/${selectedSemesterId}/lessons?id=${editingLesson.id}`,
-                        {
-                          method: "PUT",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            id: editingLesson.id,
-                            ...lessonData,
-                            order: editingLesson.order,
-                            isPublished: editingLesson.isPublished,
-                          }),
-                        }
-                      );
-                      
-                      if (!res.ok) {
-                        const errorText = await res.text();
-                        console.error("Failed to update lesson:", res.status, errorText);
-                        throw new Error(`Không thể cập nhật bài học (${res.status})`);
-                      }
-                      
-                      savedLesson = await res.json();
-                    } else {
-                      // Create new lesson
-                      const res = await fetch(
-                        `/api/admin/subjects/${selectedSubjectId}/semesters/${selectedSemesterId}/lessons`,
-                        {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify(lessonData),
-                        }
-                      );
-                      
-                      if (!res.ok) {
-                        const errorText = await res.text();
-                        console.error("Failed to create lesson:", res.status, errorText);
-                        throw new Error(`Không thể tạo bài học (${res.status})`);
-                      }
-                      
-                      savedLesson = await res.json();
-                    }
-                    
-                    // Upload PDF if selected
-                    if (pdfFile && savedLesson?.id) {
-                      setUploading(true);
-                      try {
-                        const formData = new FormData();
-                        formData.append("file", pdfFile);
-                        const pdfRes = await fetch(
-                          `/api/admin/subjects/${selectedSubjectId}/semesters/${selectedSemesterId}/lessons/${savedLesson.id}/pdf`,
-                          { method: "POST", body: formData }
-                        );
-                        
-                        if (!pdfRes.ok) {
-                          const errorText = await pdfRes.text();
-                          console.error("Failed to upload PDF:", pdfRes.status, errorText);
-                          // Continue anyway - lesson is saved, PDF is optional
-                          console.warn("PDF upload failed but lesson was saved");
-                        }
-                      } catch (pdfErr) {
-                        console.error("PDF upload error:", pdfErr);
-                        // Continue anyway
-                      }
-                      setUploading(false);
-                    }
-                    
-                    setUploadSuccess(true);
-                    setPdfFile(null);
-                    loadSubjects();
-                    
-                    // Show success for 1 second before closing
-                    setTimeout(() => {
-                      setShowLessonModal(false);
-                      setUploadSuccess(false);
-                    }, 1000);
-                  } catch (err: any) {
-                    console.error("Save lesson error:", err);
-                    alert(err.message || "Đã xảy ra lỗi khi lưu bài học. Vui lòng thử lại.");
-                  } finally {
-                    setSaving(false);
-                    setUploading(false);
-                  }
-                }}
-                disabled={saving || !lessonForm.title.trim() || uploading}
-                className={cn(
-                  "gap-2 transition-all",
-                  uploadSuccess && "bg-emerald-500 hover:bg-emerald-600"
-                )}
+                onClick={handleSaveLesson}
+                disabled={saving || !lessonForm.title.trim()}
+                className="gap-2"
               >
-                {uploadSuccess ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Đã lưu thành công!
-                  </>
-                ) : saving || uploading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {uploading ? "Đang upload PDF..." : "Đang lưu..."}
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Lưu{pdfFile ? " + Upload PDF" : ""}
-                  </>
-                )}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Lưu
               </Button>
             </div>
           </div>

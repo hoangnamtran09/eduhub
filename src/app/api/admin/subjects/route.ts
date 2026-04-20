@@ -1,42 +1,21 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma/client";
+import { generateSlug } from "@/lib/slug";
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-// GET /api/admin/subjects - Lấy danh sách tất cả môn học
 export async function GET() {
   try {
-    const subjects = await prisma.subject.findMany({
+    const prismaAny = prisma as any;
+    const subjects = await prismaAny.subject.findMany({
       include: {
-        semesters: {
-          include: {
-            lessons: true,
-            courses: true,
-          },
-          orderBy: { order: "asc" },
-        },
+        lessons: true,
+        courses: true,
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: {
+        name: "asc",
+      },
     });
 
-    const subjectsWithStats = subjects.map((subject) => {
-      const totalLessons = subject.semesters.reduce(
-        (acc, sem) => acc + sem.lessons.length,
-        0
-      );
-      const totalSemesters = subject.semesters.length;
-
-      return {
-        ...subject,
-        totalLessons,
-        totalSemesters,
-      };
-    });
-
-    return NextResponse.json(subjectsWithStats);
+    return NextResponse.json(subjects);
   } catch (error) {
     console.error("Error fetching subjects:", error);
     return NextResponse.json(
@@ -46,33 +25,34 @@ export async function GET() {
   }
 }
 
-// POST /api/admin/subjects - Tạo môn học mới
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, description, icon, color } = body;
+    const { name, slug, description, icon, color } = body;
 
     if (!name) {
       return NextResponse.json(
-        { error: "Name is required" },
+        { error: "Subject name is required" },
         { status: 400 }
       );
     }
 
-    const slug = name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    const baseSlug = slug || generateSlug(name);
+    // Ensure slug is unique by appending timestamp if it already exists
+    const prismaAny = prisma as any;
+    const existingSubject = await prismaAny.subject.findUnique({
+      where: { slug: baseSlug },
+    });
+    
+    const finalSlug = existingSubject ? `${baseSlug}-${Date.now()}` : baseSlug;
 
-    const subject = await prisma.subject.create({
+    const subject = await prismaAny.subject.create({
       data: {
         name,
-        slug: `${slug}-${Date.now()}`,
-        description,
-        icon,
-        color,
+        slug: finalSlug,
+        description: description || null,
+        icon: icon || "📚",
+        color: color || "blue",
       },
     });
 
@@ -80,29 +60,33 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error creating subject:", error);
     return NextResponse.json(
-      { error: "Failed to create subject" },
+      { 
+        error: "Failed to create subject",
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }
 }
 
-// PUT /api/admin/subjects - Cập nhật môn học
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, name, description, icon, color } = body;
+    const { id, name, slug, description, icon, color } = body;
 
     if (!id) {
       return NextResponse.json(
-        { error: "ID is required" },
+        { error: "Subject ID is required" },
         { status: 400 }
       );
     }
 
-    const subject = await prisma.subject.update({
+    const prismaAny = prisma as any;
+    const subject = await prismaAny.subject.update({
       where: { id },
       data: {
         name,
+        slug: slug || (name ? generateSlug(name) : undefined),
         description,
         icon,
         color,
@@ -119,7 +103,6 @@ export async function PUT(request: Request) {
   }
 }
 
-// DELETE /api/admin/subjects - Xóa môn học
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -127,28 +110,18 @@ export async function DELETE(request: Request) {
 
     if (!id) {
       return NextResponse.json(
-        { error: "ID is required" },
+        { error: "Subject ID is required" },
         { status: 400 }
       );
     }
 
-    // Lấy tất cả semesters của subject
-    const semesters = await prisma.semester.findMany({ where: { subjectId: id }, select: { id: true } });
-    const semesterIds = semesters.map(s => s.id);
-    // Lấy tất cả lessons của các semester này
-    let lessonIds: string[] = [];
-    if (semesterIds.length > 0) {
-      const lessons = await prisma.lesson.findMany({ where: { semesterId: { in: semesterIds } }, select: { id: true } });
-      lessonIds = lessons.map(l => l.id);
-    }
-    // Xóa chat history của các lesson này
-    if (lessonIds.length > 0) {
-      await prisma.chatHistory.deleteMany({ where: { lessonId: { in: lessonIds } } });
-    }
-    // Xóa subject (cascading xóa semester, lesson nhờ onDelete: Cascade)
-    await prisma.subject.delete({
+    // Related courses and lessons will be deleted by Cascade if defined in schema,
+    // but let's be explicit if needed or just rely on onDelete: Cascade
+    const prismaAny = prisma as any;
+    await prismaAny.subject.delete({
       where: { id },
     });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting subject:", error);

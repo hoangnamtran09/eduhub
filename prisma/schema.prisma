@@ -59,27 +59,14 @@ model Subject {
   icon        String?
   color       String?
   createdAt   DateTime   @default(now())
-  semesters   Semester[]
+  lessons     Lesson[]
+  courses     Course[]
 
   @@index([slug])
 }
 
-model Semester {
-  id          String   @id @default(cuid())
-  subjectId   String
-  name        String
-  order       Int      @default(1)
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  courses     Course[]
-  lessons     Lesson[]
-  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-}
-
 model Course {
   id          String       @id @default(cuid())
-  semesterId  String
   subjectId   String
   title       String
   slug        String       @unique
@@ -91,9 +78,9 @@ model Course {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   Chapter     Chapter[]
-  semester    Semester     @relation(fields: [semesterId], references: [id], onDelete: Cascade)
   enrollments Enrollment[]
   pdfPages    PDFPage[]
+  subject     Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 }
 
 model PDFPage {
@@ -110,7 +97,7 @@ model PDFPage {
 
 model Lesson {
   id              String           @id @default(cuid())
-  semesterId      String
+  subjectId       String
   title           String
   content         String
   videoUrl        String?
@@ -124,11 +111,11 @@ model Lesson {
   aiConversations AICo[]
   ChatHistory     ChatHistory[]
   Chapter         Chapter?         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  semester        Semester         @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  subject         Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   progress        LessonProgress[]
   quizzes         Quiz[]
 
-  @@index([semesterId])
+  @@index([subjectId])
 }
 
 model Quiz {

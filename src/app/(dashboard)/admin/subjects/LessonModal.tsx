@@ -80,16 +80,16 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                 placeholder="45"
               />
             </div>
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Video URL</label>
               <Input
                 value={form.videoUrl}
                 onChange={e => setForm({ ...form, videoUrl: e.target.value })}
                 placeholder="https://..."
               />
-            </div>
+            </div> */}
           </div>
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Nội dung</label>
             <textarea
               value={form.content}
@@ -97,7 +97,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
               placeholder="Nội dung bài học (Markdown)..."
               className="w-full h-32 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
             />
-          </div>
+          </div> */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">File PDF bài học</label>
             <div className={`border-2 border-dashed rounded-xl p-4 text-center transition-colors ${pdfFile ? "border-emerald-300 bg-emerald-50" : "border-slate-200 hover:border-brand-400"}`}>

@@ -1,31 +1,20 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
+import { prisma } from "@/lib/prisma/client";
 
 export async function GET() {
   try {
-    const subjects = await prisma.subject.findMany({
+    const prismaAny = prisma as any;
+    const subjects = await prismaAny.subject.findMany({
       include: {
-        semesters: {
-          include: {
-            lessons: true,
-          },
-          orderBy: { order: "asc" },
-        },
+        lessons: true,
+        courses: true,
       },
       orderBy: { createdAt: "asc" },
     });
 
     // Transform to include statistics
-    const subjectsWithStats = subjects.map((subject) => {
-      const totalLessons = subject.semesters.reduce(
-        (acc, sem) => acc + sem.lessons.length,
-        0
-      );
+    const subjectsWithStats = subjects.map((subject: any) => {
+      const totalLessons = subject.lessons?.length || 0;
 
       return {
         id: subject.id,
@@ -34,7 +23,7 @@ export async function GET() {
         gradient: getGradientFromColor(subject.color || "blue"),
         description: subject.description,
         totalLessons,
-        coursesCount: subject.semesters.length,
+        coursesCount: subject.courses?.length || 0,
       };
     });
 

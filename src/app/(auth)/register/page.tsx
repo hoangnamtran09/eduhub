@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { GraduationCap, Mail, Lock, User, Eye, EyeOff, Check, UserCircle, Users } from "lucide-react";
 import { UserRole } from "@/types";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const setUser = useAuthStore((state) => state.setUser);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>("STUDENT");
@@ -61,8 +63,12 @@ export default function RegisterPage() {
         throw new Error(data.error || "Đăng ký thất bại");
       }
 
+      // Update auth store
+      setUser(data.user);
+
       toast.success("Đăng ký thành công!");
-      router.push("/login");
+      router.push("/");
+      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
     } finally {

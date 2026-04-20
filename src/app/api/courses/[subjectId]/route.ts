@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
+import { prisma } from "@/lib/prisma/client";
 
 interface RouteParams {
   params: { subjectId: string };
@@ -13,19 +8,18 @@ interface RouteParams {
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { subjectId } = params;
+    
+    // Use any to bypass Prisma type sync issues
+    const prismaAny = prisma as any;
 
-    const subject = await prisma.subject.findUnique({
+    const subject = await prismaAny.subject.findUnique({
       where: { id: subjectId },
       include: {
-        semesters: {
+        lessons: {
+          where: { isPublished: true },
           orderBy: { order: "asc" },
-          include: {
-            lessons: {
-              where: { isPublished: true },
-              orderBy: { order: "asc" },
-            },
-          },
         },
+        courses: true,
       },
     });
 
@@ -33,47 +27,45 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Subject not found" }, { status: 404 });
     }
 
-    // Transform data - keep courses structure for frontend compatibility
+    // Transform data - Đơn giản hóa, bỏ qua Semester
     const response = {
       id: subject.id,
       name: subject.name,
       icon: subject.icon,
       description: subject.description,
       gradient: getGradientFromColor(subject.color || "blue"),
-      // Original courses structure
-      courses: subject.semesters.map((semester) => ({
-        id: semester.id,
-        title: semester.name,
-        slug: semester.name.toLowerCase().replace(/\s+/g, "-"),
-        gradeLevel: 6,
-        chapters: semester.lessons.map((lesson, idx) => ({
-          id: lesson.id,
-          title: lesson.title,
-          order: idx + 1,
-          lessons: [{
+      // Giả lập structure cũ để tương thích với các component cũ nếu có
+      courses: [
+        {
+          id: subject.id,
+          title: "Nội dung chính",
+          slug: "main-content",
+          gradeLevel: 6,
+          chapters: (subject.lessons || []).map((lesson: any, idx: number) => ({
             id: lesson.id,
             title: lesson.title,
-            order: lesson.order,
-            duration: lesson.duration || 30,
-            hasPdf: !!lesson.content?.includes('.pdf'),
-            hasVideo: !!lesson.videoUrl,
-            hasQuiz: false,
-          }],
-        })),
-      })),
-      // New semesters structure for 3-column learning page
-      semesters: subject.semesters.map((semester) => ({
-        id: semester.id,
-        name: semester.name,
-        lessons: semester.lessons.map((lesson) => ({
-          id: lesson.id,
-          title: lesson.title,
-          order: lesson.order,
-          duration: lesson.duration || 30,
-          hasPdf: !!lesson.content?.includes('.pdf'),
-          hasVideo: !!lesson.videoUrl,
-          hasQuiz: false,
-        })),
+            order: idx + 1,
+            lessons: [{
+              id: lesson.id,
+              title: lesson.title,
+              order: lesson.order,
+              duration: lesson.duration || 30,
+              hasPdf: !!lesson.pdfUrl,
+              hasVideo: !!lesson.videoUrl,
+              hasQuiz: false,
+            }],
+          })),
+        }
+      ],
+      // Structure phẳng cho Learning Page
+      lessons: (subject.lessons || []).map((lesson: any) => ({
+        id: lesson.id,
+        title: lesson.title,
+        order: lesson.order,
+        duration: lesson.duration || 30,
+        hasPdf: !!lesson.pdfUrl,
+        hasVideo: !!lesson.videoUrl,
+        hasQuiz: false,
       })),
     };
 
