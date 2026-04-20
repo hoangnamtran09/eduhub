@@ -123,10 +123,15 @@ export async function DELETE(
       );
     }
 
+    // Xóa toàn bộ chat history của các lesson thuộc semester này
+    const lessons = await prisma.lesson.findMany({ where: { semesterId: id }, select: { id: true } });
+    const lessonIds = lessons.map(l => l.id);
+    if (lessonIds.length > 0) {
+      await prisma.chatHistory.deleteMany({ where: { lessonId: { in: lessonIds } } });
+    }
     await prisma.semester.delete({
       where: { id },
     });
-
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting semester:", error);

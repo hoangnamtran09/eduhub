@@ -94,6 +94,7 @@ Quy tắc:
       };
     }
 
+
     // Create subject
     const finalSubjectName = subjectName || structuredData.subjectName || "Môn học";
     const subject = await prisma.subject.create({
@@ -102,6 +103,16 @@ Quy tắc:
         slug: finalSubjectName.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now(),
         icon: "📚",
         color: "blue",
+      }
+    });
+
+    // Create semester (default: Học kì 1)
+    const semester = await prisma.semester.create({
+      data: {
+        subjectId: subject.id,
+        name: "Học kì 1",
+        order: 1,
+        description: `Học kì 1 của ${finalSubjectName}`,
       }
     });
 
@@ -114,6 +125,7 @@ Quy tắc:
         slug: courseSlug,
         description: `Khóa học ${finalSubjectName} - Lớp ${gradeLevel}`,
         subjectId: subject.id,
+        semesterId: semester.id,
         gradeLevel,
         isPublished: true,
         pdfUrl: pdfUrl, // Save the PDF URL
@@ -142,6 +154,7 @@ Quy tắc:
             duration: 30,
             order: lessonOrder++,
             chapterId: chapter.id,
+            semesterId: semester.id,
             // Note: type field is not in schema, so we don't save it
           }
         });

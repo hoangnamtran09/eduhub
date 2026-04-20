@@ -38,17 +38,15 @@ interface PdfUploadModalProps {
   onSuccess: (result: ParsedResult) => void;
 }
 
-type UploadStep = "idle" | "uploading" | "ocr" | "analyzing" | "creating" | "done" | "error";
+type UploadStep = "idle" | "uploading" | "converting" | "done" | "error";
 
 const STEPS = [
   { key: "uploading", label: "Đang tải file lên...", icon: Upload },
-  { key: "ocr", label: "Đang nhận diện văn bản từ PDF...", icon: ImageIcon },
-  { key: "analyzing", label: "Đang phân tích cấu trúc bài học...", icon: Brain },
-  { key: "creating", label: "Đang tạo bài học...", icon: BookOpen },
+  { key: "converting", label: "Đang chuyển PDF thành ảnh...", icon: ImageIcon },
 ];
 
 const getStepIndex = (step: UploadStep): number => {
-  const order: UploadStep[] = ["uploading", "ocr", "analyzing", "creating"];
+  const order: UploadStep[] = ["uploading", "converting"];
   return order.indexOf(step);
 };
 
@@ -127,7 +125,7 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
 
       const uploadData = await uploadRes.json();
       setProgress(30);
-      setCurrentStep("ocr");
+      setCurrentStep("converting");
 
       // Process PDF and extract lessons - OCR step
       setUploading(false);
@@ -159,15 +157,6 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
         throw new Error("Processing failed");
       }
 
-      setProgress(70);
-      setCurrentStep("analyzing");
-
-      const processData: ParsedResult = await processRes.json();
-      
-      setProgress(85);
-      setCurrentStep("creating");
-
-      setResult(processData);
       setProgress(100);
       setCurrentStep("done");
       setProcessing(false);
@@ -189,11 +178,7 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
 
   const renderProgress = () => {
     const stepIndex = getStepIndex(currentStep);
-    const totalProgress = currentStep === "uploading" ? 25 : 
-                          currentStep === "ocr" ? 50 : 
-                          currentStep === "analyzing" ? 75 : 
-                          currentStep === "creating" ? 90 : 
-                          currentStep === "done" ? 100 : progress;
+    const totalProgress = currentStep === "uploading" ? 40 : currentStep === "converting" ? 80 : currentStep === "done" ? 100 : progress;
 
     return (
       <div className="space-y-4">
@@ -254,10 +239,8 @@ export function PdfUploadModal({ subjectId, onClose, onSuccess }: PdfUploadModal
           <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
           <p className="text-sm text-blue-700">
             {currentStep === "uploading" && "Đang upload file PDF lên server..."}
-            {currentStep === "ocr" && "Đang quét từng trang PDF để trích xuất văn bản..."}
-            {currentStep === "analyzing" && "Đang phân tích AI để tách chương và bài học..."}
-            {currentStep === "creating" && "Đang tạo cấu trúc bài học trong database..."}
-            {currentStep === "done" && "Hoàn tất! Đang chuyển sang xem kết quả..."}
+            {currentStep === "converting" && "Đang chuyển PDF thành ảnh..."}
+            {currentStep === "done" && "Hoàn tất! PDF đã được chuyển thành ảnh."}
           </p>
         </div>
       </div>

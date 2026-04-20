@@ -5,7 +5,6 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from app.core.config import settings
 from app.db.vector_store import get_vector_store
-from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain import hub
 
@@ -25,7 +24,7 @@ class AIService:
             temperature=0.3
         )
         
-        self.search_tool = TavilySearchResults(api_key=settings.TAVILY_API_KEY) if settings.TAVILY_API_KEY else None
+
 
     async def generate_summary(self, content: str):
         prompt = ChatPromptTemplate.from_template(
@@ -46,6 +45,7 @@ class AIService:
             return "\n\n".join([doc.page_content for doc in docs])
 
         from langchain.tools import Tool
+
         tools = [
             Tool(
                 name="search_textbook",
@@ -53,18 +53,19 @@ class AIService:
                 description="Hữu ích khi bạn cần tìm câu trả lời trong sách giáo khoa của bài học này."
             )
         ]
-        
-        if self.search_tool:
-            tools.append(self.search_tool)
 
         prompt = hub.pull("hwchase17/openai-functions-agent")
         
         # Tùy chỉnh system message
         prompt.messages[0] = SystemMessage(content=(
-            "Bạn là một trợ lý giáo dục lễ phép, hỗ trợ học sinh học tập bằng tiếng Việt. "
-            "Hãy ưu tiên tìm câu trả lời trong sách giáo khoa (search_textbook). "
-            "Nếu thông tin trong sách không đủ, hãy sử dụng Tavily Search để tìm thêm từ Internet. "
-            "Trả lời ngắn gọn, dễ hiểu và luôn lễ phép."
+            "Bạn là một Gia sư AI thông minh và thân thiện tại EduHub. "
+            "Nhiệm vụ của bạn là hỗ trợ học sinh học tập một cách tự nhiên và lôi cuốn. "
+            "\n\nNGUYÊN TẮC HỖ TRỢ:"
+            "\n1. Sử dụng công cụ 'search_textbook' để tìm kiếm kiến thức chính thống từ bài học. "
+            "\n2. Nếu thông tin không có trong sách, hãy sử dụng kiến thức sâu rộng của mình để giải đáp, nhưng vẫn giữ đúng định hướng giáo dục. "
+            "\n3. Luôn trả lời bằng tiếng Việt, văn phong gần gũi, lễ phép nhưng không quá máy móc. "
+            "\n4. Khuyến khích học sinh suy nghĩ bằng các câu hỏi gợi mở. "
+            "\n5. Sử dụng Markdown và LaTeX cho các công thức toán học nếu cần thiết."
         ))
 
         agent = create_openai_functions_agent(self.llm_chat, tools, prompt)

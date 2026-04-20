@@ -7,173 +7,170 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================
-// AUTH & USER
-// ============================================
+enum UserRole {
+  STUDENT
+  PARENT
+  ADMIN
+  TEACHER
+}
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String?
-  fullName      String?
-  avatarUrl     String?
-  gradeLevel    Int?      // 6-12
-  emailVerified DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              String           @id @default(cuid())
+  email           String           @unique
+  passwordHash    String?
+  fullName        String?
+  avatarUrl       String?
+  role            UserRole         @default(STUDENT)
+  gradeLevel      Int?
+  diamonds        Int              @default(0)
+  emailVerified   DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  // Parent-Child relationship
+  children        User[]           @relation("ParentChildren")
+  parent          User?            @relation("ParentChildren", fields: [parentId], references: [id])
+  parentId        String?
 
-  profile        StudentProfile?
-  enrollments    Enrollment[]
-  progress       LessonProgress[]
-  quizAttempts   QuizAttempt[]
   aiConversations AICo[]
+  enrollments     Enrollment[]
+  progress        LessonProgress[]
+  quizAttempts    QuizAttempt[]
+  exerciseAttempts ExerciseAttempt[]
+  profile         StudentProfile?
 }
 
 model StudentProfile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  goals       String[]
-  strengths   String[]
-  weaknesses  String[]
-  streakDays  Int       @default(0)
-  lastActive  DateTime?
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  goals      String[]
+  strengths  String[]
+  weaknesses String[]
+  streakDays Int       @default(0)
+  lastActive DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// ============================================
-// SUBJECTS & COURSES
-// ============================================
-
 model Subject {
-  id          String   @id @default(cuid())
-  name        String   // Toán, Tiếng Anh, Vật Lý...
-  slug        String   @unique
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
   description String?
   icon        String?
   color       String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime   @default(now())
+  semesters   Semester[]
 
-  semesters Semester[]
-
-  // Generate slug from name if not provided
   @@index([slug])
 }
 
 model Semester {
   id          String   @id @default(cuid())
   subjectId   String
-  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  name        String   // Học kì 1, Học kì 2
+  name        String
   order       Int      @default(1)
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  lessons     Lesson[]
   courses     Course[]
+  lessons     Lesson[]
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 }
 
 model Course {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   semesterId  String
-  semester    Semester @relation(fields: [semesterId], references: [id], onDelete: Cascade)
   subjectId   String
   title       String
-  slug        String   @unique
+  slug        String       @unique
   description String?
   thumbnail   String?
   pdfUrl      String?
   gradeLevel  Int
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  isPublished Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  Chapter     Chapter[]
+  semester    Semester     @relation(fields: [semesterId], references: [id], onDelete: Cascade)
   enrollments Enrollment[]
   pdfPages    PDFPage[]
 }
 
 model PDFPage {
-  id        String   @id @default(cuid())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  courseId   String
   pageNumber Int
-  imageUrl  String
-  ocrText   String?  @db.Text
-  createdAt DateTime @default(now())
+  imageUrl   String
+  ocrText    String?
+  createdAt  DateTime @default(now())
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, pageNumber])
 }
 
 model Lesson {
-  id        String   @id @default(cuid())
-  semesterId String
-  semester  Semester @relation(fields: [semesterId], references: [id], onDelete: Cascade)
-  title     String
-  slug      String?  // URL-friendly slug generated from title (nullable for migration)
-  content   String   @db.Text // Markdown
-  videoUrl  String?
-  pdfUrl    String?
-  order     Int
-  duration  Int?     // minutes
-  type      String   @default("theory") // theory, exercise, quiz
-  isPublished Boolean @default(true)
-
-  quizzes        Quiz[]
-  progress       LessonProgress[]
+  id              String           @id @default(cuid())
+  semesterId      String
+  title           String
+  content         String
+  videoUrl        String?
+  order           Int
+  duration        Int?
+  type            String           @default("theory")
+  isPublished     Boolean          @default(true)
+  pdfUrl          String?
+  slug            String?
+  chapterId       String?
   aiConversations AICo[]
+  ChatHistory     ChatHistory[]
+  Chapter         Chapter?         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  semester        Semester         @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  progress        LessonProgress[]
+  quizzes         Quiz[]
 
   @@index([semesterId])
 }
 
-// ============================================
-// QUIZ & ASSESSMENT
-// ============================================
-
 model Quiz {
-  id       String  @id @default(cuid())
-  lessonId String
-  lesson   Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  title    String?
-
-  questions QuizQuestion[]
+  id        String         @id @default(cuid())
+  lessonId  String
+  title     String?
+  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   attempts  QuizAttempt[]
+  questions QuizQuestion[]
 }
 
 model QuizQuestion {
   id          String  @id @default(cuid())
   quizId      String
-  quiz        Quiz    @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  question    String  @db.Text
-  options     Json    // [{text: string, isCorrect: boolean}]
-  explanation String? @db.Text
+  question    String
+  options     Json
+  explanation String?
   order       Int
+  quiz        Quiz    @relation(fields: [quizId], references: [id], onDelete: Cascade)
 }
 
 model QuizAttempt {
-  id           String    @id @default(cuid())
-  quizId       String
-  quiz         Quiz      @relation(fields: [quizId], references: [id])
-  userId       String
-  user         User      @relation(fields: [userId], references: [id])
-  score        Int
+  id             String    @id @default(cuid())
+  quizId         String
+  userId         String
+  score          Int
   totalQuestions Int
-  answers      Json      // [{questionId, selectedOption, isCorrect}]
-  startedAt    DateTime  @default(now())
-  completedAt  DateTime?
+  answers        Json
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  quiz           Quiz      @relation(fields: [quizId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
 }
-
-// ============================================
-// PROGRESS & ENROLLMENT
-// ============================================
 
 model LessonProgress {
   id          String    @id @default(cuid())
   lessonId    String
-  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   completed   Boolean   @default(false)
   completedAt DateTime?
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([lessonId, userId])
 }
@@ -181,55 +178,100 @@ model LessonProgress {
 model Enrollment {
   id         String   @id @default(cuid())
   courseId   String
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   enrolledAt DateTime @default(now())
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, userId])
 }
 
-// ============================================
-// AI TUTOR
-// ============================================
-
 model AICo {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   lessonId  String?
-  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+  lesson    Lesson?     @relation(fields: [lessonId], references: [id])
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  AIMessage[]
-  createdAt DateTime @default(now())
 }
 
 model AIMessage {
-  id              String       @id @default(cuid())
-  conversationId  String
-  conversation    AICo        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  role            String       // "user" | "assistant"
-  content         String       @db.Text
-  createdAt       DateTime     @default(now())
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String
+  createdAt      DateTime @default(now())
+  conversation   AICo     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 }
 
-// ============================================
-// ONBOARDING & DIAGNOSTIC
-// ============================================
+model ExerciseAttempt {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId      String?
+  exerciseTitle String
+  question      String   @db.Text
+  userAnswer    String   @db.Text
+  aiFeedback    String?  @db.Text
+  score         Int?     // 0-100
+  diamondsEarned Int     @default(0)
+  createdAt     DateTime @default(now())
+}
 
 model DiagnosticQuiz {
-  id        String   @id @default(cuid())
-  subjectId String
+  id         String   @id @default(cuid())
+  subjectId  String
   gradeLevel Int
-  questions Json     // [{question, options, correctAnswer, topic}]
-  createdAt DateTime @default(now())
+  questions  Json
+  createdAt  DateTime @default(now())
 }
 
 model DiagnosticAttempt {
-  id            String   @id @default(cuid())
-  userId        String
-  subjectId     String
-  answers       Json
-  score         Int
-  weakTopics    String[]
-  createdAt     DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  subjectId  String
+  answers    Json
+  score      Int
+  weakTopics String[]
+  createdAt  DateTime @default(now())
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  courseId  String
+  title     String
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  Lesson    Lesson[]
+}
+
+model ChatHistory {
+  id        String   @id @default(cuid())
+  lessonId  String
+  messages  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Lesson    Lesson   @relation(fields: [lessonId], references: [id])
+}
+
+model langchain_pg_collection {
+  name                   String?                  @db.VarChar
+  cmetadata              Json?                    @db.Json
+  uuid                   String                   @id @db.Uuid
+  langchain_pg_embedding langchain_pg_embedding[]
+}
+
+model langchain_pg_embedding {
+  collection_id           String?                  @db.Uuid
+  embedding               Unsupported("vector")?
+  document                String?                  @db.VarChar
+  cmetadata               Json?
+  custom_id               String?                  @db.VarChar
+  uuid                    String                   @id @db.Uuid
+  langchain_pg_collection langchain_pg_collection? @relation(fields: [collection_id], references: [uuid], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([cmetadata(ops: JsonbPathOps)], map: "ix_cmetadata_gin", type: Gin)
 }

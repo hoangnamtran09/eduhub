@@ -1,13 +1,19 @@
 // User types
+export type UserRole = "STUDENT" | "PARENT" | "ADMIN" | "TEACHER";
+
 export interface User {
   id: string;
   email: string;
   fullName?: string;
   avatarUrl?: string;
+  role: UserRole;
   gradeLevel?: number;
+  diamonds: number;
   emailVerified?: Date;
   createdAt: Date;
   profile?: StudentProfile;
+  parentId?: string;
+  children?: User[];
 }
 
 export interface StudentProfile {
@@ -148,6 +154,20 @@ export interface AIMessage {
   conversationId: string;
   role: "user" | "assistant";
   content: string;
+  metadata?: any;
+  createdAt: Date;
+}
+
+export interface ExerciseAttempt {
+  id: string;
+  userId: string;
+  lessonId?: string;
+  exerciseTitle: string;
+  question: string;
+  userAnswer: string;
+  aiFeedback?: string;
+  score?: number;
+  diamondsEarned: number;
   createdAt: Date;
 }
 
@@ -199,6 +219,7 @@ export interface RegisterForm {
   email: string;
   password: string;
   fullName: string;
+  role: UserRole;
 }
 
 export interface ProfileForm {

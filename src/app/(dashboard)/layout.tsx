@@ -17,15 +17,36 @@ export default function DashboardLayout({
   const pathname = usePathname();
   
   // Hide sidebar for learning pages
-  const isLearningPage = pathname?.includes('/courses/') && pathname?.includes('/lesson') || pathname?.includes('/learn');
+  // Match /courses/[subjectId]/[lessonId] or /learn
+  const isLearningPage = 
+    (pathname?.startsWith('/courses/') && pathname.split('/').filter(Boolean).length >= 3) || 
+    pathname?.startsWith('/learn');
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (isLearningPage) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100vh';
+    } else {
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = 'auto';
+      document.body.style.height = 'auto';
+    }
+    return () => {
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = 'auto';
+      document.body.style.height = 'auto';
+    };
+  }, [isLearningPage]);
 
 
   if (isLearningPage) {
-    return <>{children}</>;
+    return (
+      <div className="fixed inset-0 overflow-hidden bg-white">
+        {children}
+      </div>
+    );
   }
 
   return (

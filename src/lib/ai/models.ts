@@ -1,39 +1,26 @@
-/**
- * AI Model Configuration
- * 
- * Configure different AI models for different features.
- * Edit the model names below to change which model each feature uses.
- * 
- * Available models on Beeknoee:
- * - Claude-chat (Claude 3.5, balanced)
- * - Claude-chat-20250307 (Claude latest)
- * - GLM-4-Flash (fast, cheap)
- * - GLM-4.7-Flash (larger context)
- * - claude-sonnet-4-6 (Claude, good for reasoning)
- * - Qwen-Turbo (Alibaba, fast)
- */
+
 
 export const AI_MODELS = {
   // Chat/AI Tutor - for student Q&A and tutoring
-  chat: "GLM-4-Flash",           // Use GLM for fast responses in chat
-  
+  chat: "glm-4.7-flash",
+
   // PDF Processing - extract content and structure from PDFs
-  pdfExtract: "GLM-4-Flash",      // Use GLM for PDF parsing
-  
+  pdfExtract: "glm-4-flash",
+
   // Quiz Generation - create questions from lesson content
-  quizGenerate: "GLM-4-Flash",    // Use GLM for quiz generation
-  
+  quizGenerate: "glm-4-flash",
+
   // OCR - extract text from images (use faster model)
-  ocr: "GLM-4-Flash",             // Use GLM for text extraction
-  
+  ocr: "glm-4-flash",
+
   // Translation - translate content between languages
-  translate: "GLM-4-Flash",       // Use GLM for translation
-  
+  translate: "glm-4-flash",
+
   // Code Generation - generate code snippets
-  codeGenerate: "claude-sonnet-4-6",  // Use Claude for code (better at reasoning)
-  
+  codeGenerate: "claude-3-5-sonnet",
+
   // Math Solving - solve math problems (use model with math capability)
-  math: "GLM-4-Flash",            // Use GLM for math
+  math: "glm-4-flash",
 } as const;
 
 export type AIFeature = keyof typeof AI_MODELS;

@@ -132,10 +132,23 @@ export async function DELETE(request: Request) {
       );
     }
 
+    // Lấy tất cả semesters của subject
+    const semesters = await prisma.semester.findMany({ where: { subjectId: id }, select: { id: true } });
+    const semesterIds = semesters.map(s => s.id);
+    // Lấy tất cả lessons của các semester này
+    let lessonIds: string[] = [];
+    if (semesterIds.length > 0) {
+      const lessons = await prisma.lesson.findMany({ where: { semesterId: { in: semesterIds } }, select: { id: true } });
+      lessonIds = lessons.map(l => l.id);
+    }
+    // Xóa chat history của các lesson này
+    if (lessonIds.length > 0) {
+      await prisma.chatHistory.deleteMany({ where: { lessonId: { in: lessonIds } } });
+    }
+    // Xóa subject (cascading xóa semester, lesson nhờ onDelete: Cascade)
     await prisma.subject.delete({
       where: { id },
     });
-
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting subject:", error);

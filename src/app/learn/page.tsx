@@ -28,6 +28,9 @@ import {
   Sparkles,
   Loader2,
 } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const MarkdownMessage = dynamic(() => import("@/components/ai/MarkdownMessage"), { ssr: false });
 
 interface LessonItem {
   id: string;
@@ -80,6 +83,7 @@ export default function LearnPage({
 
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -124,6 +128,56 @@ export default function LearnPage({
     loadData();
   }, [searchParams.subjectId, searchParams.lessonId]);
 
+
+
+  // Luôn gọi API chào hỏi và tóm tắt mỗi khi chọn bài học mới
+  useEffect(() => {
+    if (!loading && currentLesson && subject) {
+      setSending(true);
+      (async () => {
+        try {
+          const response = await fetch("/api/ai/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages: [
+                {
+                  role: "user",
+                  content: `Chào bạn! Hãy tóm tắt bài học hôm nay và giới thiệu ngắn gọn cho học sinh.`,
+                },
+              ],
+              lessonId: currentLesson.id,
+              subjectId: subject.id,
+            }),
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setMessages([
+              {
+                id: Date.now().toString(),
+                role: "assistant",
+                content: data.message,
+                timestamp: new Date(),
+              },
+            ]);
+          }
+        } catch (error) {
+          setMessages([
+            {
+              id: Date.now().toString(),
+              role: "assistant",
+              content: "Xin chào! Mình là AI Tutor. Bạn có thể hỏi mình bất cứ điều gì về bài học hôm nay!",
+              timestamp: new Date(),
+            },
+          ]);
+        } finally {
+          setSending(false);
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, currentLesson?.id, subject?.id]);
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -138,7 +192,7 @@ export default function LearnPage({
     setSending(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -147,7 +201,7 @@ export default function LearnPage({
             content: m.content,
           })),
           lessonId: searchParams.lessonId,
-          model: "glm-4-flash",
+          subjectId: searchParams.subjectId,
         }),
       });
 
@@ -417,13 +471,17 @@ export default function LearnPage({
                 >
                   <div
                     className={cn(
-                      "max-w-[85%] px-4 py-2.5 text-sm",
+                      "max-w-[85%] px-4 py-2.5 text-sm overflow-x-auto",
                       msg.role === "user"
                         ? "bg-blue-500 text-white"
                         : "bg-white border border-slate-200 text-slate-700"
                     )}
                   >
-                    {msg.content}
+                    {msg.role === "assistant" ? (
+                      <MarkdownMessage content={msg.content} />
+                    ) : (
+                      <span style={{whiteSpace: 'pre-line'}}>{msg.content}</span>
+                    )}
                   </div>
                   <span className="text-xs text-slate-400 mt-1">
                     {msg.timestamp.toLocaleTimeString("vi-VN", {

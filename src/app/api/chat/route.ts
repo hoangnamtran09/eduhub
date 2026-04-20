@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { beeknoeeClient } from "@/lib/beeknoee/client";
 import { getModel } from "@/lib/ai/models";
+import { getTutorPrompt } from "@/lib/ai/prompts";
 
 interface ChatRequest {
   messages: { role: string; content: string }[];
@@ -14,14 +15,12 @@ export async function POST(request: NextRequest) {
     const body: ChatRequest = await request.json();
     const { messages, lessonTitle, lessonContent, model } = body;
 
-    const systemPrompt = lessonContent
-      ? `Bạn là một AI gia sư thông minh, giúp học sinh hiểu bài học. 
-Hãy trả lời dựa trên nội dung bài học sau:
----
-${lessonContent}
----
-Chỉ trả lời bằng tiếng Việt.`
-      : "Bạn là một AI gia sư thông minh. Chỉ trả lời bằng tiếng Việt.";
+    const systemPrompt = getTutorPrompt(
+      lessonTitle || "Chung",
+      "Kiến thức tổng hợp",
+      0,
+      lessonContent || ""
+    );
 
     const allMessages = [
       { role: "system", content: systemPrompt },

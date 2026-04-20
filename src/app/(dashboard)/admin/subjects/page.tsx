@@ -174,20 +174,18 @@ export default function AdminSubjectsPage() {
 
   const handleSaveSubject = async () => {
     if (!subjectForm.name.trim()) return;
-    
     setSaving(true);
     try {
-      const url = editingSubject 
-        ? `/api/admin/subjects?id=${editingSubject.id}`
-        : "/api/admin/subjects";
+      const url = "/api/admin/subjects";
       const method = editingSubject ? "PUT" : "POST";
-      
+      const body = editingSubject
+        ? JSON.stringify({ id: editingSubject.id, ...subjectForm })
+        : JSON.stringify(subjectForm);
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subjectForm),
+        body,
       });
-
       if (res.ok) {
         setShowSubjectModal(false);
         loadSubjects();

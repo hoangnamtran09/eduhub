@@ -10,13 +10,13 @@ const prisma = globalForPrisma.prisma ?? new PrismaClient();
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const subjectSlug = searchParams.get("subject");
-    const lessonSlug = searchParams.get("lesson");
+    const subjectId = searchParams.get("subject");
+    const lessonId = searchParams.get("lesson");
 
     // If looking for lesson by slug
-    if (lessonSlug) {
+    if (lessonId) {
       const lesson = await prisma.lesson.findFirst({
-        where: { slug: lessonSlug },
+        where: { slug: lessonId },
         include: {
           semester: {
             include: {
@@ -95,9 +95,9 @@ export async function GET(request: Request) {
     }
 
     // If looking for subject by slug
-    if (subjectSlug) {
+    if (subjectId) {
       const subject = await prisma.subject.findUnique({
-        where: { slug: subjectSlug },
+        where: { slug: subjectId },
         include: {
           semesters: {
             orderBy: { order: "asc" },
