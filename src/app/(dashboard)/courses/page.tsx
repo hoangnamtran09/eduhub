@@ -9,8 +9,6 @@ import { cn } from "@/lib/utils";
 import { 
   BookOpen, 
   Search, 
-  Upload, 
-  Sparkles,
   ArrowRight,
   GraduationCap,
   Loader2,
@@ -32,7 +30,6 @@ export default function CoursesPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {
     const loadSubjects = async () => {
@@ -94,13 +91,6 @@ export default function CoursesPage() {
                 className="pl-10 h-10 w-60 bg-white border-slate-200 focus:ring-4 focus:ring-brand-500/5 transition-all rounded-xl text-xs font-bold"
               />
             </div>
-            <Button 
-              onClick={() => setShowUploadModal(true)} 
-              className="gap-2 bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-100 transition-all rounded-xl h-10 px-6"
-            >
-              <Upload className="w-4 h-4" />
-              <span className="font-bold text-sm">Tải lên PDF</span>
-            </Button>
           </div>
         </div>
 
@@ -158,112 +148,14 @@ export default function CoursesPage() {
         {/* Empty State */}
         {filteredSubjects.length === 0 && (
           <div className="text-center py-20 bg-white rounded-[32px] border border-slate-200 border-dashed">
-            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-slate-200" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">Không tìm thấy môn học</h3>
-            <p className="text-slate-400 text-sm max-w-sm mx-auto px-6">Thử tìm kiếm với từ khóa khác hoặc tải lên tài liệu mới để bắt đầu.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Simplified Upload Modal Backdrop */}
-      {showUploadModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[32px] shadow-2xl max-w-lg w-full p-8 animate-in fade-in zoom-in duration-300">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 rounded-xl bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-100">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">Tạo khóa học AI</h3>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Tải PDF & Phân tích</p>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <label className="block">
-                <div className="border-2 border-dashed border-slate-100 rounded-2xl p-6 text-center hover:border-brand-200 hover:bg-brand-50/30 transition-all cursor-pointer group">
-                  <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-white group-hover:shadow-sm transition-all">
-                    <Upload className="w-6 h-6 text-slate-300 group-hover:text-brand-500" />
-                  </div>
-                  <p className="text-xs font-bold text-slate-900 mb-0.5">Kéo thả file PDF</p>
-                  <p className="text-[10px] text-slate-400">hoặc click để chọn file</p>
-                  <input type="file" id="pdfFile" accept=".pdf" className="hidden" />
-                </div>
-              </label>
-
-              <div className="space-y-3">
-                <Input 
-                  id="subjectName" 
-                  placeholder="Tên môn học (VD: Toán 6)" 
-                  className="h-12 px-4 bg-slate-50 border-transparent focus:bg-white rounded-xl font-bold text-xs"
-                />
-                <Input 
-                  id="courseTitle" 
-                  placeholder="Tên khóa học (VD: Chương 1 - Số học)" 
-                  className="h-12 px-4 bg-slate-50 border-transparent focus:bg-white rounded-xl font-bold text-xs"
-                />
-                <select 
-                  id="gradeLevel" 
-                  className="w-full h-12 px-4 bg-slate-50 border-transparent focus:bg-white rounded-xl text-xs font-bold focus:ring-4 focus:ring-brand-500/5 transition-all outline-none border border-slate-100"
-                >
-                  {[6,7,8,9,10,11,12].map(lv => (
-                    <option key={lv} value={lv}>Lớp {lv}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-8">
-              <Button 
-                variant="ghost" 
-                onClick={() => setShowUploadModal(false)} 
-                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-50 text-xs"
-              >
-                Hủy bỏ
-              </Button>
-              <Button 
-                className="flex-2 h-12 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-bold gap-2 shadow-lg shadow-slate-100 text-xs px-8"
-                onClick={async () => {
-                  const fileInput = document.getElementById('pdfFile') as HTMLInputElement;
-                  const subjectName = (document.getElementById('subjectName') as HTMLInputElement).value;
-                  const courseTitle = (document.getElementById('courseTitle') as HTMLInputElement).value;
-                  const gradeLevel = parseInt((document.getElementById('gradeLevel') as HTMLSelectElement).value);
-                  
-                  if (!fileInput.files?.[0]) {
-                    alert('Vui lòng chọn file PDF');
-                    return;
-                  }
-                  
-                  const formData = new FormData();
-                  formData.append('file', fileInput.files[0]);
-                  formData.append('subjectName', subjectName);
-                  formData.append('courseTitle', courseTitle);
-                  formData.append('gradeLevel', gradeLevel.toString());
-                  
-                  try {
-                    const response = await fetch('/api/upload-pdf', {
-                      method: 'POST',
-                      body: formData
-                    });
-                    
-                    if (response.ok) {
-                      setShowUploadModal(false);
-                      window.location.reload();
-                    }
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                Bắt đầu tạo
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+               <Search className="w-8 h-8 text-slate-200" />
+             </div>
+             <h3 className="text-lg font-bold text-slate-900 mb-1">Không tìm thấy môn học</h3>
+             <p className="text-slate-400 text-sm max-w-sm mx-auto px-6">Thử tìm kiếm với từ khóa khác để tiếp tục.</p>
+           </div>
+         )}
+       </div>
     </div>
   );
 }

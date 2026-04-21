@@ -10,9 +10,6 @@ export const AI_MODELS = {
   // Quiz Generation - create questions from lesson content
   quizGenerate: "glm-4-flash",
 
-  // OCR - extract text from images (use faster model)
-  ocr: "glm-4-flash",
-
   // Translation - translate content between languages
   translate: "glm-4-flash",
 

@@ -81,20 +81,7 @@ model Course {
   updatedAt   DateTime     @updatedAt
   Chapter     Chapter[]
   enrollments Enrollment[]
-  pdfPages    PDFPage[]
   subject     Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-}
-
-model PDFPage {
-  id         String   @id @default(cuid())
-  courseId   String
-  pageNumber Int
-  imageUrl   String
-  ocrText    String?
-  createdAt  DateTime @default(now())
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  @@unique([courseId, pageNumber])
 }
 
 model Lesson {
@@ -279,23 +266,4 @@ model ChatHistory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Lesson    Lesson   @relation(fields: [lessonId], references: [id])
-}
-
-model langchain_pg_collection {
-  name                   String?                  @db.VarChar
-  cmetadata              Json?                    @db.Json
-  uuid                   String                   @id @db.Uuid
-  langchain_pg_embedding langchain_pg_embedding[]
-}
-
-model langchain_pg_embedding {
-  collection_id           String?                  @db.Uuid
-  embedding               Unsupported("vector")?
-  document                String?                  @db.VarChar
-  cmetadata               Json?
-  custom_id               String?                  @db.VarChar
-  uuid                    String                   @id @db.Uuid
-  langchain_pg_collection langchain_pg_collection? @relation(fields: [collection_id], references: [uuid], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([cmetadata(ops: JsonbPathOps)], map: "ix_cmetadata_gin", type: Gin)
 }

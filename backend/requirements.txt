@@ -1,11 +1,6 @@
 fastapi
 uvicorn
 python-dotenv
-langchain
-langchain-openai
-langchain-community
-pgvector
-psycopg2-binary
 pdf2image
 openai
 pydantic-settings
