@@ -37,6 +37,8 @@ model User {
   progress        LessonProgress[]
   quizAttempts    QuizAttempt[]
   exerciseAttempts ExerciseAttempt[]
+  assignedTasks   AssignmentRecipient[]
+  createdAssignments Assignment[]   @relation("AssignmentCreator")
   profile         StudentProfile?
 }
 
@@ -114,8 +116,42 @@ model Lesson {
   subject         Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   progress        LessonProgress[]
   quizzes         Quiz[]
+  assignments     Assignment[]
 
   @@index([subjectId])
+}
+
+model Assignment {
+  id               String                @id @default(cuid())
+  title            String
+  description      String                @db.Text
+  lessonId         String?
+  createdById      String?
+  dueDate          DateTime?
+  maxScore         Int                   @default(10)
+  targetGradeLevel Int?
+  isPublished      Boolean               @default(true)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  createdBy        User?                 @relation("AssignmentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  lesson           Lesson?               @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  recipients       AssignmentRecipient[]
+}
+
+model AssignmentRecipient {
+  id             String      @id @default(cuid())
+  assignmentId   String
+  studentId      String
+  status         String      @default("assigned")
+  submissionText String?     @db.Text
+  submittedAt    DateTime?
+  reviewedAt     DateTime?
+  createdAt      DateTime    @default(now())
+  assignment     Assignment  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student        User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId, status])
 }
 
 model Quiz {

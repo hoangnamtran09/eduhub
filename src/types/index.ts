@@ -171,6 +171,31 @@ export interface ExerciseAttempt {
   createdAt: Date;
 }
 
+export interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  lessonId?: string;
+  createdById?: string;
+  dueDate?: Date;
+  maxScore: number;
+  targetGradeLevel?: number;
+  isPublished: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AssignmentRecipient {
+  id: string;
+  assignmentId: string;
+  studentId: string;
+  status: string;
+  submissionText?: string;
+  submittedAt?: Date;
+  reviewedAt?: Date;
+  createdAt: Date;
+}
+
 // Progress Stats
 export interface ProgressStats {
   totalLessonsCompleted: number;

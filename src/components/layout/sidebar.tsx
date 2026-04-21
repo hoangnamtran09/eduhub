@@ -3,46 +3,50 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { 
+import {
   LayoutDashboard, 
   BookOpen, 
   Trophy, 
   MessageSquare, 
   Settings,
   ChevronLeft,
-  ChevronRight,
   Flame,
   GraduationCap,
   Library,
-  ClipboardList
+  ClipboardList,
+  NotebookPen
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useSidebarStore } from "@/stores/sidebar-store";
+import { useAuthStore } from "@/stores/auth-store";
 
-const navItems = [
+const defaultNavItems = [
   { href: "/", label: "Trang chủ", icon: LayoutDashboard },
   { href: "/courses", label: "Khóa học", icon: BookOpen },
-  { href: "/admin/subjects", label: "Quản lý môn học", icon: ClipboardList },
+  { href: "/assignments", label: "Bài tập", icon: NotebookPen },
   { href: "/progress", label: "Tiến độ", icon: Trophy },
   { href: "/tutor", label: "Gia sư AI", icon: MessageSquare },
   { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
 
+const adminNavItems = [
+  { href: "/admin/students", label: "Quản lý học sinh", icon: Library },
+  { href: "/admin/subjects", label: "Quản lý môn học", icon: ClipboardList },
+  { href: "/admin/assignments", label: "Giao bài tập", icon: NotebookPen },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
   const { collapsed, toggleCollapsed } = useSidebarStore();
+  const user = useAuthStore((state) => state.user);
+  const isAuthLoading = useAuthStore((state) => state.isLoading);
   const [mounted, setMounted] = useState(false);
+  const navItems = user?.role === "ADMIN" ? adminNavItems : defaultNavItems;
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  if (!mounted) {
-    return (
-      <aside className="fixed left-0 top-0 z-40 h-screen bg-white border-r border-ink-200/50 w-72" />
-    );
-  }
 
   return (
     <aside
@@ -72,43 +76,53 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="px-3 py-6 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || 
-            (item.href !== "/" && pathname.startsWith(item.href));
-          const Icon = item.icon;
+        {!mounted || isAuthLoading
+          ? Array.from({ length: collapsed ? 5 : 6 }).map((_, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "animate-pulse rounded-2xl bg-slate-100/90",
+                  collapsed ? "mx-auto h-12 w-12" : "h-12 w-full"
+                )}
+              />
+            ))
+          : navItems.map((item) => {
+              const isActive = pathname === item.href ||
+                (item.href !== "/" && pathname.startsWith(item.href));
+              const Icon = item.icon;
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "group relative flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300",
-                isActive
-                  ? "bg-brand-50 text-brand-600 shadow-sm"
-                  : "text-slate-500 hover:bg-slate-50/80 hover:text-slate-900",
-                collapsed && "justify-center px-0"
-              )}
-            >
-              {isActive && (
-                <div className="absolute left-0 top-3 bottom-3 w-1 bg-brand-500 rounded-r-full" />
-              )}
-              <Icon className={cn(
-                "w-5 h-5 flex-shrink-0 transition-all duration-300",
-                isActive ? "text-brand-600 scale-110" : "group-hover:text-brand-500"
-              )} />
-              {!collapsed && (
-                <span className={cn(
-                  "text-sm font-bold tracking-tight transition-colors",
-                  isActive ? "text-slate-900" : "text-slate-500 group-hover:text-slate-900"
-                )}>{item.label}</span>
-              )}
-            </Link>
-          );
-        })}
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "group relative flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300",
+                    isActive
+                      ? "bg-brand-50 text-brand-600 shadow-sm"
+                      : "text-slate-500 hover:bg-slate-50/80 hover:text-slate-900",
+                    collapsed && "justify-center px-0"
+                  )}
+                >
+                  {isActive && (
+                    <div className="absolute left-0 top-3 bottom-3 w-1 bg-brand-500 rounded-r-full" />
+                  )}
+                  <Icon className={cn(
+                    "w-5 h-5 flex-shrink-0 transition-all duration-300",
+                    isActive ? "text-brand-600 scale-110" : "group-hover:text-brand-500"
+                  )} />
+                  {!collapsed && (
+                    <span className={cn(
+                      "text-sm font-bold tracking-tight transition-colors",
+                      isActive ? "text-slate-900" : "text-slate-500 group-hover:text-slate-900"
+                    )}>{item.label}</span>
+                  )}
+                </Link>
+              );
+            })}
       </nav>
 
       {/* Streak Badge - Minimal */}
-      {!collapsed && (
+      {!collapsed && user?.role !== "ADMIN" && (
         <div className="absolute bottom-24 left-5 right-5">
           <div className="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm group hover:border-brand-200 transition-all">
             <div className="flex items-center gap-3">
