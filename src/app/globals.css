@@ -31,7 +31,7 @@
     --border: 40 15% 88%;
     --input: 40 15% 88%;
     --ring: 14 60% 62%;
-    --radius: 12px;
+    --radius: 16px;
   }
 
   * {
@@ -49,6 +49,17 @@
       radial-gradient(at 40% 20%, hsla(40, 30%, 94%, 0.5) 0px, transparent 50%),
       radial-gradient(at 80% 0%, hsla(38, 40%, 90%, 0.3) 0px, transparent 50%),
       radial-gradient(at 0% 50%, hsla(14, 60%, 92%, 0.3) 0px, transparent 50%);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at top left, hsla(14, 60%, 88%, 0.18), transparent 32%),
+      radial-gradient(circle at 85% 15%, hsla(38, 40%, 85%, 0.14), transparent 30%);
+    z-index: -1;
   }
 
   /* Custom Scrollbar */
@@ -112,7 +123,7 @@
 
   /* Card Styles */
   .card-base {
-    @apply bg-white rounded-xl border border-ink-200/50 shadow-soft transition-all duration-300;
+    @apply bg-white rounded-[28px] border border-ink-200/50 shadow-soft transition-all duration-300;
   }
 
   .card-elevated {
@@ -126,7 +137,7 @@
   /* Button Styles */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 
-           bg-brand-500 text-white font-medium rounded-lg
+           bg-brand-500 text-white font-medium rounded-xl
            transition-all duration-200 ease-out
            hover:bg-brand-600 active:bg-brand-700 active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
@@ -134,7 +145,7 @@
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 
-           bg-ink-900 text-white font-medium rounded-lg
+           bg-ink-900 text-white font-medium rounded-xl
            transition-all duration-200 ease-out
            hover:bg-ink-800 active:bg-ink-700 active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
@@ -142,7 +153,7 @@
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2
-           text-ink-600 font-medium rounded-lg
+           text-ink-600 font-medium rounded-xl
            transition-all duration-200 ease-out
            hover:bg-ink-100 active:bg-ink-200
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -150,7 +161,7 @@
 
   .btn-outline {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3
-           border-2 border-brand-500 text-brand-600 font-medium rounded-lg
+           border-2 border-brand-500 text-brand-600 font-medium rounded-xl
            transition-all duration-200 ease-out
            hover:bg-brand-50 active:bg-brand-100 active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -159,7 +170,7 @@
   /* Input Styles */
   .input-base {
     @apply w-full px-4 py-3 bg-white 
-           border border-ink-200 rounded-lg
+           border border-ink-200 rounded-xl
            font-sans text-ink-900 placeholder:text-ink-400
            transition-all duration-200 ease-out
            focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500

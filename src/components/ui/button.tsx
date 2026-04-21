@@ -4,21 +4,21 @@ import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-paper-100 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 font-medium rounded-2xl transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-paper-100 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         // Primary - Terracotta warm tone
-        default: "bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700 active:scale-[0.98] shadow-sm",
+        default: "bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700 active:scale-[0.98] shadow-sm shadow-brand-500/10",
         
         // Secondary - Deep ink
         secondary: "bg-ink-900 text-white hover:bg-ink-800 active:bg-ink-700 active:scale-[0.98]",
         
         // Outline - Brand border
-        outline: "border-2 border-brand-500 text-brand-600 hover:bg-brand-50 active:bg-brand-100 active:scale-[0.98]",
+        outline: "border border-ink-200 bg-white text-ink-700 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-[0.98]",
         
         // Ghost - Subtle hover
-        ghost: "text-ink-600 hover:bg-ink-100 hover:text-ink-900 active:bg-ink-200",
+        ghost: "text-ink-600 hover:bg-white hover:text-ink-900 hover:shadow-soft active:bg-ink-100",
         
         // Link - Underline
         link: "text-brand-600 underline-offset-4 hover:underline",
@@ -34,11 +34,11 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-12 px-6 py-3 text-sm",
-        sm: "h-9 px-4 py-2 text-xs",
+        sm: "h-10 px-4 py-2 text-xs",
         lg: "h-14 px-8 py-4 text-base",
-        icon: "h-11 w-11",
-        "icon-sm": "h-9 w-9",
-        "icon-lg": "h-14 w-14",
+        icon: "h-11 w-11 rounded-[18px]",
+        "icon-sm": "h-9 w-9 rounded-2xl",
+        "icon-lg": "h-14 w-14 rounded-[22px]",
       },
     },
     defaultVariants: {

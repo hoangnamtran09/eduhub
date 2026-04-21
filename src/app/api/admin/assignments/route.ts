@@ -52,6 +52,7 @@ export async function POST(request: Request) {
     const {
       title,
       description,
+      pdfUrl,
       lessonId,
       dueDate,
       maxScore,
@@ -93,6 +94,7 @@ export async function POST(request: Request) {
       data: {
         title: title.trim(),
         description: description.trim(),
+        pdfUrl: typeof pdfUrl === "string" && pdfUrl ? pdfUrl : null,
         lessonId: lessonId || null,
         createdById: createdById || null,
         dueDate: dueDate ? new Date(dueDate) : null,

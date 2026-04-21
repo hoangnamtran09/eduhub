@@ -125,6 +125,7 @@ model Assignment {
   id               String                @id @default(cuid())
   title            String
   description      String                @db.Text
+  pdfUrl           String?
   lessonId         String?
   createdById      String?
   dueDate          DateTime?

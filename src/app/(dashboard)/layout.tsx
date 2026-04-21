@@ -32,6 +32,9 @@ export default function DashboardLayout({
       document.documentElement.style.overflow = 'auto';
       document.body.style.overflow = 'auto';
       document.body.style.height = 'auto';
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo(0, 0);
     }
     return () => {
       document.documentElement.style.overflow = 'auto';
@@ -50,7 +53,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-paper-100 text-ink-900">
       <Sidebar />
       {/* Main content shifts with sidebar, no header */}
       <div 
@@ -60,7 +63,9 @@ export default function DashboardLayout({
         )}
       >
         <main className="p-4 lg:p-6">
-          {children}
+          <div className="min-h-[calc(100vh-2rem)] rounded-[32px] border border-white/70 bg-white/65 p-4 shadow-panel backdrop-blur-xl lg:p-6">
+            {children}
+          </div>
         </main>
       </div>
     </div>
