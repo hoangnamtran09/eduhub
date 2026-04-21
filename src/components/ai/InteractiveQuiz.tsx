@@ -20,12 +20,21 @@ interface QuizData {
   explanation: string;
 }
 
+export interface QuizAnswerPayload {
+  question: string;
+  explanation: string;
+  selectedOptionText: string;
+  correctOptionText: string;
+  isCorrect: boolean;
+}
+
 interface InteractiveQuizProps {
   data: QuizData;
   onCorrect?: () => void;
+  onAnswered?: (payload: QuizAnswerPayload) => void;
 }
 
-export default function InteractiveQuiz({ data, onCorrect }: InteractiveQuizProps) {
+export default function InteractiveQuiz({ data, onCorrect, onAnswered }: InteractiveQuizProps) {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -33,6 +42,17 @@ export default function InteractiveQuiz({ data, onCorrect }: InteractiveQuizProp
     if (isSubmitted) return;
     setSelectedOption(index);
     setIsSubmitted(true);
+
+    const selected = data.options[index];
+    const correct = data.options.find((option) => option.isCorrect);
+
+    onAnswered?.({
+      question: data.question,
+      explanation: data.explanation,
+      selectedOptionText: selected.text,
+      correctOptionText: correct?.text || "",
+      isCorrect: selected.isCorrect,
+    });
     
     if (data.options[index].isCorrect && onCorrect) {
       onCorrect();

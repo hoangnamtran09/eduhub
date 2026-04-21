@@ -7,7 +7,6 @@ import {
   LayoutDashboard, 
   BookOpen, 
   Trophy, 
-  MessageSquare, 
   Settings,
   ChevronLeft,
   Flame,
@@ -27,7 +26,6 @@ const defaultNavItems = [
   { href: "/courses", label: "Khóa học", icon: BookOpen },
   { href: "/assignments", label: "Bài tập", icon: NotebookPen },
   { href: "/progress", label: "Tiến độ", icon: Trophy },
-  { href: "/tutor", label: "Gia sư AI", icon: MessageSquare },
   { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
 
@@ -73,22 +71,22 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r border-white/60 bg-paper-100/85 backdrop-blur-xl",
+        "fixed left-0 top-0 z-40 h-screen border-r border-white/10 bg-[linear-gradient(180deg,rgba(17,24,39,0.98)_0%,rgba(20,41,58,0.96)_42%,rgba(21,63,61,0.94)_100%)] text-white backdrop-blur-xl",
         collapsed ? "w-20" : "w-72"
       )}
     >
-      <div className="flex h-20 items-center border-b border-white/70 px-6">
+      <div className="flex h-20 items-center border-b border-white/10 px-6">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-brand-200/70 bg-gradient-to-br from-brand-500 to-accent-500 text-white shadow-lg shadow-brand-500/15">
             <GraduationCap className="h-5 w-5 text-white" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-lg font-semibold leading-tight text-ink-900">
+              <span className="text-lg font-semibold leading-tight text-white">
                 EduHub
               </span>
-              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-ink-500">
-                Admin Panel
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/55">
+                Learning OS
               </span>
             </div>
           )}
@@ -101,7 +99,7 @@ export function Sidebar() {
               <div
                 key={index}
                 className={cn(
-                   "animate-pulse rounded-2xl bg-ink-200/70",
+                    "animate-pulse rounded-2xl bg-white/10",
                    collapsed ? "mx-auto h-12 w-12" : "h-12 w-full"
                 )}
               />
@@ -118,22 +116,22 @@ export function Sidebar() {
                   className={cn(
                     "group relative flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 transition-all duration-200",
                     isActive
-                      ? "border-brand-200 bg-white text-ink-900 shadow-soft"
-                      : "text-ink-600 hover:border-white hover:bg-white/80 hover:text-ink-900 hover:shadow-soft",
+                      ? "border-white/20 bg-white/12 text-white shadow-soft backdrop-blur-sm"
+                      : "text-white/72 hover:border-white/10 hover:bg-white/8 hover:text-white",
                     collapsed && "justify-center px-0"
                   )}
                 >
                   {isActive && (
-                    <div className="absolute left-2 top-2 bottom-2 w-1 rounded-full bg-brand-400" />
+                    <div className="absolute left-2 top-2 bottom-2 w-1 rounded-full bg-accent-400" />
                   )}
                   <Icon className={cn(
                     "h-5 w-5 flex-shrink-0 transition-colors duration-200",
-                    isActive ? "text-brand-600" : "group-hover:text-ink-900"
+                    isActive ? "text-accent-300" : "group-hover:text-white"
                   )} />
                   {!collapsed && (
                     <span className={cn(
                       "text-sm font-medium transition-colors",
-                      isActive ? "text-ink-900" : "text-ink-600 group-hover:text-ink-900"
+                      isActive ? "text-white" : "text-white/72 group-hover:text-white"
                     )}>{item.label}</span>
                   )}
                 </Link>
@@ -143,18 +141,18 @@ export function Sidebar() {
 
       <div className={cn("absolute left-5 right-5", collapsed ? "bottom-24 left-3 right-3" : "bottom-24")}>
         {!collapsed && user?.role !== "ADMIN" && (
-          <div className="rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-soft transition-all">
+          <div className="rounded-[28px] border border-white/10 bg-white/8 p-4 shadow-soft transition-all backdrop-blur-sm">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50">
-                <Flame className="h-5 w-5 text-amber-500" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-accent-500/14">
+                <Flame className="h-5 w-5 text-accent-300" />
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-500">Học tập 7 ngày</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55">Học tập 7 ngày</p>
                 <div className="flex items-center gap-1">
-                  <span className="text-lg font-semibold text-ink-900">Chuỗi: 7</span>
+                  <span className="text-lg font-semibold text-white">Chuỗi: 7</span>
                   <div className="flex gap-0.5">
                     {[1, 2, 3].map(i => (
-                      <div key={i} className="h-1 w-1 rounded-full bg-brand-400" />
+                       <div key={i} className="h-1 w-1 rounded-full bg-brand-300" />
                     ))}
                   </div>
                 </div>
@@ -169,7 +167,7 @@ export function Sidebar() {
           onClick={handleLogout}
           disabled={isLoggingOut}
           className={cn(
-            "mt-3 w-full border-white/80 bg-white/90 text-ink-700 hover:bg-white hover:text-ink-900 hover:shadow-soft",
+            "mt-3 w-full border-white/10 bg-white/8 text-white hover:bg-white/12 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0",
             collapsed && "h-12 px-0"
           )}
         >
@@ -183,9 +181,9 @@ export function Sidebar() {
         variant="ghost"
         size="icon"
         onClick={toggleCollapsed}
-        className="absolute bottom-10 right-0 z-50 h-10 w-10 translate-x-1/2 border border-white/90 bg-white shadow-soft transition-all hover:bg-paper-50 hover:border-brand-200"
+        className="absolute bottom-10 right-0 z-50 h-10 w-10 translate-x-1/2 border border-white/10 bg-ink-900 text-white shadow-soft transition-all hover:bg-ink-800 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0"
       >
-        <ChevronLeft className={cn("h-4 w-4 text-ink-500", collapsed && "rotate-180")} />
+        <ChevronLeft className={cn("h-4 w-4 text-white", collapsed && "rotate-180")} />
       </Button>
     </aside>
   );

@@ -63,7 +63,8 @@ export default function DashboardLayout({
         )}
       >
         <main className="p-4 lg:p-6">
-          <div className="min-h-[calc(100vh-2rem)] rounded-[32px] border border-white/70 bg-white/65 p-4 shadow-panel backdrop-blur-xl lg:p-6">
+          <div className="relative min-h-[calc(100vh-2rem)] overflow-hidden rounded-[36px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,247,240,0.88)_100%)] p-4 shadow-panel backdrop-blur-xl lg:p-6">
+            <div className="pointer-events-none absolute inset-0 opacity-60 [background:radial-gradient(circle_at_top_right,rgba(35,143,134,0.1),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(199,147,43,0.1),transparent_26%)]" />
             {children}
           </div>
         </main>

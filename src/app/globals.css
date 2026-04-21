@@ -3,35 +3,34 @@
 @tailwind utilities;
 
 /* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Manrope:wght@200..800&display=swap');
 
 @layer base {
   :root {
-    /* Brand Colors */
-    --background: 40 30% 98%;
-    --foreground: 40 10% 18%;
+    --background: 42 46% 97%;
+    --foreground: 220 35% 14%;
     --card: 0 0% 100%;
-    --card-foreground: 40 10% 18%;
+    --card-foreground: 220 35% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 40 10% 18%;
-    --primary: 14 60% 62%;
-    --primary-foreground: 40 30% 98%;
-    --secondary: 38 40% 62%;
-    --secondary-foreground: 40 10% 18%;
-    --muted: 40 20% 92%;
-    --muted-foreground: 40 8% 45%;
-    --accent: 38 40% 62%;
-    --accent-foreground: 40 10% 18%;
+    --popover-foreground: 220 35% 14%;
+    --primary: 176 60% 35%;
+    --primary-foreground: 42 46% 97%;
+    --secondary: 41 65% 47%;
+    --secondary-foreground: 220 35% 14%;
+    --muted: 42 32% 91%;
+    --muted-foreground: 220 15% 42%;
+    --accent: 41 65% 47%;
+    --accent-foreground: 220 35% 14%;
     --error: 0 84% 60%;
     --error-foreground: 0 0% 100%;
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 40 10% 18%;
-    --border: 40 15% 88%;
-    --input: 40 15% 88%;
-    --ring: 14 60% 62%;
-    --radius: 16px;
+    --border: 40 18% 84%;
+    --input: 40 18% 84%;
+    --ring: 176 60% 35%;
+    --radius: 18px;
   }
 
   * {
@@ -44,11 +43,10 @@
 
   body {
     @apply bg-paper-100 text-ink-900 font-sans antialiased;
-    /* Subtle texture */
     background-image: 
-      radial-gradient(at 40% 20%, hsla(40, 30%, 94%, 0.5) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsla(38, 40%, 90%, 0.3) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsla(14, 60%, 92%, 0.3) 0px, transparent 50%);
+      radial-gradient(at 15% 20%, hsla(176, 30%, 88%, 0.34) 0px, transparent 42%),
+      radial-gradient(at 85% 0%, hsla(42, 72%, 88%, 0.36) 0px, transparent 38%),
+      linear-gradient(180deg, #fffefb 0%, #f8f4eb 52%, #f3ecde 100%);
   }
 
   body::before {
@@ -57,8 +55,19 @@
     inset: 0;
     pointer-events: none;
     background:
-      radial-gradient(circle at top left, hsla(14, 60%, 88%, 0.18), transparent 32%),
-      radial-gradient(circle at 85% 15%, hsla(38, 40%, 85%, 0.14), transparent 30%);
+      radial-gradient(circle at top left, hsla(176, 40%, 84%, 0.18), transparent 30%),
+      radial-gradient(circle at 85% 15%, hsla(42, 68%, 82%, 0.14), transparent 28%);
+    z-index: -1;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(rgba(17, 24, 39, 0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(17, 24, 39, 0.018) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(circle at center, black 35%, transparent 100%);
     z-index: -1;
   }
 
@@ -123,7 +132,7 @@
 
   /* Card Styles */
   .card-base {
-    @apply bg-white rounded-[28px] border border-ink-200/50 shadow-soft transition-all duration-300;
+    @apply bg-white/94 rounded-[28px] border border-white/90 shadow-soft transition-all duration-300 backdrop-blur-sm;
   }
 
   .card-elevated {

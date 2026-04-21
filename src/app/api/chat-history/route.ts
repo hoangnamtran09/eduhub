@@ -22,6 +22,11 @@ export async function POST(req: NextRequest) {
   }
   // Xoá lịch sử cũ và lưu mới (1 lịch sử cho mỗi lesson)
   await prisma.chatHistory.deleteMany({ where: { lessonId } });
+
+  if (messages.length === 0) {
+    return NextResponse.json({ lessonId, messages: [] });
+  }
+
   const created = await prisma.chatHistory.create({
     data: {
       lessonId,

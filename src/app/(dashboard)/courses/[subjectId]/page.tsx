@@ -8,9 +8,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { 
   BookOpen, ChevronLeft, ChevronRight, PlayCircle, FileText, 
-  Loader2, AlertCircle, ArrowLeft, Upload, Trophy
+  Loader2, AlertCircle, ArrowLeft, Trophy
 } from "lucide-react";
-import { PdfUploadModal } from "@/components/pdf-upload-modal";
 
 interface Subject {
   id: string;
@@ -50,7 +49,6 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
   const [loading, setLoading] = useState(true);
   const [subject, setSubject] = useState<Subject | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -115,7 +113,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
     <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 lg:px-10">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Subject Header Section - Compact */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-[32px] border border-slate-200/60 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/94 p-6 rounded-[32px] border border-white/80 shadow-panel">
           <div className="flex items-center gap-6">
             <div className={cn(
               "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg border-4 border-white shrink-0",
@@ -133,12 +131,8 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
                   <ArrowLeft className="w-3 h-3" />
                   <span className="font-bold text-[10px] uppercase tracking-widest">Quay lại</span>
                 </Button>
-                <span className="w-1 h-1 rounded-full bg-slate-200" />
-                <span className="px-2 py-0.5 rounded-md bg-brand-50 text-brand-600 text-[9px] font-bold uppercase tracking-wider border border-brand-100">
-                  Lớp {courses[0]?.gradeLevel || "11"}
-                </span>
               </div>
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight leading-tight">
+              <h1 className="font-serif text-3xl font-semibold text-slate-900 tracking-tight leading-tight">
                 {subject.name}
               </h1>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-tight mt-0.5">
@@ -147,13 +141,6 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
             </div>
           </div>
 
-          <Button 
-            onClick={() => setShowUploadModal(true)}
-            className="gap-2 bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-100 transition-all rounded-xl h-11 px-6 shrink-0"
-          >
-            <Upload className="w-4 h-4" />
-            <span className="font-bold text-sm">Tải lên PDF</span>
-          </Button>
         </div>
 
         {/* Content Grid */}
@@ -164,7 +151,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
                 <div key={course.id} className="space-y-6">
                   <div className="flex items-center gap-4">
                     <div className="h-px flex-1 bg-slate-200" />
-                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] px-4 whitespace-nowrap">
+                    <h2 className="font-serif text-sm font-semibold text-slate-500 uppercase tracking-[0.2em] px-4 whitespace-nowrap">
                       {course.title}
                     </h2>
                     <div className="h-px flex-1 bg-slate-200" />
@@ -172,18 +159,15 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
                   
                   <div className="space-y-4">
                   {course.chapters.map((chapter, idx) => (
-                    <div key={chapter.id} className="bg-white rounded-[28px] border border-slate-200/60 shadow-sm overflow-hidden group hover:border-brand-200 transition-all">
+                    <div key={chapter.id} className="bg-white/94 rounded-[28px] border border-white/80 shadow-soft overflow-hidden group hover:border-brand-200 transition-all">
                       {/* Chapter Header */}
-                      <div className="px-6 py-4 flex items-center justify-between bg-slate-50/30 border-b border-slate-100">
+                      <div className="px-6 py-4 flex items-center justify-between bg-paper-50/60 border-b border-paper-200">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-base font-bold text-slate-900 shadow-sm">
                             {idx + 1}
                           </div>
                           <div>
                             <h3 className="font-bold text-slate-900 text-base leading-tight">{chapter.title}</h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-                              Chương {idx + 1} • {chapter.lessons.length} bài học
-                            </p>
                           </div>
                         </div>
                       </div>
@@ -218,7 +202,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
                               </div>
                               <Button 
                                 size="sm" 
-                                className="bg-white text-slate-900 border border-slate-200 hover:bg-brand-500 hover:text-white hover:border-brand-500 rounded-xl px-5 h-9 font-bold text-xs transition-all shadow-sm"
+                                className="bg-white text-slate-900 border border-paper-200 hover:bg-brand-500 hover:text-white hover:border-brand-500 rounded-xl px-5 h-9 font-bold text-xs transition-all shadow-sm"
                               >
                                 Học ngay
                               </Button>
@@ -243,7 +227,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
 
           {/* Sidebar Stats Area */}
           <div className="lg:col-span-4 space-y-6">
-            <Card className="rounded-[32px] border-none bg-slate-900 p-8 text-white shadow-2xl shadow-slate-200 relative overflow-hidden group">
+              <Card className="rounded-[32px] border-none bg-[linear-gradient(135deg,#111827_0%,#1f2a3d_52%,#153f3d_100%)] p-8 text-white shadow-2xl shadow-slate-200 relative overflow-hidden group">
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-8">
                   <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center">
@@ -276,7 +260,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-brand-500/20 transition-colors" />
             </Card>
 
-            <Card className="rounded-[32px] border-slate-200/60 p-8 shadow-sm bg-white">
+              <Card className="rounded-[32px] border-white/80 p-8 shadow-soft bg-white/94">
               <h3 className="text-lg font-bold text-slate-900 mb-6">Liên kết hữu ích</h3>
               <div className="space-y-3">
                 <Button variant="ghost" className="w-full justify-between h-12 px-4 rounded-xl hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100">
@@ -303,18 +287,6 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
         </div>
       </div>
 
-      {/* Upload Modal */}
-      {showUploadModal && (
-        <PdfUploadModal
-          subjectId={params.subjectId}
-          onClose={() => setShowUploadModal(false)}
-          onSuccess={() => {
-            setShowUploadModal(false);
-            window.location.reload();
-          }}
-        />
-      )}
     </div>
   );
 }
-

@@ -1,11 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, BookOpen, Loader2, PencilLine, Save, Search, Trash2, UserRound, Users, X } from "lucide-react";
+import {
+  BookOpen,
+  Loader2,
+  PencilLine,
+  Save,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 
 interface StudentProfile {
   goals: string[];
@@ -22,8 +29,8 @@ interface StudentEnrollment {
   } | null;
 }
 
-interface StudentProgress {
-  completed: boolean;
+interface StudySessionRecord {
+  durationSec: number;
 }
 
 interface StudentRecord {
@@ -34,8 +41,8 @@ interface StudentRecord {
   diamonds: number;
   createdAt: string;
   profile: StudentProfile | null;
+  studySessions: StudySessionRecord[];
   enrollments: StudentEnrollment[];
-  progress: StudentProgress[];
 }
 
 interface StudentForm {
@@ -75,12 +82,21 @@ function createForm(student: StudentRecord): StudentForm {
   };
 }
 
+function formatStudyTime(totalSeconds: number) {
+  if (totalSeconds >= 3600) {
+    return `${(totalSeconds / 3600).toFixed(1)} giờ`;
+  }
+
+  const minutes = Math.max(1, Math.round(totalSeconds / 60));
+  return `${minutes} phút`;
+}
+
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [form, setForm] = useState<StudentForm | null>(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -94,28 +110,14 @@ export default function AdminStudentsPage() {
       }
 
       const data = await response.json();
-      const normalized = Array.isArray(data) ? data : [];
-      setStudents(normalized);
-
-      if (!normalized.length) {
-        setSelectedStudentId(null);
-        setForm(null);
-        return;
-      }
-
-      const currentId = selectedStudentId && normalized.some((student) => student.id === selectedStudentId)
-        ? selectedStudentId
-        : normalized[0].id;
-      const currentStudent = normalized.find((student) => student.id === currentId) || normalized[0];
-      setSelectedStudentId(currentStudent.id);
-      setForm(createForm(currentStudent));
+      setStudents(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to fetch students:", error);
       setStudents([]);
     } finally {
       setLoading(false);
     }
-  }, [selectedStudentId]);
+  }, []);
 
   useEffect(() => {
     loadStudents();
@@ -139,26 +141,15 @@ export default function AdminStudentsPage() {
     });
   }, [query, selectedGrade, students]);
 
-  const selectedStudent = useMemo(
-    () => students.find((student) => student.id === selectedStudentId) || null,
-    [students, selectedStudentId]
-  );
-
-  const stats = useMemo(() => {
-    const totalStudents = students.length;
-    const activeStudents = students.filter((student) => (student.profile?.streakDays || 0) > 0).length;
-    const unassignedClass = students.filter((student) => !student.gradeLevel).length;
-    const totalLessons = students.reduce(
-      (sum, student) => sum + student.progress.filter((item) => item.completed).length,
-      0
-    );
-
-    return { totalStudents, activeStudents, unassignedClass, totalLessons };
-  }, [students]);
-
-  const openStudent = (student: StudentRecord) => {
-    setSelectedStudentId(student.id);
+  const openEditModal = (student: StudentRecord) => {
+    setEditingStudentId(student.id);
     setForm(createForm(student));
+  };
+
+  const closeEditModal = () => {
+    if (saving) return;
+    setEditingStudentId(null);
+    setForm(null);
   };
 
   const handleSave = async () => {
@@ -183,8 +174,8 @@ export default function AdminStudentsPage() {
 
       const updated = await response.json();
       setStudents((current) => current.map((student) => (student.id === updated.id ? updated : student)));
-      setSelectedStudentId(updated.id);
-      setForm(createForm(updated));
+      setEditingStudentId(null);
+      setForm(null);
     } catch (error) {
       console.error(error);
     } finally {
@@ -207,16 +198,10 @@ export default function AdminStudentsPage() {
         throw new Error("Failed to delete student");
       }
 
-      const nextStudents = students.filter((student) => student.id !== studentId);
-      setStudents(nextStudents);
-
-      if (!nextStudents.length) {
-        setSelectedStudentId(null);
+      setStudents((current) => current.filter((student) => student.id !== studentId));
+      if (editingStudentId === studentId) {
+        setEditingStudentId(null);
         setForm(null);
-      } else {
-        const nextStudent = nextStudents[0];
-        setSelectedStudentId(nextStudent.id);
-        setForm(createForm(nextStudent));
       }
     } catch (error) {
       console.error(error);
@@ -237,305 +222,243 @@ export default function AdminStudentsPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-48px)] overflow-hidden rounded-[36px] border border-white/80 bg-paper-100/80 text-slate-900 shadow-panel backdrop-blur-sm">
-      <div className="grid h-full grid-rows-[auto_auto_1fr]">
-        <header className="border-b border-white/80 bg-white/90 px-6 py-5">
-          <div className="flex items-start justify-between gap-6">
-            <div>
-               <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
-                Student Management
-              </div>
-              <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Quản lý học sinh</h1>
-              <p className="mt-1 text-sm text-slate-500">
-                Theo dõi hồ sơ, chỉnh sửa thông tin học sinh và quản trị dữ liệu học tập trong một giao diện vận hành rõ ràng, gọn và ít trang trí.
-              </p>
+    <>
+      <div className="min-h-[calc(100vh-48px)] rounded-[36px] border border-white/80 bg-paper-100/70 text-slate-900 shadow-panel backdrop-blur-sm">
+        <header className="border-b border-white/80 bg-white/88 px-6 py-5">
+          <div>
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+              LMS Registry
             </div>
-            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-              <AdminStat label="Học sinh" value={stats.totalStudents} icon={Users} />
-              <AdminStat label="Đang học" value={stats.activeStudents} icon={BookOpen} />
-              <AdminStat label="Chưa phân lớp" value={stats.unassignedClass} icon={AlertTriangle} />
-              <AdminStat label="Bài hoàn thành" value={stats.totalLessons} icon={UserRound} />
-            </div>
+            <h1 className="font-serif text-[30px] font-semibold tracking-tight text-slate-900">Quản lý học sinh</h1>
           </div>
         </header>
 
-         <section className="border-b border-white/80 bg-white/90 px-6 py-4">
+        <section className="border-b border-white/80 bg-white/88 px-6 py-4">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="relative w-full xl:max-w-md">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Tìm theo tên hoặc email"
-                 className="h-11 rounded-2xl border-white bg-white pl-11 text-slate-900 placeholder:text-slate-400 shadow-soft"
-               />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {gradeTabs.map((grade) => (
-                <button
-                  key={grade}
-                  type="button"
-                  onClick={() => setSelectedGrade(grade)}
-                  className={cn(
-                     "rounded-2xl border px-3 py-2 text-xs font-medium transition",
-                     selectedGrade === grade
-                      ? "border-brand-200 bg-brand-500 text-white shadow-sm"
-                      : "border-white bg-white text-slate-600 shadow-soft hover:border-brand-100 hover:text-slate-900"
-                   )}
+            <div className="flex w-full flex-col gap-3 xl:max-w-2xl xl:flex-row xl:items-center">
+              <div className="relative w-full xl:max-w-md">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Tìm theo tên hoặc email"
+                  className="h-11 rounded-2xl border-white bg-white pl-11 text-slate-900 placeholder:text-slate-400 shadow-soft"
+                />
+              </div>
+              <div className="w-full xl:w-56">
+                <select
+                  value={selectedGrade}
+                  onChange={(event) => setSelectedGrade(event.target.value)}
+                  className="h-11 w-full rounded-2xl border border-white bg-white px-4 text-sm text-slate-900 shadow-soft outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                 >
-                  {grade === "all" ? "Tất cả" : grade === "none" ? "Chưa phân lớp" : `Lớp ${grade}`}
-                </button>
-              ))}
+                  {gradeTabs.map((grade) => (
+                    <option key={grade} value={grade}>
+                      {grade === "all" ? "Tất cả khối lớp" : grade === "none" ? "Chưa phân lớp" : `Lớp ${grade}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="text-xs text-slate-500">
+              Bộ lọc hiện tại: <span className="font-medium text-slate-700">{selectedGrade === "all" ? "Tất cả khối lớp" : selectedGrade === "none" ? "Chưa phân lớp" : `Lớp ${selectedGrade}`}</span>
             </div>
           </div>
         </section>
 
-        <section className="grid min-h-0 grid-cols-1 xl:grid-cols-[390px_minmax(0,1fr)]">
-           <div className="min-h-0 border-r border-white/70 bg-white/40">
-            <div className="flex h-full flex-col">
-               <div className="flex items-center justify-between border-b border-white/80 bg-white/90 px-6 py-4">
-                <div>
-                  <h2 className="text-sm font-semibold text-slate-900">Danh sách học sinh</h2>
-                  <p className="text-xs text-slate-500">{filteredStudents.length} bản ghi</p>
-                </div>
-              </div>
-
-              <div className="min-h-0 flex-1 overflow-y-auto p-3">
-                <div className="space-y-2">
-                  {filteredStudents.map((student) => {
-                    const isSelected = student.id === selectedStudentId;
-                    const completedLessons = student.progress.filter((item) => item.completed).length;
-
-                    return (
-                      <button
-                        key={student.id}
-                        type="button"
-                        onClick={() => openStudent(student)}
-                        className={cn(
-                           "w-full rounded-[26px] border px-4 py-4 text-left transition-all duration-200",
-                           isSelected
-                             ? "border-brand-200 bg-slate-900 text-white shadow-lg shadow-slate-200"
-                             : "border-white bg-white/95 text-slate-900 shadow-soft hover:border-brand-100"
-                         )}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-semibold">{student.fullName || "Chưa cập nhật tên"}</div>
-                            <div className={cn("mt-1 truncate text-xs", isSelected ? "text-slate-300" : "text-slate-500")}>{student.email}</div>
-                          </div>
-                          <span className={cn(
-                             "rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
-                             isSelected ? "border-slate-600 bg-slate-800 text-slate-200" : "border-slate-200 bg-slate-50 text-slate-500"
-                           )}>
-                            {student.gradeLevel ? `L${student.gradeLevel}` : "None"}
-                          </span>
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                          <MiniMetric label="KC" value={student.diamonds} active={isSelected} />
-                          <MiniMetric label="Khóa" value={student.enrollments.length} active={isSelected} />
-                          <MiniMetric label="Xong" value={completedLessons} active={isSelected} />
-                        </div>
-                      </button>
-                    );
-                  })}
-
-                  {!filteredStudents.length && (
-                    <div className="rounded-[28px] border border-dashed border-slate-300 bg-white px-4 py-12 text-center text-sm text-slate-500 shadow-soft">
-                      Không có học sinh nào phù hợp với bộ lọc hiện tại.
-                    </div>
-                  )}
-                </div>
-              </div>
+        <section className="p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Danh sách học sinh</h2>
+              <p className="text-xs text-slate-500">{filteredStudents.length} bản ghi phù hợp</p>
             </div>
           </div>
 
-          <div className="min-h-0 rounded-r-[36px] bg-white/75 backdrop-blur-sm">
-            {selectedStudent && form ? (
-              <div className="grid h-full min-h-0 grid-rows-[auto_1fr_auto]">
-                <div className="border-b border-white/80 px-6 py-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Hồ sơ học sinh</div>
-                      <h2 className="mt-2 text-2xl font-semibold text-slate-900">{selectedStudent.fullName || selectedStudent.email}</h2>
-                      <p className="mt-1 text-sm text-slate-500">Tạo ngày {new Date(selectedStudent.createdAt).toLocaleDateString("vi-VN")}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setForm(createForm(selectedStudent))}
-                        className="border-white bg-white text-slate-700 hover:bg-white hover:text-slate-900 hover:shadow-soft"
-                      >
-                        <X className="mr-2 h-4 w-4" />
-                        Hoàn tác
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => handleDelete(selectedStudent.id)}
-                        disabled={deletingId === selectedStudent.id}
-                        className="bg-slate-900 text-white hover:bg-slate-800"
-                      >
-                        {deletingId === selectedStudent.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-                        Xóa
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+          <div className="space-y-3">
+            {filteredStudents.map((student) => {
+              const totalStudySeconds = student.studySessions.reduce((sum, session) => sum + (session.durationSec || 0), 0);
 
-                <div className="min-h-0 overflow-y-auto bg-transparent px-6 py-5">
-                  <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-                    <Card className="border-white/90 bg-white shadow-soft">
-                      <CardContent className="space-y-5 p-5">
-                        <SectionTitle icon={PencilLine} title="Thông tin cơ bản" />
-
-                        <Field label="Họ và tên">
-                          <Input
-                            value={form.fullName}
-                            onChange={(event) => setForm((current) => current ? { ...current, fullName: event.target.value } : current)}
-                            className="border-slate-200 bg-white text-slate-900"
-                          />
-                        </Field>
-
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <Field label="Email">
-                            <Input
-                              value={form.email}
-                              onChange={(event) => setForm((current) => current ? { ...current, email: event.target.value } : current)}
-                              className="border-slate-200 bg-white text-slate-900"
-                            />
-                          </Field>
-
-                          <Field label="Khối lớp">
-                            <select
-                              value={form.gradeLevel}
-                              onChange={(event) => setForm((current) => current ? { ...current, gradeLevel: event.target.value } : current)}
-                              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
-                            >
-                              <option value="">Chưa phân lớp</option>
-                              {gradeTabs.filter((item) => !["all", "none"].includes(item)).map((grade) => (
-                                <option key={grade} value={grade}>Lớp {grade}</option>
-                              ))}
-                            </select>
-                          </Field>
+              return (
+                <Card key={student.id} className="border-white/90 bg-white shadow-soft">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-base font-semibold text-slate-900">
+                            {student.fullName || "Chưa cập nhật tên"}
+                          </h3>
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                            {student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}
+                          </span>
                         </div>
-
-                        <Field label="Kim cương">
-                          <Input
-                            type="number"
-                            value={form.diamonds}
-                            onChange={(event) => setForm((current) => current ? { ...current, diamonds: event.target.value } : current)}
-                            className="border-slate-200 bg-white text-slate-900"
-                          />
-                        </Field>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-white/90 bg-white shadow-soft">
-                      <CardContent className="space-y-4 p-5">
-                        <SectionTitle icon={BookOpen} title="Tổng quan học tập" />
-                        <InfoGrid
-                          items={[
-                            { label: "Khóa học", value: String(selectedStudent.enrollments.length) },
-                            { label: "Hoàn thành", value: String(selectedStudent.progress.filter((item) => item.completed).length) },
-                            { label: "Chuỗi học", value: String(selectedStudent.profile?.streakDays || 0) },
-                            { label: "Lần cuối", value: selectedStudent.profile?.lastActive ? new Date(selectedStudent.profile.lastActive).toLocaleDateString("vi-VN") : "Chưa có" },
-                          ]}
-                        />
-                        <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
-                          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Khóa đang học</p>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedStudent.enrollments.length ? selectedStudent.enrollments.slice(0, 6).map((enrollment, index) => (
-                              <span key={enrollment.course?.id || `course-${index}`} className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm">
-                                {enrollment.course?.title || "Khóa học"}
-                              </span>
-                            )) : <span className="text-sm text-slate-500">Chưa ghi danh khóa học.</span>}
-                          </div>
+                        <p className="mt-1 truncate text-sm text-slate-500">{student.email}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <MiniBadge label="Kim cương" value={student.diamonds} />
+                          <MiniBadge label="Chuỗi học" value={student.profile?.streakDays || 0} />
                         </div>
-                      </CardContent>
-                    </Card>
+                        <p className="mt-3 text-sm text-slate-600">
+                          Thời gian học đã ghi nhận: <span className="font-semibold text-slate-900">{formatStudyTime(totalStudySeconds)}</span>
+                        </p>
+                        <p className="mt-3 text-xs text-slate-400">
+                          Tạo ngày {new Date(student.createdAt).toLocaleDateString("vi-VN")}
+                          {student.profile?.lastActive
+                            ? ` • Hoạt động gần nhất ${new Date(student.profile.lastActive).toLocaleDateString("vi-VN")}`
+                            : " • Chưa có hoạt động gần đây"}
+                        </p>
+                      </div>
 
-                    <Card className="border-white/90 bg-white shadow-soft">
-                      <CardContent className="space-y-4 p-5">
-                        <SectionTitle icon={UserRound} title="Mục tiêu" />
-                        <Field label="Mỗi dòng là một mục tiêu">
-                          <textarea
-                            value={form.goals}
-                            onChange={(event) => setForm((current) => current ? { ...current, goals: event.target.value } : current)}
-                            className="min-h-[180px] w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
-                          />
-                        </Field>
-                      </CardContent>
-                    </Card>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => openEditModal(student)}
+                          className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                        >
+                          <PencilLine className="mr-2 h-4 w-4" />
+                          Chỉnh sửa
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => handleDelete(student.id)}
+                          disabled={deletingId === student.id}
+                          className="bg-slate-900 text-white hover:bg-slate-800"
+                        >
+                          {deletingId === student.id ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="mr-2 h-4 w-4" />
+                          )}
+                          Xóa
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
 
-                    <Card className="border-white/90 bg-white shadow-soft">
-                      <CardContent className="space-y-4 p-5">
-                        <SectionTitle icon={UserRound} title="Điểm mạnh và điểm yếu" />
-                        <Field label="Điểm mạnh - mỗi dòng một ý">
-                          <textarea
-                            value={form.strengths}
-                            onChange={(event) => setForm((current) => current ? { ...current, strengths: event.target.value } : current)}
-                            className="min-h-[120px] w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
-                          />
-                        </Field>
-                        <Field label="Cần cải thiện - mỗi dòng một ý">
-                          <textarea
-                            value={form.weaknesses}
-                            onChange={(event) => setForm((current) => current ? { ...current, weaknesses: event.target.value } : current)}
-                            className="min-h-[120px] w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
-                          />
-                        </Field>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-
-                <div className="border-t border-white/80 bg-white/90 px-6 py-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-sm text-slate-500">Bố cục cố định theo kiểu phần mềm quản trị: danh sách bên trái, chi tiết bên phải, cuộn nội bộ trong panel.</p>
-                    <Button onClick={handleSave} disabled={saving} className="bg-slate-900 text-white hover:bg-slate-800">
-                      {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                      Lưu thay đổi
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex h-full items-center justify-center px-6 text-center text-slate-500">
-                Chưa có học sinh nào để hiển thị.
+            {!filteredStudents.length && (
+              <div className="rounded-[28px] border border-dashed border-slate-300 bg-white px-4 py-12 text-center text-sm text-slate-500 shadow-soft">
+                Không có học sinh nào phù hợp với bộ lọc hiện tại.
               </div>
             )}
           </div>
         </section>
       </div>
-    </div>
+
+      {editingStudentId && form && (
+        <div className="fixed inset-0 z-50 bg-slate-950/45 p-4 backdrop-blur-sm sm:p-6">
+          <div className="mx-auto flex h-full max-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-2xl sm:max-h-[calc(100vh-3rem)]">
+            <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Chỉnh sửa học sinh</div>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-900">{form.fullName || form.email}</h2>
+                <p className="mt-1 text-sm text-slate-500">Cập nhật hồ sơ, mục tiêu học tập và chỉ số quản trị.</p>
+              </div>
+              <Button type="button" variant="ghost" size="icon" onClick={closeEditModal} disabled={saving}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+              <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+                <Card className="border-slate-200 bg-white shadow-none">
+                  <CardContent className="space-y-5 p-5">
+                    <SectionTitle icon={PencilLine} title="Thông tin cơ bản" />
+
+                    <Field label="Họ và tên">
+                      <Input
+                        value={form.fullName}
+                        onChange={(event) => setForm((current) => current ? { ...current, fullName: event.target.value } : current)}
+                        className="border-slate-200 bg-white text-slate-900"
+                      />
+                    </Field>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field label="Email">
+                        <Input
+                          value={form.email}
+                          onChange={(event) => setForm((current) => current ? { ...current, email: event.target.value } : current)}
+                          className="border-slate-200 bg-white text-slate-900"
+                        />
+                      </Field>
+
+                      <Field label="Khối lớp">
+                        <select
+                          value={form.gradeLevel}
+                          onChange={(event) => setForm((current) => current ? { ...current, gradeLevel: event.target.value } : current)}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                        >
+                          <option value="">Chưa phân lớp</option>
+                          {gradeTabs.filter((item) => !["all", "none"].includes(item)).map((grade) => (
+                            <option key={grade} value={grade}>Lớp {grade}</option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
+
+                    <Field label="Kim cương">
+                      <Input
+                        type="number"
+                        value={form.diamonds}
+                        onChange={(event) => setForm((current) => current ? { ...current, diamonds: event.target.value } : current)}
+                        className="border-slate-200 bg-white text-slate-900"
+                      />
+                    </Field>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-slate-200 bg-white shadow-none">
+                  <CardContent className="space-y-4 p-5">
+                    <SectionTitle icon={BookOpen} title="Mục tiêu và năng lực" />
+                    <Field label="Mục tiêu - mỗi dòng một ý">
+                      <textarea
+                        value={form.goals}
+                        onChange={(event) => setForm((current) => current ? { ...current, goals: event.target.value } : current)}
+                        className="min-h-[128px] w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                      />
+                    </Field>
+                    <Field label="Điểm mạnh - mỗi dòng một ý">
+                      <textarea
+                        value={form.strengths}
+                        onChange={(event) => setForm((current) => current ? { ...current, strengths: event.target.value } : current)}
+                        className="min-h-[128px] w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                      />
+                    </Field>
+                    <Field label="Cần cải thiện - mỗi dòng một ý">
+                      <textarea
+                        value={form.weaknesses}
+                        onChange={(event) => setForm((current) => current ? { ...current, weaknesses: event.target.value } : current)}
+                        className="min-h-[128px] w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                      />
+                    </Field>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 flex items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 px-6 py-4">
+              <p className="text-sm text-slate-500">Popup tập trung vào chỉnh sửa, còn danh sách chính giữ gọn để quản trị nhanh hơn.</p>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" onClick={closeEditModal} disabled={saving}>
+                  Hủy
+                </Button>
+                <Button onClick={handleSave} disabled={saving} className="bg-slate-900 text-white hover:bg-slate-800">
+                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  Lưu thay đổi
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
-function AdminStat({ label, value, icon: Icon }: { label: string; value: number; icon: any }) {
+function MiniBadge({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-[24px] border border-white/80 bg-white px-4 py-3 shadow-soft">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-600">
-          <Icon className="h-4 w-4" />
-        </div>
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</div>
-          <div className="text-xl font-semibold text-slate-900">{value}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MiniMetric({ label, value, active }: { label: string; value: number; active: boolean }) {
-  return (
-    <div className={cn(
-      "rounded-2xl border px-2 py-2",
-      active ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-slate-50"
-    )}>
-      <div className={cn("text-[10px] uppercase tracking-wide", active ? "text-slate-400" : "text-slate-500")}>{label}</div>
-      <div className={cn("mt-1 text-sm font-semibold", active ? "text-white" : "text-slate-900")}>{value}</div>
+    <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600">
+      <span className="font-semibold text-slate-900">{value}</span> {label}
     </div>
   );
 }
@@ -557,18 +480,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</span>
       {children}
     </label>
-  );
-}
-
-function InfoGrid({ items }: { items: Array<{ label: string; value: string }> }) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {items.map((item) => (
-        <div key={item.label} className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{item.label}</div>
-          <div className="mt-2 text-sm font-medium text-slate-900">{item.value}</div>
-        </div>
-      ))}
-    </div>
   );
 }

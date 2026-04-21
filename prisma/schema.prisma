@@ -35,6 +35,7 @@ model User {
   aiConversations AICo[]
   enrollments     Enrollment[]
   progress        LessonProgress[]
+  studySessions   StudySession[]
   quizAttempts    QuizAttempt[]
   exerciseAttempts ExerciseAttempt[]
   assignedTasks   AssignmentRecipient[]
@@ -99,6 +100,7 @@ model Lesson {
   chapterId       String?
   aiConversations AICo[]
   ChatHistory     ChatHistory[]
+  studySessions   StudySession[]
   Chapter         Chapter?         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   subject         Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   progress        LessonProgress[]
@@ -266,4 +268,21 @@ model ChatHistory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Lesson    Lesson   @relation(fields: [lessonId], references: [id])
+}
+
+model StudySession {
+  id           String   @id @default(cuid())
+  userId       String
+  lessonId     String
+  startedAt    DateTime @default(now())
+  endedAt      DateTime?
+  durationSec  Int      @default(0)
+  lastPingAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@index([lessonId, startedAt])
 }

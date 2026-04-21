@@ -2,17 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowUpRight,
   BookCheck,
   CalendarClock,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   ClipboardCheck,
-  GraduationCap,
   FileText,
+  GraduationCap,
   Loader2,
-  Search,
   Plus,
-  Sparkles,
+  Search,
   Send,
   Upload,
   Users,
@@ -70,25 +70,6 @@ const emptyForm = {
   targetGradeLevel: "",
 };
 
-const HeroMetric = ({ label, value }: { label: string; value: number }) => {
-  return (
-    <div className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-3 backdrop-blur">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</div>
-      <div className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-white">{value}</div>
-    </div>
-  );
-};
-
-const FilterInsight = ({ title, value, note }: { title: string; value: string; note: string }) => {
-  return (
-    <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{title}</div>
-      <div className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-slate-950">{value}</div>
-      <div className="mt-1 text-xs text-slate-500">{note}</div>
-    </div>
-  );
-};
-
 export default function AdminAssignmentsPage() {
   const user = useAuthStore((state) => state.user);
   const [assignments, setAssignments] = useState<AssignmentRecord[]>([]);
@@ -103,9 +84,9 @@ export default function AdminAssignmentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [studentSearchQuery, setStudentSearchQuery] = useState("");
   const [lessonSearchQuery, setLessonSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "submitted" | "pending">("all");
   const [assignmentPdfName, setAssignmentPdfName] = useState("");
   const [form, setForm] = useState(emptyForm);
+  const [expandedAssignments, setExpandedAssignments] = useState<Set<string>>(new Set());
 
   const loadData = async () => {
     setLoading(true);
@@ -132,7 +113,7 @@ export default function AdminAssignmentsPage() {
           title: lesson.title,
           subjectId: subject.id,
           subjectName: subject.name,
-        }))
+        })),
       );
 
       setLessons(lessonOptions);
@@ -147,38 +128,40 @@ export default function AdminAssignmentsPage() {
     loadData();
   }, []);
 
-  useEffect(() => {
-    const previousDocumentOverflow = document.documentElement.style.overflow;
-    const previousOverflow = document.body.style.overflow;
-    const previousBodyHeight = document.body.style.height;
+  const toggleAssignment = (assignmentId: string) => {
+    setExpandedAssignments((current) => {
+      const next = new Set(current);
+      if (next.has(assignmentId)) {
+        next.delete(assignmentId);
+      } else {
+        next.add(assignmentId);
+      }
+      return next;
+    });
+  };
 
-    if (showCreateModal) {
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.overflow = "hidden";
-      document.body.style.height = "100vh";
-    }
-
-    return () => {
-      document.documentElement.style.overflow = previousDocumentOverflow;
-      document.body.style.overflow = previousOverflow;
-      document.body.style.height = previousBodyHeight;
-    };
-  }, [showCreateModal]);
+  const visibleAssignments = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    return assignments.filter((assignment) => {
+      if (!normalizedQuery) return true;
+      return (
+        assignment.title.toLowerCase().includes(normalizedQuery) ||
+        assignment.description.toLowerCase().includes(normalizedQuery) ||
+        assignment.lesson?.title.toLowerCase().includes(normalizedQuery) ||
+        assignment.lesson?.subjectName.toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [assignments, searchQuery]);
 
   const filteredStudents = useMemo(() => {
-    if (!form.targetGradeLevel) {
-      return students;
-    }
-
+    if (!form.targetGradeLevel) return students;
     return students.filter((student) => String(student.gradeLevel || "") === form.targetGradeLevel);
   }, [form.targetGradeLevel, students]);
 
   const visibleStudents = useMemo(() => {
     const normalizedQuery = studentSearchQuery.trim().toLowerCase();
-
     return filteredStudents.filter((student) => {
       if (!normalizedQuery) return true;
-
       return (
         (student.fullName || "").toLowerCase().includes(normalizedQuery) ||
         student.email.toLowerCase().includes(normalizedQuery)
@@ -188,87 +171,28 @@ export default function AdminAssignmentsPage() {
 
   const subjectOptions = useMemo(() => {
     const subjectMap = new Map<string, { id: string; name: string }>();
-
     lessons.forEach((lesson) => {
       if (!subjectMap.has(lesson.subjectId)) {
-        subjectMap.set(lesson.subjectId, {
-          id: lesson.subjectId,
-          name: lesson.subjectName,
-        });
+        subjectMap.set(lesson.subjectId, { id: lesson.subjectId, name: lesson.subjectName });
       }
     });
-
     return Array.from(subjectMap.values()).sort((a, b) => a.name.localeCompare(b.name, "vi"));
   }, [lessons]);
 
   const filteredLessons = useMemo(() => {
-    if (!form.subjectId) {
-      return [];
-    }
-
+    if (!form.subjectId) return [];
     const normalizedQuery = lessonSearchQuery.trim().toLowerCase();
 
     return lessons.filter((lesson) => {
-      if (lesson.subjectId !== form.subjectId) {
-        return false;
-      }
-
-      if (!normalizedQuery) {
-        return true;
-      }
-
+      if (lesson.subjectId !== form.subjectId) return false;
+      if (!normalizedQuery) return true;
       return lesson.title.toLowerCase().includes(normalizedQuery);
     });
   }, [form.subjectId, lessonSearchQuery, lessons]);
 
-  const stats = useMemo(() => {
-    const totalRecipients = assignments.reduce((sum, assignment) => sum + assignment.recipients.length, 0);
-    const submittedRecipients = assignments.reduce(
-      (sum, assignment) => sum + assignment.recipients.filter((recipient) => recipient.status === "submitted").length,
-      0
-    );
-
-    return {
-      totalAssignments: assignments.length,
-      totalRecipients,
-      submittedRecipients,
-      completionRate: totalRecipients ? Math.round((submittedRecipients / totalRecipients) * 100) : 0,
-    };
-  }, [assignments]);
-
-  const visibleAssignments = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-
-    return assignments.filter((assignment) => {
-      const submittedCount = assignment.recipients.filter((recipient) => recipient.status === "submitted").length;
-      const pendingCount = assignment.recipients.length - submittedCount;
-
-      const matchesQuery =
-        !normalizedQuery ||
-        assignment.title.toLowerCase().includes(normalizedQuery) ||
-        assignment.description.toLowerCase().includes(normalizedQuery) ||
-        assignment.lesson?.title.toLowerCase().includes(normalizedQuery) ||
-        assignment.lesson?.subjectName.toLowerCase().includes(normalizedQuery);
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "submitted" && submittedCount > 0) ||
-        (statusFilter === "pending" && pendingCount > 0);
-
-      return matchesQuery && matchesStatus;
-    });
-  }, [assignments, searchQuery, statusFilter]);
-
   const hasRecipientSelection = selectedStudents.length > 0 || Boolean(form.targetGradeLevel);
 
-  const toggleStudent = (studentId: string) => {
-    setSubmitError("");
-    setSelectedStudents((current) =>
-      current.includes(studentId) ? current.filter((id) => id !== studentId) : [...current, studentId]
-    );
-  };
-
-const closeModal = () => {
+  const closeModal = () => {
     setShowCreateModal(false);
     setForm(emptyForm);
     setSelectedStudents([]);
@@ -276,6 +200,13 @@ const closeModal = () => {
     setLessonSearchQuery("");
     setAssignmentPdfName("");
     setSubmitError("");
+  };
+
+  const toggleStudent = (studentId: string) => {
+    setSubmitError("");
+    setSelectedStudents((current) =>
+      current.includes(studentId) ? current.filter((id) => id !== studentId) : [...current, studentId],
+    );
   };
 
   const handleCreateAssignment = async () => {
@@ -291,6 +222,7 @@ const closeModal = () => {
 
     setSubmitting(true);
     setSubmitError("");
+
     try {
       const response = await fetch("/api/admin/assignments", {
         method: "POST",
@@ -328,7 +260,6 @@ const closeModal = () => {
 
     try {
       setUploadingPdf(true);
-
       const formData = new FormData();
       formData.append("file", file);
 
@@ -354,10 +285,10 @@ const closeModal = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-paper-100">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-brand-500" />
-          <p className="font-medium text-slate-500">Đang tải danh sách bài tập đã giao...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-brand-500 mx-auto mb-4" />
+          <p className="text-slate-500 font-medium">Đang tải dữ liệu...</p>
         </div>
       </div>
     );
@@ -365,546 +296,305 @@ const closeModal = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-transparent">
-        <div className="mx-auto max-w-7xl space-y-6 pb-6">
-          <section className="relative overflow-hidden rounded-[40px] border border-slate-200/80 bg-[linear-gradient(145deg,rgba(8,15,31,0.98),rgba(15,23,42,0.96))] text-white shadow-[0_40px_120px_rgba(15,23,42,0.22)]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(56,189,248,0.24),transparent_26%),radial-gradient(circle_at_100%_0%,rgba(192,132,252,0.22),transparent_32%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.18),transparent_30%)]" />
-            <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
-            <div className="relative px-6 py-7 md:px-8 md:py-8">
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_360px]">
-                <div className="space-y-5">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-100 backdrop-blur">
-                      <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-                      Assignment Control Room
-                    </span>
-                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-semibold text-emerald-200">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      {stats.completionRate}% hoàn thành toàn hệ thống
-                    </span>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h1 className="max-w-4xl text-3xl font-semibold leading-[1.02] tracking-[-0.05em] text-white md:text-[48px]">
-                      Trung tâm giao bài tập với nhịp điều phối rõ, nhìn nhanh ai đã nhận, ai đang chờ, và đợt giao nào cần ưu tiên theo dõi.
-                    </h1>
-                    <p className="max-w-3xl text-sm leading-7 text-slate-300 md:text-base">
-                      Giao diện mới ưu tiên cảm giác điều hành thay vì danh sách thụ động: vùng tổng quan nổi bật, bộ lọc lên tuyến đầu, và từng assignment được tổ chức như một bảng điều khiển tiến độ.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-[auto_auto_1fr] md:items-center">
-                    <Button
-                      type="button"
-                      onClick={() => setShowCreateModal(true)}
-                      className="h-12 rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950 shadow-lg shadow-black/20 hover:bg-slate-100"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Tạo đợt giao bài
-                    </Button>
-                    <div className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-slate-200 backdrop-blur">
-                      <ClipboardCheck className="h-4 w-4 text-cyan-300" />
-                      {visibleAssignments.length} assignment đang hiển thị
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <HeroMetric label="Bài đã giao" value={stats.totalAssignments} />
-                      <HeroMetric label="Lượt nhận" value={stats.totalRecipients} />
-                      <HeroMetric label="Đã nộp" value={stats.submittedRecipients} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid gap-4">
-                  <div className="rounded-[30px] border border-white/10 bg-white/8 p-5 text-white backdrop-blur-xl">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Tỷ lệ hoàn thành</div>
-                        <div className="mt-2 text-5xl font-semibold tracking-[-0.06em] text-white">{stats.completionRate}%</div>
-                      </div>
-                      <div className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-white/10 bg-white/10 text-cyan-200">
-                        <ArrowUpRight className="h-5 w-5" />
-                      </div>
-                    </div>
-                    <div className="mt-6 h-3 overflow-hidden rounded-full bg-white/10">
-                      <div className="h-full rounded-full bg-[linear-gradient(90deg,#34d399,#22d3ee,#a78bfa)] transition-all duration-500" style={{ width: `${stats.completionRate}%` }} />
-                    </div>
-                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                      <MiniMetric label="Còn chờ" value={Math.max(stats.totalRecipients - stats.submittedRecipients, 0)} />
-                      <MiniMetric label="Đã nộp" value={stats.submittedRecipients} />
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                    <StatCard label="Bài đã giao" value={stats.totalAssignments} icon={BookCheck} tone="violet" />
-                    <StatCard label="Lượt nhận" value={stats.totalRecipients} icon={Users} tone="sky" />
-                    <StatCard label="Đã nộp" value={stats.submittedRecipients} icon={CheckCircle2} tone="emerald" />
-                  </div>
-                </div>
+      <div className="min-h-screen bg-slate-50 p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2 py-0.5 rounded-lg bg-brand-50 text-brand-600 text-xs font-bold uppercase tracking-wider">
+                  Admin
+                </span>
               </div>
-            </div>
-          </section>
-
-          <section className="overflow-hidden rounded-[36px] border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-            <div className="border-b border-slate-100 bg-[linear-gradient(180deg,rgba(248,250,252,0.92),rgba(255,255,255,1))] px-6 py-5 md:px-8">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="relative flex-1 lg:max-w-xl">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    placeholder="Tìm theo tên bài tập, mô tả hoặc bài học"
-                    className="h-12 rounded-2xl border-slate-200 bg-white pl-11 shadow-sm"
-                  />
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "all", label: "Tất cả" },
-                    { value: "submitted", label: "Có bài đã nộp" },
-                    { value: "pending", label: "Còn chờ nộp" },
-                  ].map((filter) => (
-                    <button
-                      key={filter.value}
-                      type="button"
-                      onClick={() => setStatusFilter(filter.value as "all" | "submitted" | "pending")}
-                      className={cn(
-                        "rounded-2xl border px-4 py-2.5 text-sm font-medium transition-all",
-                        statusFilter === filter.value
-                          ? "border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-900/10"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
-                      )}
-                    >
-                      {filter.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
-                <FilterInsight title="Hiển thị" value={`${visibleAssignments.length}/${assignments.length}`} note="Số assignment còn lại sau khi lọc" />
-                <FilterInsight title="Có nộp bài" value={`${assignments.filter((assignment) => assignment.recipients.some((recipient) => recipient.status === "submitted")).length}`} note="Đợt giao đã bắt đầu có phản hồi" />
-                <FilterInsight title="Đang chờ xử lý" value={`${assignments.filter((assignment) => assignment.recipients.some((recipient) => recipient.status !== "submitted")).length}`} note="Đợt giao vẫn còn học sinh chưa nộp" />
-              </div>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                <GraduationCap className="w-8 h-8 text-brand-500" />
+                Giao bài tập
+              </h1>
+              <p className="text-slate-500 mt-1">Tạo đợt giao bài và theo dõi danh sách học sinh nhận bài</p>
             </div>
 
-            <div className="px-3 py-3 md:px-4 md:py-4">
-              <section className="space-y-3">
-            {visibleAssignments.length ? (
-              visibleAssignments.map((assignment) => {
+            <Button onClick={() => setShowCreateModal(true)} className="gap-2 bg-gradient-to-r from-brand-500 to-accent-500 hover:opacity-90">
+              <Plus className="w-5 h-5" />
+              Thêm bài tập
+            </Button>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="relative max-w-xl">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Tìm theo tên bài tập, mô tả hoặc bài học"
+                className="pl-11"
+              />
+            </div>
+          </div>
+
+          {!visibleAssignments.length ? (
+            <div className="text-center py-20 bg-white rounded-3xl border border-slate-200">
+              <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                <ClipboardCheck className="w-10 h-10 text-slate-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-700 mb-2">Chưa có bài tập nào</h3>
+              <p className="text-slate-500 mb-6">Bắt đầu bằng cách tạo một đợt giao bài mới</p>
+              <Button onClick={() => setShowCreateModal(true)} className="gap-2">
+                <Plus className="w-5 h-5" />
+                Tạo bài tập đầu tiên
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {visibleAssignments.map((assignment) => {
                 const submittedCount = assignment.recipients.filter((recipient) => recipient.status === "submitted").length;
-                const percent = assignment.recipients.length
-                  ? (submittedCount / assignment.recipients.length) * 100
-                  : 0;
 
                 return (
-                  <Card key={assignment.id} className="overflow-hidden rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))] shadow-none transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(15,23,42,0.08)]">
-                    <CardContent className="p-0">
-                      <div className="grid gap-0 xl:grid-cols-[minmax(0,1.45fr)_340px]">
-                        <div className="p-5 md:p-6">
-                        <div className="min-w-0 flex-1 space-y-4">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
-                              {assignment.maxScore} điểm
-                            </span>
-                            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
-                              {assignment.targetGradeLevel ? `Khối ${assignment.targetGradeLevel}` : "Giao tùy chọn"}
-                            </span>
-                            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
-                              {assignment.recipients.length} học sinh nhận
-                            </span>
+                  <Card key={assignment.id} className="overflow-hidden">
+                    <div
+                      className="p-4 cursor-pointer hover:bg-slate-50 transition-colors bg-gradient-to-r from-brand-500 to-accent-500"
+                      onClick={() => toggleAssignment(assignment.id)}
+                    >
+                      <div className="flex items-center justify-between text-white gap-4">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-xl shrink-0">
+                            <ClipboardCheck className="w-6 h-6" />
                           </div>
-
-                          <div className="rounded-[28px] border border-slate-200/70 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
-                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                              <div>
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Assignment</div>
-                                <h3 className="mt-2 text-[26px] font-semibold tracking-[-0.03em] text-slate-950">{assignment.title}</h3>
-                              </div>
-                              <div className="rounded-2xl bg-slate-950 px-3 py-2 text-right text-xs font-semibold text-white">
-                                {submittedCount}/{assignment.recipients.length || 0} đã nộp
-                              </div>
-                            </div>
-                            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 line-clamp-3">{assignment.description}</p>
+                          <div className="min-w-0">
+                            <h3 className="text-lg font-bold truncate">{assignment.title}</h3>
+                            <p className="text-white/80 text-sm truncate">
+                              {assignment.lesson ? `${assignment.lesson.subjectName} • ${assignment.lesson.title}` : "Bài tập tự do"}
+                            </p>
                           </div>
+                        </div>
 
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="text-sm font-semibold bg-white/15 px-3 py-1 rounded-full">
+                            {submittedCount}/{assignment.recipients.length} đã nộp
+                          </span>
+                          {expandedAssignments.has(assignment.id) ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                        </div>
+                      </div>
+                    </div>
+
+                    {expandedAssignments.has(assignment.id) && (
+                      <CardContent className="p-4 bg-white space-y-4">
+                        <div className="grid gap-3 md:grid-cols-3">
+                          <InfoRow icon={CalendarClock} label={assignment.dueDate ? `Hạn nộp: ${new Date(assignment.dueDate).toLocaleString("vi-VN")}` : "Chưa đặt hạn nộp"} />
+                          <InfoRow icon={BookCheck} label={assignment.lesson ? `Bài học: ${assignment.lesson.title}` : "Không gắn bài học"} />
+                          <InfoRow icon={Users} label={assignment.targetGradeLevel ? `Khối lớp: ${assignment.targetGradeLevel}` : `Đã chọn ${assignment.recipients.length} học sinh`} />
+                        </div>
+
+                        <div className="rounded-xl border border-slate-100 p-4 bg-slate-50/60">
+                          <p className="text-sm font-medium text-slate-900 mb-2">Mô tả bài tập</p>
+                          <p className="text-sm text-slate-600 leading-6">{assignment.description}</p>
                           {assignment.pdfUrl && (
                             <a
                               href={assignment.pdfUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+                              className="inline-flex items-center gap-2 mt-3 text-sm font-medium text-brand-600 hover:text-brand-700"
                             >
-                              <FileText className="h-3.5 w-3.5" />
+                              <FileText className="w-4 h-4" />
                               Xem file PDF đính kèm
                             </a>
                           )}
-
-                          <div className="grid gap-2 md:grid-cols-3">
-                            <InfoPill icon={CalendarClock} label={assignment.dueDate ? new Date(assignment.dueDate).toLocaleString("vi-VN") : "Chưa đặt hạn nộp"} />
-                            <InfoPill icon={BookCheck} label={assignment.lesson ? assignment.lesson.title : "Bài tập tự do"} />
-                            <InfoPill icon={Users} label={assignment.lesson ? assignment.lesson.subjectName : "Không gắn môn học"} />
-                          </div>
-                        </div>
                         </div>
 
-                        <div className="border-t border-slate-100 bg-[linear-gradient(180deg,rgba(15,23,42,1),rgba(17,24,39,1))] p-5 text-white xl:border-l xl:border-t-0 xl:border-slate-800/80">
-                          <div className="rounded-[26px] border border-white/10 bg-white/5 p-4 backdrop-blur">
-                            <div className="mb-3 flex items-center justify-between gap-3">
-                              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Tiến độ nộp bài</span>
-                              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">{submittedCount}/{assignment.recipients.length}</span>
-                            </div>
-                            <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
-                              <div className="h-full rounded-full bg-emerald-400 transition-all duration-500" style={{ width: `${percent}%` }} />
-                            </div>
-                            <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
-                              <span>{percent.toFixed(0)}% học sinh đã gửi bài</span>
-                              <span>{Math.max(assignment.recipients.length - submittedCount, 0)} chờ nộp</span>
-                            </div>
-                            <div className="mt-4 flex flex-wrap gap-2">
-                              {assignment.recipients.slice(0, 8).map((recipient) => (
-                                <span
-                                  key={recipient.id}
-                                  className={cn(
-                                    "rounded-full px-3 py-1 text-xs font-semibold",
-                                    recipient.status === "submitted"
-                                      ? "bg-emerald-400/15 text-emerald-300"
-                                      : "bg-amber-300/15 text-amber-200"
-                                  )}
-                                >
-                                  {(recipient.student.fullName || recipient.student.email).split(" ").slice(0, 2).join(" ")}
-                                </span>
-                              ))}
-                              {assignment.recipients.length > 8 && (
-                                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-200">
-                                  +{assignment.recipients.length - 8} học sinh
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-slate-900">Danh sách học sinh nhận bài</p>
+                          {!assignment.recipients.length ? (
+                            <div className="text-sm text-slate-400">Chưa có học sinh nhận bài.</div>
+                          ) : (
+                            assignment.recipients.map((recipient) => (
+                              <div key={recipient.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
+                                <div>
+                                  <p className="font-medium text-slate-900">{recipient.student.fullName || recipient.student.email}</p>
+                                  <p className="text-xs text-slate-400 mt-1">{recipient.student.email}</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs text-slate-400">
+                                    {recipient.student.gradeLevel ? `Lớp ${recipient.student.gradeLevel}` : "Chưa phân lớp"}
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                                      recipient.status === "submitted"
+                                        ? "bg-emerald-100 text-emerald-700"
+                                        : "bg-amber-100 text-amber-700",
+                                    )}
+                                  >
+                                    {recipient.status === "submitted" ? "Đã nộp" : "Chờ nộp"}
+                                  </span>
+                                </div>
+                              </div>
+                            ))
+                          )}
                         </div>
-                      </div>
-                    </CardContent>
+                      </CardContent>
+                    )}
                   </Card>
                 );
-              })
-            ) : (
-              <div className="rounded-[32px] border border-dashed border-slate-300 bg-[linear-gradient(180deg,rgba(248,250,252,0.92),rgba(255,255,255,1))] px-6 py-16 text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[22px] bg-slate-100 text-slate-500 shadow-inner">
-                  <ClipboardCheck className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900">Chưa có bài tập phù hợp</h3>
-                <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-                  Hãy tạo một đợt giao bài mới bằng nút dấu cộng phía trên hoặc thay đổi bộ lọc để xem các bài tập khác.
-                </p>
-              </div>
-            )}
-              </section>
+              })}
             </div>
-          </section>
+          )}
         </div>
       </div>
 
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md">
-          <div className="max-h-[94vh] w-full max-w-6xl overflow-hidden rounded-[38px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))] shadow-[0_36px_120px_rgba(15,23,42,0.28)]">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5 md:px-8">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Workflow giao bài</div>
-                <h2 className="mt-1 text-2xl font-bold tracking-[-0.03em] text-slate-950">Tạo đợt giao bài mới</h2>
-              </div>
-              <Button type="button" variant="ghost" size="icon" onClick={closeModal} className="text-slate-500 hover:text-slate-900">
-                <X className="h-5 w-5" />
-              </Button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-bold text-slate-900">Thêm bài tập mới</h2>
+              <button onClick={closeModal} className="p-2 rounded-lg hover:bg-slate-100">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="max-h-[calc(94vh-88px)] overflow-y-auto px-6 py-6 md:px-8">
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,1.04fr)_380px]">
-                <div className="space-y-5 rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,rgba(248,250,252,1),rgba(255,255,255,1))] p-4 shadow-sm">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Nội dung bài tập</div>
-                        <h3 className="mt-2 text-lg font-semibold text-slate-950">Thiết lập thông tin chính</h3>
-                      </div>
-                      <div className="rounded-2xl bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white">Bước 1</div>
-                    </div>
-                  </div>
+            <div className="p-6 space-y-5 max-h-[calc(90vh-150px)] overflow-y-auto">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Tên bài tập</label>
+                  <Input value={form.title} onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))} placeholder="VD: Bài tập chương 1" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Hạn nộp</label>
+                  <Input type="datetime-local" value={form.dueDate} onChange={(e) => setForm((current) => ({ ...current, dueDate: e.target.value }))} />
+                </div>
+              </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <Input
-                      value={form.title}
-                      onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))}
-                      placeholder="Tên bài tập"
-                      className="h-12"
-                    />
-                    <Input
-                      type="datetime-local"
-                      value={form.dueDate}
-                      onChange={(e) => setForm((current) => ({ ...current, dueDate: e.target.value }))}
-                      className="h-12"
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Mô tả</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
+                  placeholder="Mô tả yêu cầu, tiêu chí chấm, cách nộp bài..."
+                  className="w-full min-h-[140px] px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+                />
+              </div>
 
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
-                    placeholder="Mô tả yêu cầu, tiêu chí chấm, cách nộp bài..."
-                    className="min-h-[180px] w-full rounded-[24px] border border-slate-200 bg-slate-50/60 px-4 py-3 text-sm outline-none transition focus:border-brand-300 focus:ring-4 focus:ring-brand-500/5"
-                  />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Môn học</label>
+                  <select
+                    value={form.subjectId}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setForm((current) => ({ ...current, subjectId: value, lessonId: "" }));
+                      setLessonSearchQuery("");
+                    }}
+                    className="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+                  >
+                    <option value="">Chọn môn học</option>
+                    {subjectOptions.map((subject) => (
+                      <option key={subject.id} value={subject.id}>{subject.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Bài học</label>
+                  <select
+                    value={form.lessonId}
+                    onChange={(e) => setForm((current) => ({ ...current, lessonId: e.target.value }))}
+                    disabled={!form.subjectId}
+                    className="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 disabled:bg-slate-50"
+                  >
+                    <option value="">{form.subjectId ? "Chọn bài học" : "Chọn môn trước"}</option>
+                    {filteredLessons.map((lesson) => (
+                      <option key={lesson.id} value={lesson.id}>{lesson.title}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-                  <div className="rounded-[26px] border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <h3 className="text-sm font-semibold text-slate-900">File PDF bài tập</h3>
-                        <p className="text-xs text-slate-500">Tải lên đề bài hoặc tài liệu hướng dẫn để học sinh xem trực tiếp từ assignment.</p>
-                      </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Khối lớp</label>
+                  <select
+                    value={form.targetGradeLevel}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setForm((current) => ({ ...current, targetGradeLevel: value }));
+                      setSelectedStudents([]);
+                      setStudentSearchQuery("");
+                      setSubmitError("");
+                    }}
+                    className="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+                  >
+                    <option value="">Chọn khối lớp</option>
+                    {gradeOptions.filter(Boolean).map((grade) => (
+                      <option key={grade} value={grade}>Lớp {grade}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Điểm tối đa</label>
+                  <Input value={form.maxScore} onChange={(e) => setForm((current) => ({ ...current, maxScore: e.target.value }))} placeholder="10" />
+                </div>
+              </div>
 
-                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300">
-                        {uploadingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                        {uploadingPdf ? "Đang tải PDF..." : "Tải PDF lên"}
-                        <input
-                          type="file"
-                          accept="application/pdf"
-                          className="hidden"
-                          onChange={handleAssignmentPdfUpload}
-                          disabled={uploadingPdf}
-                        />
-                      </label>
-                    </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">PDF bài tập</label>
+                <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-600 hover:border-brand-400">
+                  {uploadingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {uploadingPdf ? "Đang tải PDF..." : assignmentPdfName || "Tải PDF lên"}
+                  <input type="file" accept="application/pdf" className="hidden" onChange={handleAssignmentPdfUpload} disabled={uploadingPdf} />
+                </label>
+              </div>
 
-                    {form.pdfUrl && (
-                      <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0 flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
-                            <FileText className="h-4 w-4" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-medium text-slate-900">{assignmentPdfName || "assignment.pdf"}</div>
-                            <div className="text-xs text-slate-500">File PDF đã sẵn sàng để đính kèm vào bài tập</div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <a
-                            href={form.pdfUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                          >
-                            Xem file
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setForm((current) => ({ ...current, pdfUrl: "" }));
-                              setAssignmentPdfName("");
-                            }}
-                            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                          >
-                            Gỡ
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="rounded-[26px] border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ngữ cảnh học tập</div>
-                        <h3 className="mt-2 text-base font-semibold text-slate-950">Liên kết môn học và phạm vi lớp</h3>
-                      </div>
-                      <div className="rounded-2xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600">Bước 2</div>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    <select
-                      value={form.subjectId}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setForm((current) => ({ ...current, subjectId: value, lessonId: "" }));
-                        setLessonSearchQuery("");
-                      }}
-                      className="h-12 rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/15"
-                    >
-                      <option value="">Chọn môn học</option>
-                      {subjectOptions.map((subject) => (
-                        <option key={subject.id} value={subject.id}>
-                          {subject.name}
-                        </option>
-                      ))}
-                    </select>
-
-                    <div className="relative">
-                      <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        value={lessonSearchQuery}
-                        onChange={(event) => setLessonSearchQuery(event.target.value)}
-                        placeholder={form.subjectId ? "Tìm bài học theo tên" : "Chọn môn trước để tìm bài"}
-                        className="h-12 border-slate-200 pl-11"
-                        disabled={!form.subjectId}
-                      />
-                    </div>
-
-                    <select
-                      value={form.lessonId}
-                      onChange={(e) => setForm((current) => ({ ...current, lessonId: e.target.value }))}
-                      className="h-12 rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/15"
-                      disabled={!form.subjectId}
-                    >
-                      <option value="">{form.subjectId ? "Chọn bài học" : "Chọn môn trước"}</option>
-                      {filteredLessons.map((lesson) => (
-                        <option key={lesson.id} value={lesson.id}>
-                          {lesson.title}
-                        </option>
-                      ))}
-                    </select>
-
-                    </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <select
-                      value={form.targetGradeLevel}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setForm((current) => ({ ...current, targetGradeLevel: value }));
-                        setSelectedStudents([]);
-                        setStudentSearchQuery("");
-                        setSubmitError("");
-                      }}
-                      className="h-12 rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/15"
-                    >
-                      <option value="">Chọn khối lớp</option>
-                      {gradeOptions.filter(Boolean).map((grade) => (
-                        <option key={grade} value={grade}>
-                          Lớp {grade}
-                        </option>
-                      ))}
-                    </select>
-
-                    <Input
-                      value={form.maxScore}
-                      onChange={(e) => setForm((current) => ({ ...current, maxScore: e.target.value }))}
-                      placeholder="Điểm tối đa"
-                      className="h-12"
-                      />
-                  </div>
-
-                  </div>
-
-                  <div className="rounded-[26px] border border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,1),rgba(241,245,249,0.8))] p-4 text-sm leading-6 text-slate-500">
-                    Nếu không chọn học sinh thủ công, hệ thống sẽ tự giao cho toàn bộ học sinh thuộc khối lớp đã chọn.
-                  </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-slate-700">Chọn học sinh nhận bài</label>
+                  <span className="text-xs text-slate-400">{selectedStudents.length} đã chọn</span>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-[32px] border border-slate-200 bg-[linear-gradient(145deg,rgba(15,23,42,1),rgba(30,41,59,1))] p-5 text-white shadow-xl shadow-slate-900/10">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Tóm tắt giao bài</div>
-                        <h3 className="mt-2 text-xl font-semibold tracking-[-0.02em] text-white">Kiểm tra nhanh trước khi gửi</h3>
-                      </div>
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white">
-                        <GraduationCap className="h-5 w-5" />
-                      </div>
-                    </div>
+                <div className="relative mb-3">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    value={studentSearchQuery}
+                    onChange={(event) => setStudentSearchQuery(event.target.value)}
+                    placeholder="Tìm theo tên hoặc email học sinh"
+                    className="pl-11"
+                  />
+                </div>
 
-                    <div className="mt-5 space-y-3 text-sm">
-                      <SummaryRow label="Tên bài" value={form.title.trim() || "Chưa nhập"} />
-                      <SummaryRow label="Hạn nộp" value={form.dueDate || "Chưa đặt"} />
-                      <SummaryRow label="Môn học" value={subjectOptions.find((subject) => subject.id === form.subjectId)?.name || "Chưa chọn"} />
-                      <SummaryRow label="Bài học" value={filteredLessons.find((lesson) => lesson.id === form.lessonId)?.title || "Chưa chọn"} />
-                      <SummaryRow label="Khối lớp" value={form.targetGradeLevel ? `Lớp ${form.targetGradeLevel}` : "Chưa giới hạn"} />
-                      <SummaryRow label="Đã chọn tay" value={`${selectedStudents.length} học sinh`} />
-                      <SummaryRow label="PDF" value={form.pdfUrl ? (assignmentPdfName || "Đã đính kèm") : "Chưa có file"} />
-                    </div>
-                  </div>
-
-                  <div className="rounded-[32px] border border-slate-200 bg-slate-50 p-4">
-                    <div className="mb-4 flex items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-slate-900">Chọn học sinh nhận bài</h3>
-                        <p className="text-xs text-slate-500">Danh sách lọc theo khối lớp nếu đã chọn.</p>
-                      </div>
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
-                        {selectedStudents.length} đã chọn
-                      </span>
-                    </div>
-
-                    <div className="relative mb-4">
-                      <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        value={studentSearchQuery}
-                        onChange={(event) => {
-                          setStudentSearchQuery(event.target.value);
-                          setSubmitError("");
-                        }}
-                        placeholder="Tìm theo tên hoặc email học sinh"
-                        className="h-11 border-slate-200 bg-white pl-11"
-                      />
-                    </div>
-
-                    <div className="max-h-[560px] space-y-2 overflow-y-auto pr-1 xl:max-h-[620px]">
-                      {visibleStudents.length ? visibleStudents.map((student) => {
-                        const selected = selectedStudents.includes(student.id);
-                        return (
-                          <button
-                            key={student.id}
-                            type="button"
-                            onClick={() => toggleStudent(student.id)}
-                            className={cn(
-                              "flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-all",
-                              selected
-                                ? "border-brand-300 bg-brand-50 shadow-sm"
-                                : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-[0_14px_24px_rgba(15,23,42,0.06)]"
-                            )}
-                          >
-                            <div className="min-w-0 flex-1">
-                              <div className="truncate font-semibold text-slate-900">{student.fullName || student.email}</div>
-                              <div className="mt-1 truncate text-xs text-slate-500">{student.email}</div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-500">
-                                {student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}
-                              </span>
-                              <span
-                                className={cn(
-                                  "flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-bold",
-                                  selected
-                                    ? "border-brand-500 bg-brand-500 text-white"
-                                    : "border-slate-300 bg-white text-transparent"
-                                )}
-                              >
-                                ✓
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      }) : (
-                        <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-slate-500">
-                          Không tìm thấy học sinh phù hợp với từ khóa hiện tại.
+                <div className="max-h-72 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-3 bg-slate-50/60">
+                  {visibleStudents.length ? visibleStudents.map((student) => {
+                    const selected = selectedStudents.includes(student.id);
+                    return (
+                      <button
+                        key={student.id}
+                        type="button"
+                        onClick={() => toggleStudent(student.id)}
+                        className={cn(
+                          "flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-all",
+                          selected ? "border-brand-300 bg-brand-50" : "border-slate-200 bg-white hover:border-slate-300",
+                        )}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-medium text-slate-900">{student.fullName || student.email}</div>
+                          <div className="text-xs text-slate-400 mt-1">{student.email}</div>
                         </div>
-                      )}
-                    </div>
-                  </div>
+                        <span className="text-xs text-slate-500">{student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}</span>
+                      </button>
+                    );
+                  }) : (
+                    <div className="text-sm text-slate-400 text-center py-6">Không tìm thấy học sinh phù hợp.</div>
+                  )}
                 </div>
               </div>
 
               {submitError && (
-                <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   {submitError}
                 </div>
               )}
+            </div>
 
-              <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
-                <Button type="button" variant="outline" onClick={closeModal} className="h-12 px-6">
-                  Hủy
-                </Button>
-                <Button type="button" onClick={handleCreateAssignment} disabled={submitting || uploadingPdf} className="h-12 px-6">
-                  {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                  Giao bài tập
-                </Button>
-              </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-slate-50">
+              <Button variant="outline" onClick={closeModal}>Hủy</Button>
+              <Button onClick={handleCreateAssignment} disabled={submitting || uploadingPdf} className="gap-2">
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Giao bài tập
+              </Button>
             </div>
           </div>
         </div>
@@ -913,51 +603,11 @@ const closeModal = () => {
   );
 }
 
-function StatCard({ label, value, icon: Icon, tone }: { label: string; value: number; icon: any; tone: "violet" | "sky" | "emerald" }) {
-  const toneClasses = {
-    violet: "bg-violet-500/15 text-violet-700",
-    sky: "bg-sky-500/15 text-sky-700",
-    emerald: "bg-emerald-500/15 text-emerald-700",
-  };
-
+function InfoRow({ icon: Icon, label }: { icon: any; label: string }) {
   return (
-    <div className="rounded-[24px] border border-white/10 bg-white/10 px-4 py-4 backdrop-blur">
-      <div className="flex items-center gap-3">
-        <div className={cn("flex h-10 w-10 items-center justify-center rounded-2xl", toneClasses[tone])}>
-          <Icon className="h-4 w-4" />
-        </div>
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</div>
-          <div className="text-xl font-bold text-white">{value}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MiniMetric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-3">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</div>
-      <div className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">{value}</div>
-    </div>
-  );
-}
-
-function SummaryRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-3 last:border-b-0 last:pb-0">
-      <span className="text-slate-400">{label}</span>
-      <span className="max-w-[65%] text-right font-medium text-white">{value}</span>
-    </div>
-  );
-}
-
-function InfoPill({ icon: Icon, label }: { icon: any; label: string }) {
-  return (
-    <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-      <Icon className="h-4 w-4 text-slate-400" />
-      <span className="line-clamp-1">{label}</span>
+    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm text-slate-600">
+      <Icon className="w-4 h-4 text-slate-400" />
+      <span>{label}</span>
     </div>
   );
 }

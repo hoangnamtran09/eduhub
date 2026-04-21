@@ -8,6 +8,11 @@ export async function GET() {
       where: { role: "STUDENT" },
       include: {
         profile: true,
+        studySessions: {
+          select: {
+            durationSec: true,
+          },
+        },
         enrollments: {
           include: {
             course: {
@@ -16,11 +21,6 @@ export async function GET() {
                 title: true,
               },
             },
-          },
-        },
-        progress: {
-          select: {
-            completed: true,
           },
         },
       },
@@ -74,6 +74,11 @@ export async function PUT(request: Request) {
       },
       include: {
         profile: true,
+        studySessions: {
+          select: {
+            durationSec: true,
+          },
+        },
         enrollments: {
           include: {
             course: {
@@ -82,11 +87,6 @@ export async function PUT(request: Request) {
                 title: true,
               },
             },
-          },
-        },
-        progress: {
-          select: {
-            completed: true,
           },
         },
       },

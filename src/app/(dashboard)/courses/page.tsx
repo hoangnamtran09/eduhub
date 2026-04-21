@@ -70,15 +70,15 @@ export default function CoursesPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded-lg bg-brand-50 text-brand-600 text-[9px] font-black uppercase tracking-[0.15em] border border-brand-100">
-                LMS Pro
+              <span className="px-2 py-0.5 rounded-lg bg-brand-50 text-brand-700 text-[9px] font-black uppercase tracking-[0.15em] border border-brand-100">
+                Scholar Atlas
               </span>
               <span className="w-1 h-1 rounded-full bg-slate-200" />
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">
                 {subjects.length} môn học
               </span>
             </div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Khám phá môn học</h1>
+            <h1 className="font-serif text-3xl font-semibold text-slate-900 tracking-tight">Khám phá môn học</h1>
           </div>
           
           <div className="flex items-center gap-3">
@@ -102,12 +102,12 @@ export default function CoursesPage() {
               onClick={() => router.push(`/courses/${subject.id}`)}
               className="group cursor-pointer"
             >
-              <Card className="bg-white rounded-[28px] border border-slate-200/60 shadow-sm group-hover:shadow-2xl group-hover:shadow-slate-200 group-hover:border-brand-200 transition-all duration-500 overflow-hidden h-full flex flex-col">
+              <Card className="bg-white/94 rounded-[28px] border border-white/80 shadow-sm group-hover:shadow-2xl group-hover:shadow-slate-200 group-hover:border-brand-200 transition-all duration-500 overflow-hidden h-full flex flex-col">
                 {/* Compact Visual Header */}
                 <div className={cn(
                   "h-32 relative flex items-center justify-center text-4xl transition-transform duration-700 group-hover:scale-110",
-                  `bg-gradient-to-br ${subject.gradient || "from-brand-500 to-brand-600"}`
-                )}>
+                    `bg-gradient-to-br ${subject.gradient || "from-ink-800 via-brand-600 to-accent-500"}`
+                  )}>
                   <span className="relative z-10 drop-shadow-lg">{subject.icon}</span>
                   <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px] m-3 rounded-[20px] border border-white/10" />
                 </div>
@@ -135,9 +135,9 @@ export default function CoursesPage() {
                       </div>
                     </div>
                     
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-brand-500 flex items-center justify-center transition-all duration-300">
-                      <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-                    </div>
+                     <div className="w-8 h-8 rounded-lg bg-paper-100 group-hover:bg-brand-500 flex items-center justify-center transition-all duration-300">
+                       <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+                     </div>
                   </div>
                 </CardContent>
               </Card>

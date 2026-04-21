@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "katex/dist/katex.min.css";
+import "@react-pdf-viewer/core/lib/styles/index.css";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/components/auth-provider";
 

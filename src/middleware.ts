@@ -40,10 +40,6 @@ export async function middleware(request: NextRequest) {
     }
 
     // Role-based dashboard protection
-    if (pathname.startsWith("/tutor") && !["STUDENT", "TEACHER", "ADMIN"].includes(userRole)) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-
     return NextResponse.next();
   } catch (error) {
     // Invalid token

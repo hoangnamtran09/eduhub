@@ -112,16 +112,16 @@ export default function AssignmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.12),_transparent_24%),linear-gradient(180deg,_#f8fafc_0%,_#ffffff_38%,_#fefce8_100%)] p-6 lg:p-8">
+    <div className="min-h-screen bg-transparent p-6 lg:p-8">
       <div className="mx-auto max-w-6xl space-y-8">
-        <section className="rounded-[32px] border border-white/70 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] md:p-8">
+        <section className="rounded-[32px] border border-white/80 bg-white/92 p-6 shadow-panel md:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-sky-700">
+              <span className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-brand-700">
                 <ClipboardList className="h-3.5 w-3.5" />
-                Assignment Desk
+                Assignment Registry
               </span>
-              <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">Bài tập được giao</h1>
+              <h1 className="mt-4 font-serif text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">Bài tập được giao</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
                 Theo dõi bài tập giáo viên giao, mở nhanh bài học liên quan và nộp bài trực tiếp trong một màn hình tập trung.
               </p>
@@ -141,10 +141,10 @@ export default function AssignmentsPage() {
             const isOverdue = item.assignment.dueDate && new Date(item.assignment.dueDate).getTime() < Date.now() && !isSubmitted;
 
             return (
-              <Card key={item.id} className="overflow-hidden rounded-[30px] border border-slate-200/70 bg-white/95 shadow-sm">
+              <Card key={item.id} className="overflow-hidden rounded-[30px] border border-white/80 bg-white/95 shadow-soft">
                 <div className={cn(
                   "px-6 py-5",
-                  isSubmitted ? "bg-emerald-50" : isOverdue ? "bg-rose-50" : "bg-sky-50"
+                  isSubmitted ? "bg-emerald-50" : isOverdue ? "bg-rose-50" : "bg-brand-50"
                 )}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
@@ -183,7 +183,7 @@ export default function AssignmentsPage() {
                     </Button>
                   )}
 
-                  <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
+                  <div className="rounded-[24px] border border-paper-200 bg-paper-50/80 p-4">
                     <div className="mb-3 flex items-center justify-between">
                       <h3 className="font-semibold text-slate-900">Bài làm của bạn</h3>
                       {item.submittedAt && (
@@ -203,7 +203,7 @@ export default function AssignmentsPage() {
                         <CheckCircle2 className="h-4 w-4" />
                         {isSubmitted ? "Bạn có thể cập nhật và nộp lại nếu cần" : "Hệ thống lưu theo dạng tự luận"}
                       </div>
-                      <Button onClick={() => handleSubmit(item.id)} disabled={savingId === item.id} className="rounded-2xl">
+                      <Button onClick={() => handleSubmit(item.id)} disabled={savingId === item.id} className="rounded-2xl bg-ink-900 text-white hover:bg-ink-800">
                         {savingId === item.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SendHorizonal className="mr-2 h-4 w-4" />}
                         {isSubmitted ? "Nộp lại" : "Nộp bài"}
                       </Button>
@@ -215,7 +215,7 @@ export default function AssignmentsPage() {
           })}
 
           {items.length === 0 && (
-            <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-6 py-16 text-center">
+            <div className="rounded-[28px] border border-dashed border-paper-300 bg-white/80 px-6 py-16 text-center shadow-soft">
               <ClipboardList className="mx-auto mb-4 h-12 w-12 text-slate-300" />
               <h2 className="text-xl font-semibold text-slate-700">Chưa có bài tập nào được giao</h2>
               <p className="mt-2 text-sm text-slate-500">Khi admin giao bài, danh sách sẽ xuất hiện tại đây cùng hạn nộp và nút nộp bài.</p>
@@ -229,7 +229,7 @@ export default function AssignmentsPage() {
 
 function SmallStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-[20px] border border-slate-200/70 bg-white px-4 py-3 text-center shadow-sm">
+    <div className="rounded-[20px] border border-white/80 bg-white/94 px-4 py-3 text-center shadow-soft">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</div>
       <div className="mt-1 text-2xl font-bold text-slate-900">{value}</div>
     </div>
@@ -238,8 +238,8 @@ function SmallStat({ label, value }: { label: string; value: number }) {
 
 function MetaRow({ icon: Icon, text }: { icon: any; text: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-600">
-      <Icon className="h-4 w-4 text-slate-400" />
+    <div className="flex items-center gap-3 rounded-2xl border border-paper-200 bg-paper-50/70 px-4 py-3 text-sm text-slate-600">
+      <Icon className="h-4 w-4 text-brand-500" />
       <span>{text}</span>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PDFViewer } from "@/components/pdf-viewer";
@@ -31,6 +31,7 @@ import {
   Gem,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import type { QuizAnswerPayload } from "@/components/ai/InteractiveQuiz";
 
 const MarkdownMessage = dynamic(() => import("@/components/ai/MarkdownMessage"), { ssr: false });
 
@@ -72,6 +73,7 @@ export default function LearnPage({
   const [currentLesson, setCurrentLesson] = useState<LessonItem | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -79,6 +81,10 @@ export default function LearnPage({
   const [chatMode, setChatMode] = useState<"text" | "math">("text");
 
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, sending]);
 
   const handleQuizCorrect = async () => {
     if (!user) return;
@@ -95,6 +101,123 @@ export default function LearnPage({
       }
     } catch (error) {
       console.error("Failed to update diamonds:", error);
+    }
+  };
+
+  const handleQuizAnswered = async (payload: QuizAnswerPayload) => {
+    if (sending) return;
+
+    const quizReplyMessage = payload.isCorrect
+      ? `Em chọn đáp án: ${payload.selectedOptionText}.`
+      : `Em chọn đáp án: ${payload.selectedOptionText}. Chắc em đang hiểu sai chỗ này rồi.`;
+
+    const userQuizMessage = {
+      id: `${Date.now()}-quiz`,
+      role: "user" as const,
+      content: quizReplyMessage,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userQuizMessage]);
+
+    const followUpPrompt = payload.isCorrect
+      ? `Học sinh vừa trả lời đúng câu trắc nghiệm.
+Câu hỏi: ${payload.question}
+Đáp án học sinh chọn: ${payload.selectedOptionText}
+Giải thích của quiz: ${payload.explanation}
+
+Hãy phản hồi như gia sư AI trong 2-4 câu: khen ngắn gọn, xác nhận tiến bộ, nếu phù hợp nhắc rằng làm tốt có thể được thưởng kim cương, rồi dẫn dắt sang câu hỏi hoặc bước học tiếp theo để cuộc chat tiếp tục tự nhiên.`
+      : `Học sinh vừa trả lời sai câu trắc nghiệm.
+Câu hỏi: ${payload.question}
+Đáp án học sinh chọn: ${payload.selectedOptionText}
+Đáp án đúng: ${payload.correctOptionText}
+Giải thích của quiz: ${payload.explanation}
+
+Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích ngắn gọn vì sao đáp án đúng hợp lý, chỉ ra lỗi hiểu bài một cách nhẹ nhàng, rồi đặt một câu hỏi dễ hơn hoặc câu hỏi nối tiếp để cuộc chat tiếp tục tự nhiên.`;
+
+    setSending(true);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            ...messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+            {
+              role: "user",
+              content: quizReplyMessage,
+            },
+            {
+              role: "user",
+              content: followUpPrompt,
+            },
+          ],
+          lessonId: searchParams.lessonId,
+          subjectId: searchParams.subjectId,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 2).toString(),
+            role: "assistant",
+            content: data.message,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Quiz follow-up error:", error);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const startNewChat = async () => {
+    if (!currentLesson || !subject) return;
+
+    setInput("");
+    setMessages([]);
+    setSending(true);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "user",
+              content: "Chào bạn! Hãy tóm tắt bài học hôm nay và giới thiệu ngắn gọn cho học sinh.",
+            },
+          ],
+          lessonId: currentLesson.id,
+          subjectId: subject.id,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMessages([
+          {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: data.message,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Greeting error:", error);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -139,40 +262,7 @@ export default function LearnPage({
 
   useEffect(() => {
     if (!loading && currentLesson && subject && messages.length === 0) {
-      setSending(true);
-      (async () => {
-        try {
-          const response = await fetch("/api/ai/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              messages: [
-                {
-                  role: "user",
-                  content: `Chào bạn! Hãy tóm tắt bài học hôm nay và giới thiệu ngắn gọn cho học sinh.`,
-                },
-              ],
-              lessonId: currentLesson.id,
-              subjectId: subject.id,
-            }),
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setMessages([
-              {
-                id: Date.now().toString(),
-                role: "assistant",
-                content: data.message,
-                timestamp: new Date(),
-              },
-            ]);
-          }
-        } catch (error) {
-          console.error("Greeting error:", error);
-        } finally {
-          setSending(false);
-        }
-      })();
+      startNewChat();
     }
   }, [loading, currentLesson?.id, subject?.id, messages.length]);
 
@@ -419,7 +509,14 @@ export default function LearnPage({
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-slate-400"
+                onClick={startNewChat}
+                disabled={sending}
+                title="Tạo đoạn chat mới"
+              >
                 <Plus className="w-4 h-4" />
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
@@ -455,7 +552,11 @@ export default function LearnPage({
                     )}
                   >
                     {msg.role === "assistant" ? (
-                      <MarkdownMessage content={msg.content} onQuizCorrect={handleQuizCorrect} />
+                      <MarkdownMessage
+                        content={msg.content}
+                        onQuizCorrect={handleQuizCorrect}
+                        onQuizAnswered={handleQuizAnswered}
+                      />
                     ) : (
                       <span style={{whiteSpace: 'pre-line'}}>{msg.content}</span>
                     )}
@@ -480,6 +581,7 @@ export default function LearnPage({
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           <div className="p-4 border-t border-slate-100 bg-white">

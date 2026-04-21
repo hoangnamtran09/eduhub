@@ -3,9 +3,11 @@ import { getModel } from "@/lib/ai/models";
 import { chatWithGemini } from "@/lib/googleai/client";
 import OpenAI from "openai";
 
+const aiBaseURL = process.env.BEEKNOEE_BASE_URL || "https://api.krouter.net/v1";
+
 const beeknoeeClient = new OpenAI({
   apiKey: process.env.BEEKNOEE_API_KEY!,
-  baseURL: "https://platform.beeknoee.com/api/v1",
+  baseURL: aiBaseURL,
 });
 
 

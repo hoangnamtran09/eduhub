@@ -2,7 +2,7 @@
 
 export const AI_MODELS = {
   // Chat/AI Tutor - for student Q&A and tutoring
-  chat: "glm-4.7-flash",
+  chat: "gpt-5.4",
 
   // PDF Processing - extract content and structure from PDFs
   pdfExtract: "glm-4-flash",

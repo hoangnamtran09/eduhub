@@ -3,14 +3,15 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import InteractiveQuiz from "./InteractiveQuiz";
+import InteractiveQuiz, { QuizAnswerPayload } from "./InteractiveQuiz";
 
 interface MarkdownMessageProps {
   content: string;
   onQuizCorrect?: () => void;
+  onQuizAnswered?: (payload: QuizAnswerPayload) => void;
 }
 
-export default function MarkdownMessage({ content, onQuizCorrect }: MarkdownMessageProps) {
+export default function MarkdownMessage({ content, onQuizCorrect, onQuizAnswered }: MarkdownMessageProps) {
   // Regex to find :::quiz {json} :::
   const quizRegex = /:::quiz\s*(\{[\s\S]*?\})\s*:::/g;
   
@@ -79,6 +80,7 @@ export default function MarkdownMessage({ content, onQuizCorrect }: MarkdownMess
               key={index} 
               data={part.data as any} 
               onCorrect={onQuizCorrect}
+              onAnswered={onQuizAnswered}
             />
           );
         }
