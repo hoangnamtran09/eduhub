@@ -75,15 +75,7 @@ export async function POST(request: NextRequest) {
       if (convertResponse.ok) {
         const convertData = await convertResponse.json();
         if (convertData.pages && convertData.pages.length > 0) {
-          await prismaAny.pDFPage.createMany({
-            data: convertData.pages.map((page: { pageNumber: number; imageUrl: string }) => ({
-              courseId: course.id,
-              pageNumber: page.pageNumber,
-              imageUrl: page.imageUrl,
-              ocrText: null,
-            })),
-            skipDuplicates: true,
-          });
+          console.log(`Converted ${convertData.pages.length} PDF pages for course ${course.id}`);
         }
       }
     } catch (e) {

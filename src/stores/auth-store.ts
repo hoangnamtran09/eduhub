@@ -1,6 +1,12 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { User } from "@/types";
+
+const noopStorage = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+};
 
 interface AuthState {
   user: User | null;
@@ -36,6 +42,13 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "eduhub-auth",
+      storage: createJSONStorage(() => {
+        if (typeof window === "undefined") {
+          return noopStorage;
+        }
+
+        return window.localStorage;
+      }),
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,

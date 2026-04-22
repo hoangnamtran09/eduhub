@@ -6,6 +6,7 @@ async function main() {
   console.log("Seeding database...");
 
   const seedId = Date.now();
+  const defaultGradeLevel = 6;
   
   // Create subjects
   const mathSubject = await prisma.subject.create({
@@ -40,48 +41,74 @@ async function main() {
 
   console.log("Created subjects:", mathSubject.name, physicsSubject.name, englishSubject.name);
 
-  // Create semesters for Math
-  const mathSemester1 = await prisma.semester.create({
+  const mathCourse = await prisma.course.create({
     data: {
-      name: "Học kỳ 1",
-      description: "Học kỳ 1 - Toán 6",
-      order: 1,
+      title: "Toán học lớp 6",
+      slug: `toan-hoc-lop-6-${seedId}`,
       subjectId: mathSubject.id,
+      description: "Khóa học nền tảng môn Toán lớp 6",
+      gradeLevel: defaultGradeLevel,
+      isPublished: true,
     },
   });
 
-  const mathSemester2 = await prisma.semester.create({
+  const physicsCourse = await prisma.course.create({
     data: {
-      name: "Học kỳ 2",
-      description: "Học kỳ 2 - Toán 6",
-      order: 2,
-      subjectId: mathSubject.id,
-    },
-  });
-
-  // Create semesters for Physics
-  const physicsSemester1 = await prisma.semester.create({
-    data: {
-      name: "Học kỳ 1",
-      description: "Học kỳ 1 - Vật lý 6",
-      order: 1,
+      title: "Vật lý lớp 6",
+      slug: `vat-ly-lop-6-${seedId}`,
       subjectId: physicsSubject.id,
+      description: "Khóa học nền tảng môn Vật lý lớp 6",
+      gradeLevel: defaultGradeLevel,
+      isPublished: true,
     },
   });
 
-  // Create semesters for English
-  const englishSemester1 = await prisma.semester.create({
+  const englishCourse = await prisma.course.create({
     data: {
-      name: "Học kỳ 1",
-      description: "Học kỳ 1 - Tiếng Anh 6",
-      order: 1,
+      title: "Tiếng Anh lớp 6",
+      slug: `tieng-anh-lop-6-${seedId}`,
       subjectId: englishSubject.id,
+      description: "Khóa học nền tảng môn Tiếng Anh lớp 6",
+      gradeLevel: defaultGradeLevel,
+      isPublished: true,
     },
   });
 
-  console.log("Created semesters for all subjects");
+  const mathChapter1 = await prisma.chapter.create({
+    data: {
+      courseId: mathCourse.id,
+      title: "Học kỳ 1",
+      order: 1,
+    },
+  });
 
-  // Create lessons for Math Semester 1
+  const mathChapter2 = await prisma.chapter.create({
+    data: {
+      courseId: mathCourse.id,
+      title: "Học kỳ 2",
+      order: 2,
+    },
+  });
+
+  const physicsChapter1 = await prisma.chapter.create({
+    data: {
+      courseId: physicsCourse.id,
+      title: "Học kỳ 1",
+      order: 1,
+    },
+  });
+
+  const englishChapter1 = await prisma.chapter.create({
+    data: {
+      courseId: englishCourse.id,
+      title: "Học kỳ 1",
+      order: 1,
+    },
+  });
+
+  console.log("Created courses and chapters for all subjects");
+
+  // Create lessons for Math Chapter 1
   const mathLessons = [
     {
       title: "Chương 1 - Ôn tập và bổ túc về số tự nhiên",
@@ -115,14 +142,15 @@ async function main() {
 
   for (const lesson of mathLessons) {
     await prisma.lesson.create({
-      data: {
-        ...lesson,
-        semesterId: mathSemester1.id,
-      },
-    });
+        data: {
+          ...lesson,
+          subjectId: mathSubject.id,
+          chapterId: mathChapter1.id,
+        },
+      });
   }
 
-  // Create lessons for Math Semester 2
+  // Create lessons for Math Chapter 2
   const mathLessons2 = [
     {
       title: "Chương 1 - Số nguyên",
@@ -142,14 +170,15 @@ async function main() {
 
   for (const lesson of mathLessons2) {
     await prisma.lesson.create({
-      data: {
-        ...lesson,
-        semesterId: mathSemester2.id,
-      },
-    });
+        data: {
+          ...lesson,
+          subjectId: mathSubject.id,
+          chapterId: mathChapter2.id,
+        },
+      });
   }
 
-  // Create lessons for Physics Semester 1
+  // Create lessons for Physics Chapter 1
   const physicsLessons = [
     {
       title: "Chương 1 - Cơ học",
@@ -176,14 +205,15 @@ async function main() {
 
   for (const lesson of physicsLessons) {
     await prisma.lesson.create({
-      data: {
-        ...lesson,
-        semesterId: physicsSemester1.id,
-      },
-    });
+        data: {
+          ...lesson,
+          subjectId: physicsSubject.id,
+          chapterId: physicsChapter1.id,
+        },
+      });
   }
 
-  // Create lessons for English Semester 1
+  // Create lessons for English Chapter 1
   const englishLessons = [
     {
       title: "Unit 1 - Greetings",
@@ -210,11 +240,12 @@ async function main() {
 
   for (const lesson of englishLessons) {
     await prisma.lesson.create({
-      data: {
-        ...lesson,
-        semesterId: englishSemester1.id,
-      },
-    });
+        data: {
+          ...lesson,
+          subjectId: englishSubject.id,
+          chapterId: englishChapter1.id,
+        },
+      });
   }
 
   console.log("Created lessons for all subjects");

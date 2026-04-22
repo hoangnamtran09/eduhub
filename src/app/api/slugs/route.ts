@@ -6,6 +6,10 @@ const globalForPrisma = globalThis as unknown as {
 };
 const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
+function toSlugSegment(value: string) {
+  return value.toLowerCase().trim().replace(/\s+/g, "-");
+}
+
 // GET - Get subject and lessons by subject slug
 export async function GET(request: Request) {
   try {
@@ -18,17 +22,11 @@ export async function GET(request: Request) {
       const lesson = await prisma.lesson.findFirst({
         where: { slug: lessonId },
         include: {
-          semester: {
+          Chapter: {
             include: {
-              subject: true,
-              lessons: {
-                orderBy: { order: "asc" },
-                select: {
-                  id: true,
-                  title: true,
-                  slug: true,
-                  order: true,
-                  duration: true,
+              Course: {
+                include: {
+                  subject: true,
                 },
               },
             },
@@ -40,9 +38,8 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
       }
 
-      // Get all lessons in semester for navigation
       const allLessons = await prisma.lesson.findMany({
-        where: { semesterId: lesson.semesterId },
+        where: { chapterId: lesson.chapterId ?? undefined },
         orderBy: { order: "asc" },
         select: { id: true, slug: true, title: true, order: true, duration: true },
       });
@@ -60,20 +57,22 @@ export async function GET(request: Request) {
         duration: lesson.duration || 0,
         order: lesson.order,
         pdfUrl: lesson.pdfUrl,
-        semester: {
-          id: lesson.semester.id,
-          slug: lesson.semester.name.toLowerCase().replace(/\s+/g, "-"),
-          title: lesson.semester.name,
-          order: lesson.semester.order,
-        },
+        semester: lesson.Chapter
+          ? {
+              id: lesson.Chapter.id,
+              slug: toSlugSegment(lesson.Chapter.title),
+              title: lesson.Chapter.title,
+              order: lesson.Chapter.order,
+            }
+          : null,
         subject: {
-          id: lesson.semester.subject.id,
-          slug: lesson.semester.subject.slug,
-          name: lesson.semester.subject.name,
-          icon: lesson.semester.subject.icon,
-          color: lesson.semester.subject.color,
+          id: lesson.Chapter?.Course.subject.id ?? "",
+          slug: lesson.Chapter?.Course.subject.slug ?? "",
+          name: lesson.Chapter?.Course.subject.name ?? "",
+          icon: lesson.Chapter?.Course.subject.icon ?? null,
+          color: lesson.Chapter?.Course.subject.color ?? null,
         },
-        chapterLessons: lesson.semester.lessons.map((l) => ({
+        chapterLessons: allLessons.map((l) => ({
           id: l.id,
           slug: l.slug,
           title: l.title,
@@ -99,12 +98,17 @@ export async function GET(request: Request) {
       const subject = await prisma.subject.findUnique({
         where: { slug: subjectId },
         include: {
-          semesters: {
-            orderBy: { order: "asc" },
+          courses: {
+            orderBy: { createdAt: "asc" },
             include: {
-              lessons: {
-                where: { isPublished: true },
+              Chapter: {
                 orderBy: { order: "asc" },
+                include: {
+                  Lesson: {
+                    where: { isPublished: true },
+                    orderBy: { order: "asc" },
+                  },
+                },
               },
             },
           },
@@ -122,45 +126,45 @@ export async function GET(request: Request) {
         icon: subject.icon,
         description: subject.description,
         gradient: getGradientFromColor(subject.color || "blue"),
-        courses: subject.semesters.map((semester) => ({
-          id: semester.id,
-          slug: semester.name.toLowerCase().replace(/\s+/g, "-"),
-          title: semester.name,
-          gradeLevel: 6,
-          chapters: semester.lessons.map((lesson, idx) => ({
-            id: lesson.id,
-            slug: lesson.slug,
-            title: lesson.title,
-            order: idx + 1,
-            lessons: [
-              {
-                id: lesson.id,
-                slug: lesson.slug,
-                title: lesson.title,
-                order: lesson.order,
-                duration: lesson.duration || 30,
-                hasPdf: !!lesson.pdfUrl,
-                hasVideo: !!lesson.videoUrl,
-                hasQuiz: false,
-              },
-            ],
+        courses: subject.courses.map((course) => ({
+          id: course.id,
+          slug: course.slug,
+          title: course.title,
+          gradeLevel: course.gradeLevel,
+          chapters: course.Chapter.map((chapter) => ({
+            id: chapter.id,
+            slug: toSlugSegment(chapter.title),
+            title: chapter.title,
+            order: chapter.order,
+            lessons: chapter.Lesson.map((lesson) => ({
+              id: lesson.id,
+              slug: lesson.slug,
+              title: lesson.title,
+              order: lesson.order,
+              duration: lesson.duration || 30,
+              hasPdf: !!lesson.pdfUrl,
+              hasVideo: !!lesson.videoUrl,
+              hasQuiz: false,
+            })),
           })),
         })),
-        semesters: subject.semesters.map((semester) => ({
-          id: semester.id,
-          slug: semester.name.toLowerCase().replace(/\s+/g, "-"),
-          name: semester.name,
-          lessons: semester.lessons.map((lesson) => ({
-            id: lesson.id,
-            slug: lesson.slug,
-            title: lesson.title,
-            order: lesson.order,
-            duration: lesson.duration || 30,
-            hasPdf: !!lesson.pdfUrl,
-            hasVideo: !!lesson.videoUrl,
-            hasQuiz: false,
-          })),
-        })),
+        semesters: subject.courses.flatMap((course) =>
+          course.Chapter.map((chapter) => ({
+            id: chapter.id,
+            slug: toSlugSegment(chapter.title),
+            name: chapter.title,
+            lessons: chapter.Lesson.map((lesson) => ({
+              id: lesson.id,
+              slug: lesson.slug,
+              title: lesson.title,
+              order: lesson.order,
+              duration: lesson.duration || 30,
+              hasPdf: !!lesson.pdfUrl,
+              hasVideo: !!lesson.videoUrl,
+              hasQuiz: false,
+            })),
+          }))
+        ),
       };
 
       return NextResponse.json(response);

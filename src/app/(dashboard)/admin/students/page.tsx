@@ -13,83 +13,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-interface StudentProfile {
-  goals: string[];
-  strengths: string[];
-  weaknesses: string[];
-  streakDays: number;
-  lastActive: string | null;
-}
-
-interface StudentEnrollment {
-  course: {
-    id: string;
-    title: string;
-  } | null;
-}
-
-interface StudySessionRecord {
-  durationSec: number;
-}
-
-interface StudentRecord {
-  id: string;
-  email: string;
-  fullName: string | null;
-  gradeLevel: number | null;
-  diamonds: number;
-  createdAt: string;
-  profile: StudentProfile | null;
-  studySessions: StudySessionRecord[];
-  enrollments: StudentEnrollment[];
-}
-
-interface StudentForm {
-  id: string;
-  email: string;
-  fullName: string;
-  gradeLevel: string;
-  diamonds: string;
-  goals: string;
-  strengths: string;
-  weaknesses: string;
-}
+import {
+  createForm,
+  formatStudyTime,
+  toListValue,
+  type StudentForm,
+  type StudentRecord,
+} from "@/app/(dashboard)/admin/students/helpers";
 
 const gradeTabs = ["all", "none", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
-
-function toLineValue(items?: string[]) {
-  return (items || []).join("\n");
-}
-
-function toListValue(value: string) {
-  return value
-    .split("\n")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function createForm(student: StudentRecord): StudentForm {
-  return {
-    id: student.id,
-    email: student.email,
-    fullName: student.fullName || "",
-    gradeLevel: student.gradeLevel ? String(student.gradeLevel) : "",
-    diamonds: String(student.diamonds ?? 0),
-    goals: toLineValue(student.profile?.goals),
-    strengths: toLineValue(student.profile?.strengths),
-    weaknesses: toLineValue(student.profile?.weaknesses),
-  };
-}
-
-function formatStudyTime(totalSeconds: number) {
-  if (totalSeconds >= 3600) {
-    return `${(totalSeconds / 3600).toFixed(1)} giờ`;
-  }
-
-  const minutes = Math.max(1, Math.round(totalSeconds / 60));
-  return `${minutes} phút`;
-}
 
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState<StudentRecord[]>([]);

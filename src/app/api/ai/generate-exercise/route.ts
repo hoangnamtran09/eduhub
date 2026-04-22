@@ -15,15 +15,15 @@ export async function POST(request: NextRequest) {
       const lesson = await prisma.lesson.findUnique({
         where: { id: lessonId },
         include: {
-          semester: {
+          Chapter: {
             include: {
-              courses: { take: 1 }
-            }
-          }
-        }
+              Course: true,
+            },
+          },
+        },
       });
       if (lesson) {
-        gradeLevel = lesson.semester?.courses[0]?.gradeLevel || 10;
+        gradeLevel = lesson.Chapter?.Course.gradeLevel || 10;
         lessonContent = lesson.content || "";
       }
     }

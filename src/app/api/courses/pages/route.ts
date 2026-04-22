@@ -10,21 +10,32 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "courseId is required" }, { status: 400 });
     }
 
-    // Fetch PDF pages for this course
-    const pdfPages = await prisma.pDFPage.findMany({
-      where: { courseId },
-      orderBy: { pageNumber: "asc" },
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
       select: {
-        pageNumber: true,
-        imageUrl: true,
-        ocrText: true,
+        id: true,
+        pdfUrl: true,
       },
     });
 
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    const pages = course.pdfUrl
+      ? [
+          {
+            pageNumber: 1,
+            imageUrl: course.pdfUrl,
+            ocrText: null,
+          },
+        ]
+      : [];
+
     return NextResponse.json({
       success: true,
-      totalPages: pdfPages.length,
-      pages: pdfPages,
+      totalPages: pages.length,
+      pages,
     });
   } catch (error) {
     console.error("Error fetching PDF pages:", error);

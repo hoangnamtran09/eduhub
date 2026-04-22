@@ -5,18 +5,8 @@
 export function generateSlug(text: string): string {
   if (!text) return "";
 
-  // Remove Vietnamese diacritics
-  const from =
-    "àáãảạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóõỏọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđÀÁÃẢẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓÕỎỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ";
-  const to =
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaadaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaada";
-
-  let result = text.toLowerCase();
-
-  // Replace Vietnamese characters
-  for (let i = 0; i < from.length; i++) {
-    result = result.replace(new RegExp(from.charAt(i), "g"), to.charAt(i));
-  }
+  let result = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  result = result.replace(/đ/g, "d");
 
   // Replace spaces and special characters with hyphens
   result = result.replace(/[^a-z0-9\s-]/g, "");

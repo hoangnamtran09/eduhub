@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { generateSlug } from "@/lib/slug";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -39,61 +40,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Lấy semester đầu tiên của subject này
-    const semester = await prisma.semester.findFirst({
-      where: { subjectId },
-      orderBy: { order: 'asc' }
-    });
-    if (!semester) {
-      return NextResponse.json(
-        { error: "Không tìm thấy học kỳ cho môn học này" },
-        { status: 400 }
-      );
-    }
-
-    // Create or find default course for this subject (theo semester)
+    // Create or find a default course for this subject.
     let course = await prisma.course.findFirst({
-      where: { subjectId, semesterId: semester.id }
+      where: { subjectId },
+      orderBy: { createdAt: "asc" },
     });
 
     if (!course) {
       course = await prisma.course.create({
         data: {
           subjectId,
-          semesterId: semester.id,
           title: "Khóa học mới",
-          slug: `course-${subjectId}-${Date.now()}`,
+          slug: `course-${generateSlug(subjectId)}-${Date.now()}`,
           gradeLevel: 6,
-          isPublished: true
-        }
+          isPublished: true,
+        },
       });
     }
 
-    // Lấy tất cả semesterId thuộc subject này
-    const semesters = await prisma.semester.findMany({ where: { subjectId } });
-    const semesterIds = semesters.map(s => s.id);
-    // Xóa toàn bộ lesson cũ thuộc các semester này
-    await prisma.lesson.deleteMany({
-      where: { semesterId: { in: semesterIds } }
+    const existingChapters = await prisma.chapter.findMany({
+      where: { courseId: course.id },
+      select: { id: true },
     });
 
-    // Tạo lesson mới, gán vào semester đầu tiên của subject
+    await prisma.lesson.deleteMany({
+      where: {
+        chapterId: {
+          in: existingChapters.map((chapter) => chapter.id),
+        },
+      },
+    });
+
+    await prisma.chapter.deleteMany({ where: { courseId: course.id } });
+
     let totalLessons = 0;
     for (let chapterIdx = 0; chapterIdx < chapters.length; chapterIdx++) {
       const chapter = chapters[chapterIdx];
+      const createdChapter = await prisma.chapter.create({
+        data: {
+          courseId: course.id,
+          title: chapter.title,
+          order: chapterIdx + 1,
+        },
+      });
+
       for (let lessonIdx = 0; lessonIdx < chapter.lessons.length; lessonIdx++) {
         const lesson = chapter.lessons[lessonIdx];
         await prisma.lesson.create({
           data: {
-            semesterId: semester.id,
+            subjectId,
+            chapterId: createdChapter.id,
             title: lesson.title,
             content: lesson.content,
             order: lessonIdx + 1,
             duration: 30, // Default 30 minutes
             type: lesson.type,
             pdfUrl: lesson.pdfUrl ?? undefined,
-            // Có thể thêm trường chapter nếu muốn lưu tên chương
-          }
+          },
         });
         totalLessons++;
       }
@@ -103,7 +106,7 @@ export async function POST(request: NextRequest) {
       success: true,
       courseId: course.id,
       totalChapters: chapters.length,
-      totalLessons
+      totalLessons,
     });
 
   } catch (error) {
