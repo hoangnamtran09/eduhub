@@ -1,6 +1,4 @@
-
 import { getModel } from "@/lib/ai/models";
-import { chatWithGemini } from "@/lib/googleai/client";
 import OpenAI from "openai";
 
 const aiBaseURL = process.env.BEEKNOEE_BASE_URL || "https://api.krouter.net/v1";
@@ -13,7 +11,7 @@ const beeknoeeClient = new OpenAI({
 
 export async function chatWithAI(messages: { role: string; content: string }[]) {
   try {
-    // Hàm gọi AI, retry 1 lần nếu không có output
+    // Retry one time if the upstream model returns an empty payload.
     let response = await beeknoeeClient.chat.completions.create({
       model: getModel("chat"),
       messages: messages.map(m => ({
@@ -37,18 +35,12 @@ export async function chatWithAI(messages: { role: string; content: string }[]) 
     
     if (output) return output;
 
-    // Nếu vẫn không có output, fallback sang Gemini
-    console.log("Beeknoee empty response, falling back to Gemini...");
-    return await chatWithGemini(messages);
+    console.warn("Beeknoee returned an empty response after retry.");
+    return "Xin lỗi, hiện tại hệ thống AI chưa trả về kết quả. Bạn vui lòng thử lại sau vài phút nhé!";
 
   } catch (error) {
-    console.error("Beeknoee API Error, falling back to Gemini:", error);
-    try {
-      return await chatWithGemini(messages);
-    } catch (geminiError) {
-      console.error("Gemini Fallback Error:", geminiError);
-      return "Xin lỗi, hiện tại tất cả các hệ thống AI đều đang bận. Bạn vui lòng thử lại sau vài phút nhé!";
-    }
+    console.error("Beeknoee API Error:", error);
+    return "Xin lỗi, hiện tại hệ thống AI đang bận. Bạn vui lòng thử lại sau vài phút nhé!";
   }
 }
 
