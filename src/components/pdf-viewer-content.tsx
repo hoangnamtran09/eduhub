@@ -23,7 +23,7 @@ export function PDFViewerContent({
   const [viewerKey, setViewerKey] = useState(0);
   const [currentPage, setCurrentPage] = useState(Math.max(initialPage, 1));
   const totalPagesRef = useRef(0);
-  const { jumpToNextPage, jumpToPreviousPage } = pageNavigationPluginInstance;
+  const { jumpToNextPage, jumpToPreviousPage } = pageNavigationPluginInstance || {};
 
   const getFullUrl = useCallback(() => {
     if (url.startsWith("http")) return url;
@@ -77,7 +77,7 @@ export function PDFViewerContent({
             variant="outline"
             size="sm"
             disabled={currentPage <= 1}
-            onClick={jumpToPreviousPage}
+            onClick={() => jumpToPreviousPage?.()}
             className="h-9 rounded-xl border-slate-200 px-3"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -87,7 +87,7 @@ export function PDFViewerContent({
             type="button"
             size="sm"
             disabled={totalPagesRef.current === 0 || currentPage >= totalPagesRef.current}
-            onClick={jumpToNextPage}
+            onClick={() => jumpToNextPage?.()}
             className="h-9 rounded-xl px-3"
           >
             Trang sau
@@ -96,7 +96,7 @@ export function PDFViewerContent({
         </div>
       </div>
 
-      <div className="relative flex-1 overflow-hidden bg-slate-100">
+      <div className="relative flex-1 overflow-hidden bg-white">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-3">
