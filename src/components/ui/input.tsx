@@ -18,8 +18,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const baseInputStyles = "w-full bg-white font-sans text-ink-900 placeholder:text-ink-400 transition-all duration-200 ease-out shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] focus:outline-none disabled:bg-ink-100 disabled:cursor-not-allowed";
 
     const variantStyles = {
-      default: "border border-ink-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500",
-      filled: "border border-transparent rounded-2xl px-4 py-3 bg-paper-200 focus:bg-white focus:border-ink-200 focus:ring-2 focus:ring-brand-500/30",
+      default: "border border-ink-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500",
+      filled: "border border-transparent rounded-lg px-4 py-3 bg-paper-200 focus:bg-white focus:border-ink-200 focus:ring-2 focus:ring-brand-500/30",
       underline: "border-b border-ink-200 rounded-none px-0 py-2 bg-transparent focus:border-brand-500 focus:ring-0",
     };
 
@@ -96,7 +96,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           id={textareaId}
           className={cn(
-             "w-full px-4 py-3 bg-white border border-ink-200 rounded-2xl",
+             "w-full px-4 py-3 bg-white border border-ink-200 rounded-lg",
             "font-sans text-ink-900 placeholder:text-ink-400",
             "transition-all duration-200 ease-out",
             "focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500",

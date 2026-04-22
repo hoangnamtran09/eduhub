@@ -9,13 +9,13 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, hover, variant = "default", padding = "default", ...props }, ref) => {
-    const baseStyles = "bg-white rounded-[28px] transition-all duration-300";
+    const baseStyles = "bg-white rounded-lg transition-all duration-300";
     
     const variantStyles = {
-      default: "border border-ink-200/50 shadow-soft",
-      elevated: "border border-ink-200/30 shadow-hover",
+      default: "border border-ink-200 shadow-soft",
+      elevated: "border border-ink-200 shadow-hover",
       outline: "border-2 border-ink-200",
-      gradient: "border border-ink-200/30 shadow-soft bg-gradient-to-br from-white to-paper-200",
+      gradient: "border border-ink-200 shadow-soft",
     };
 
     const paddingStyles = {
@@ -25,7 +25,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       lg: "p-8",
     };
 
-    const hoverStyles = hover && "hover:shadow-lift hover:-translate-y-1 cursor-pointer";
+    const hoverStyles = hover && "hover:shadow-lift hover:-translate-y-0.5 cursor-pointer";
 
     return (
       <div
@@ -33,6 +33,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         className={cn(
           baseStyles,
           variantStyles[variant],
+          paddingStyles[padding],
           hoverStyles,
           className
         )}

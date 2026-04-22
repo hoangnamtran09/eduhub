@@ -3,6 +3,7 @@ import { StudentOption } from "@/types/assignment";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface StudentSelectorProps {
   students: StudentOption[];
@@ -13,6 +14,14 @@ interface StudentSelectorProps {
 export function StudentSelector({ students, selectedStudents, onSelect }: StudentSelectorProps) {
   const [search, setSearch] = useState("");
   const [gradeFilter, setGradeFilter] = useState("");
+
+  // Get unique grade levels from students
+  const availableGrades = useMemo(() => {
+    const grades = students
+      .map(s => s.gradeLevel)
+      .filter((grade): grade is number => grade !== null && grade !== undefined);
+    return Array.from(new Set(grades)).sort((a, b) => a - b);
+  }, [students]);
 
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
@@ -34,8 +43,20 @@ export function StudentSelector({ students, selectedStudents, onSelect }: Studen
     <div>
         <Label>Học sinh</Label>
         <div className="grid grid-cols-2 gap-4 mb-2">
-            <Input placeholder="Tìm học sinh..." value={search} onChange={e => setSearch(e.target.value)} />
-            <Input type="number" placeholder="Lọc theo lớp..." value={gradeFilter} onChange={e => setGradeFilter(e.target.value)} />
+            <Input placeholder="Tìm học sinh..." value={search} onChange={e => setSearch(e.target.value)} className="h-10" />
+            <Select value={gradeFilter || "all"} onValueChange={(value) => setGradeFilter(value === "all" ? "" : value)}>
+              <SelectTrigger className="h-10">
+                <SelectValue placeholder="Lọc theo lớp..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả các lớp</SelectItem>
+                {availableGrades.map(grade => (
+                  <SelectItem key={grade} value={grade.toString()}>
+                    Lớp {grade}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
         </div>
         <div className="max-h-60 overflow-y-auto border rounded-md p-2 space-y-2">
             {filteredStudents.map(student => (

@@ -69,12 +69,12 @@ export function useAssignments() {
   const handleCreateAssignment = async () => {
     if (!form.title.trim() || !form.description.trim()) {
       setSubmitError("Vui lòng nhập đầy đủ tên bài tập và mô tả.");
-      return;
+      return false;
     }
 
     if (!form.studentIds?.length) {
         setSubmitError("Vui lòng chọn học sinh để giao bài.");
-        return;
+        return false;
     }
 
     setSubmitting(true);
@@ -96,9 +96,13 @@ export function useAssignments() {
       }
 
       await loadData();
+      setForm(emptyForm);
+      setAssignmentPdfName("");
+      return true;
     } catch (error) {
       console.error(error);
       setSubmitError(error instanceof Error ? error.message : "Không thể tạo bài tập.");
+      return false;
     } finally {
       setSubmitting(false);
     }
