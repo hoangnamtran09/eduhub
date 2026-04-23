@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
+import { GoogleLoginErrorToast } from "@/components/auth/google-login-error-toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -56,6 +57,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex">
+      <Suspense fallback={null}>
+        <GoogleLoginErrorToast />
+      </Suspense>
       {/* Left Panel - Decorative */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand-500 via-brand-600 to-accent-600 relative overflow-hidden">
         {/* Decorative Elements */}
