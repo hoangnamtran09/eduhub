@@ -25,7 +25,9 @@ export function PDFViewerContent({
   const { jumpToNextPage, jumpToPreviousPage } = pageNavigationPluginInstance || {};
 
   const getFullUrl = useCallback(() => {
-    if (url.startsWith("http")) return url;
+    if (url.startsWith("http")) {
+      return `/api/pdf-proxy?url=${encodeURIComponent(url)}`;
+    }
     return window.location.origin + url;
   }, [url]);
 
