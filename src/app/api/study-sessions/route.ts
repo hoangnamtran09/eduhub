@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getAuthUser } from "@/lib/auth/get-auth-user";
+import { ensureLessonProgressWithClient } from "@/lib/learning-state";
 
 function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -59,6 +60,8 @@ export async function POST(request: Request) {
           lastActive: now,
         },
       });
+
+      await ensureLessonProgressWithClient(tx, authUser.userId, lessonId);
 
       return tx.studySession.create({
         data: {

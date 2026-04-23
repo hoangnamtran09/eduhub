@@ -94,12 +94,14 @@ export default function LearningPage({
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [currentPdfPage, setCurrentPdfPage] = useState(1);
   const [totalPdfPages, setTotalPdfPages] = useState(0);
+  const [initialPdfPage, setInitialPdfPage] = useState(1);
   const [pageReadSeconds, setPageReadSeconds] = useState<Record<number, number>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const studySessionIdRef = useRef<string | null>(null);
   const studyUnsyncedSecondsRef = useRef(0);
   const studyStartedRef = useRef(false);
+  const activeConversationIdRef = useRef<string | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -428,14 +430,52 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         setPdfUrl(null);
       }
 
+      const learningStateResponse = await fetch(`/api/learning-state?lessonId=${params.lessonId}`, {
+        cache: "no-store",
+      });
+
+      if (learningStateResponse.ok) {
+        const learningState = await learningStateResponse.json();
+        const progress = learningState.progress;
+        const conversation = learningState.conversation;
+
+        if (progress?.lastPage) {
+          setInitialPdfPage(progress.lastPage);
+          setCurrentPdfPage(progress.lastPage);
+        } else {
+          setInitialPdfPage(1);
+          setCurrentPdfPage(1);
+        }
+
+        if (typeof progress?.totalStudySec === "number") {
+          setStudyTimeSeconds(progress.totalStudySec);
+        }
+
+        if (conversation?.id) {
+          activeConversationIdRef.current = conversation.id;
+          setMessages(
+            (conversation.messages || []).map((m: any) => ({
+              id: m.id,
+              role: m.role,
+              content: m.content,
+              timestamp: new Date(m.timestamp || Date.now()),
+            })),
+          );
+        } else {
+          activeConversationIdRef.current = null;
+          setMessages([]);
+        }
+      }
+
       const chatResponse = await fetch(`/api/chat-history?lessonId=${params.lessonId}`, {
         cache: "no-store",
       });
 
       if (chatResponse.ok) {
         const chatData = await chatResponse.json();
-        if (chatData.length > 0) {
+        if (!activeConversationIdRef.current && chatData.length > 0) {
           const latestHistory = chatData[chatData.length - 1];
+          activeConversationIdRef.current = latestHistory.id;
           if (latestHistory.messages) {
             setMessages(latestHistory.messages.map((m: any) => ({
               ...m,
@@ -469,6 +509,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               lessonId: params.lessonId,
+              conversationId: activeConversationIdRef.current,
               messages: messages
             }),
           });
@@ -577,8 +618,14 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           lessonId: params.lessonId,
+          conversationId: activeConversationIdRef.current,
           messages: [],
         }),
+      }).then(async (response) => {
+        if (response.ok) {
+          const data = await response.json();
+          activeConversationIdRef.current = data.id;
+        }
       });
 
       const response = await fetch("/api/ai/chat", {
@@ -926,9 +973,22 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                 </div>
                 <PDFViewer
                   url={pdfUrl}
+                  initialPage={initialPdfPage}
                   onPageChange={(page, totalPages) => {
                     setCurrentPdfPage(page);
                     setTotalPdfPages(totalPages);
+
+                    void fetch("/api/learning-state", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        lessonId: params.lessonId,
+                        page,
+                        totalPages,
+                      }),
+                    }).catch((error) => {
+                      console.error("Failed to update learning state:", error);
+                    });
                   }}
                 />
               </div>

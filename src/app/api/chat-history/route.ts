@@ -10,6 +10,7 @@ const messageSchema = z.object({
 
 const chatHistoryPayloadSchema = z.object({
   lessonId: z.string().min(1),
+  conversationId: z.string().min(1).optional(),
   messages: z.array(messageSchema).max(200),
 });
 
@@ -25,10 +26,36 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing lessonId" }, { status: 400 });
   }
 
-  const history = await prisma.chatHistory.findMany({
-    where: { lessonId },
-    orderBy: { createdAt: "asc" },
+  const prismaAny = prisma as any;
+  const conversations = await prismaAny.aICo.findMany({
+    where: {
+      lessonId,
+      userId: authUser.userId,
+    },
+    include: {
+      messages: {
+        orderBy: { createdAt: "asc" },
+      },
+    },
+    orderBy: { updatedAt: "asc" },
   });
+
+  const history = conversations.map((conversation: any) => ({
+    id: conversation.id,
+    lessonId: conversation.lessonId,
+    userId: conversation.userId,
+    title: conversation.title,
+    createdAt: conversation.createdAt,
+    updatedAt: conversation.updatedAt,
+    messages: (conversation.messages || []).map((message: any) => ({
+      id: message.id,
+      role: message.role,
+      content: message.content,
+      metadata: message.metadata || null,
+      timestamp: message.createdAt,
+    })),
+  }));
+
   return NextResponse.json(history);
 }
 
@@ -50,20 +77,101 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { lessonId, messages } = parsed.data;
-
-  // Xoá lịch sử cũ và lưu mới (1 lịch sử cho mỗi lesson)
-  await prisma.chatHistory.deleteMany({ where: { lessonId } });
+  const { lessonId, conversationId, messages } = parsed.data;
+  const prismaAny = prisma as any;
 
   if (messages.length === 0) {
-    return NextResponse.json({ lessonId, messages: [] });
+    const conversation = await prismaAny.aICo.create({
+      data: {
+        lessonId,
+        userId: authUser.userId,
+        title: "Đoạn chat mới",
+      },
+    });
+
+    return NextResponse.json({
+      id: conversation.id,
+      lessonId,
+      userId: authUser.userId,
+      messages: [],
+    });
   }
 
-  const created = await prisma.chatHistory.create({
-    data: {
-      lessonId,
-      messages,
-    },
+  const existingConversation = conversationId
+    ? await prismaAny.aICo.findFirst({
+        where: {
+          id: conversationId,
+          lessonId,
+          userId: authUser.userId,
+        },
+      })
+    : null;
+
+  const conversation = existingConversation
+    ? await prismaAny.$transaction(async (tx: any) => {
+        await tx.aIMessage.deleteMany({
+          where: { conversationId: existingConversation.id },
+        });
+
+        await tx.aICo.update({
+          where: { id: existingConversation.id },
+          data: {
+            title:
+              messages.find((message) => message.role === "user")?.content.slice(0, 80) ||
+              existingConversation.title ||
+              "Đoạn chat mới",
+            messages: {
+              create: messages.map((message) => ({
+                role: message.role,
+                content: message.content,
+                metadata: null,
+              })),
+            },
+          },
+        });
+
+        return tx.aICo.findUnique({
+          where: { id: existingConversation.id },
+          include: {
+            messages: {
+              orderBy: { createdAt: "asc" },
+            },
+          },
+        });
+      })
+    : await prismaAny.aICo.create({
+        data: {
+          lessonId,
+          userId: authUser.userId,
+          title: messages.find((message) => message.role === "user")?.content.slice(0, 80) || "Đoạn chat mới",
+          messages: {
+            create: messages.map((message) => ({
+              role: message.role,
+              content: message.content,
+              metadata: null,
+            })),
+          },
+        },
+        include: {
+          messages: {
+            orderBy: { createdAt: "asc" },
+          },
+        },
+      });
+
+  return NextResponse.json({
+    id: conversation.id,
+    lessonId: conversation.lessonId,
+    userId: conversation.userId,
+    title: conversation.title,
+    createdAt: conversation.createdAt,
+    updatedAt: conversation.updatedAt,
+    messages: conversation.messages.map((message: any) => ({
+      id: message.id,
+      role: message.role,
+      content: message.content,
+      metadata: message.metadata || null,
+      timestamp: message.createdAt,
+    })),
   });
-  return NextResponse.json(created);
 }

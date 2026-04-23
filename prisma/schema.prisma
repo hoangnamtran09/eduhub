@@ -14,6 +14,12 @@ enum UserRole {
   TEACHER
 }
 
+enum LessonProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
 model User {
   id              String           @id @default(cuid())
   email           String           @unique
@@ -113,7 +119,6 @@ model Lesson {
   slug            String?
   chapterId       String?
   aiConversations AICo[]
-  ChatHistory     ChatHistory[]
   studySessions   StudySession[]
   Chapter         Chapter?         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   subject         Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
@@ -191,15 +196,21 @@ model QuizAttempt {
 }
 
 model LessonProgress {
-  id          String    @id @default(cuid())
-  lessonId    String
-  userId      String
-  completed   Boolean   @default(false)
-  completedAt DateTime?
-  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String               @id @default(cuid())
+  lessonId      String
+  userId        String
+  completed     Boolean              @default(false)
+  completedAt   DateTime?
+  startedAt     DateTime?
+  lastStudiedAt DateTime?
+  lastPage      Int?
+  totalStudySec Int                  @default(0)
+  status        LessonProgressStatus @default(NOT_STARTED)
+  lesson        Lesson               @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([lessonId, userId])
+  @@index([userId, status])
 }
 
 model Enrollment {
@@ -217,10 +228,14 @@ model AICo {
   id        String      @id @default(cuid())
   lessonId  String?
   userId    String
+  title     String?
   createdAt DateTime    @default(now())
-  lesson    Lesson?     @relation(fields: [lessonId], references: [id])
+  updatedAt DateTime    @updatedAt
+  lesson    Lesson?     @relation(fields: [lessonId], references: [id], onDelete: SetNull)
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  AIMessage[]
+
+  @@index([userId, lessonId, updatedAt])
 }
 
 model AIMessage {
@@ -228,8 +243,11 @@ model AIMessage {
   conversationId String
   role           String
   content        String
+  metadata       Json?
   createdAt      DateTime @default(now())
   conversation   AICo     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
 }
 
 model ExerciseAttempt {
@@ -273,15 +291,6 @@ model Chapter {
   updatedAt DateTime @updatedAt
   Course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   Lesson    Lesson[]
-}
-
-model ChatHistory {
-  id        String   @id @default(cuid())
-  lessonId  String
-  messages  Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Lesson    Lesson   @relation(fields: [lessonId], references: [id])
 }
 
 model StudySession {

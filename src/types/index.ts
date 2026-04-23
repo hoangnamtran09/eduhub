@@ -130,6 +130,11 @@ export interface LessonProgress {
   userId: string;
   completed: boolean;
   completedAt?: Date;
+  startedAt?: Date;
+  lastStudiedAt?: Date;
+  lastPage?: number;
+  totalStudySec: number;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
 }
 
 export interface Enrollment {
@@ -145,16 +150,18 @@ export interface AIConversation {
   id: string;
   lessonId?: string;
   userId: string;
+  title?: string;
   messages: AIMessage[];
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface AIMessage {
   id: string;
   conversationId: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
-  metadata?: any;
+  metadata?: Record<string, unknown> | null;
   createdAt: Date;
 }
 

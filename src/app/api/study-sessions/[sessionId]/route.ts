@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getAuthUser } from "@/lib/auth/get-auth-user";
+import { updateLessonProgressStudyTime } from "@/lib/learning-state";
 
 interface RouteParams {
   params: { sessionId: string };
@@ -33,6 +34,8 @@ async function updateStudySession(request: Request, { params }: RouteParams) {
         endedAt: ended ? new Date() : existing.endedAt,
       },
     });
+
+    await updateLessonProgressStudyTime(authUser.userId, existing.lessonId, extraSeconds);
 
     return NextResponse.json(updated);
   } catch (error) {

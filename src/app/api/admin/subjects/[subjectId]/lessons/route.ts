@@ -165,7 +165,7 @@ export async function DELETE(
     }
 
     const prismaAny = prisma as any;
-    await prismaAny.chatHistory.deleteMany({ where: { lessonId: id } });
+    await prismaAny.aICo.deleteMany({ where: { lessonId: id } });
     await prismaAny.lesson.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
