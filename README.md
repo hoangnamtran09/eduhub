@@ -59,6 +59,63 @@ OPENAI_API_KEY=your_openai_api_key
 BEKNOEE_API_KEY=your_beeknoee_api_key
 ```
 
+## Deploy
+
+Kiến trúc phù hợp với codebase hiện tại:
+
+- `backend/` FastAPI deploy trên Railway
+- app Next.js hiện tại nên deploy trên nền tảng hỗ trợ Node server runtime đầy đủ
+
+Lý do: repo này có nhiều `src/app/api/*` route dùng `Prisma`, `fs`, `path`, `Buffer` và ghi file vào `public/`, nên không phù hợp để đưa nguyên app lên Cloudflare Pages runtime theo mô hình Workers.
+
+### Railway cho backend FastAPI
+
+Thư mục backend đã có sẵn:
+
+- `backend/Dockerfile`
+- `backend/requirements.txt`
+- `backend/railway.json`
+- `backend/.env.example`
+
+Thiết lập trên Railway:
+
+1. Tạo service mới từ GitHub repo này.
+2. Đặt `Root Directory` là `backend`.
+3. Railway sẽ build bằng `Dockerfile` có sẵn.
+4. Thêm các biến môi trường theo `backend/.env.example`.
+5. Đặt `ALLOWED_ORIGINS` thành domain frontend production của bạn.
+
+Ví dụ:
+
+```env
+PROJECT_NAME=EduHub AI Backend
+DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require
+BEEKNOEE_API_KEY=your_ai_provider_api_key
+BEEKNOEE_BASE_URL=https://api.krouter.net/v1
+TAVILY_API_KEY=your_tavily_api_key
+ALLOWED_ORIGINS=https://app.yourdomain.com
+```
+
+Sau khi deploy, kiểm tra:
+
+```bash
+curl https://your-railway-domain.up.railway.app/health
+```
+
+### Frontend app
+
+Frontend cần có biến môi trường:
+
+```env
+NEXT_PUBLIC_BACKEND_URL=https://your-railway-domain.up.railway.app
+```
+
+Route `src/app/api/upload-pdf/route.ts` hiện đã yêu cầu biến này phải tồn tại để tránh âm thầm fallback về `localhost` khi chạy production.
+
+### Nếu vẫn bắt buộc dùng Cloudflare
+
+Cloudflare nên đặt ở lớp CDN/domain/proxy cho frontend hoặc static assets. Với codebase hiện tại, không nên deploy toàn bộ app Next.js hiện tại lên Cloudflare Pages nếu chưa tách các API route Node-only ra khỏi app hoặc chuyển chúng sang backend riêng.
+
 ## 📁 Cấu trúc dự án
 
 ```

@@ -6,6 +6,15 @@ import path from "path";
 
 export async function POST(request: NextRequest) {
   try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+    if (!backendUrl) {
+      return NextResponse.json(
+        { error: "NEXT_PUBLIC_BACKEND_URL is not configured" },
+        { status: 500 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const subjectName = formData.get("subjectName") as string | null;
@@ -57,7 +66,6 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
       const outputDir = path.join(process.cwd(), "public", "pdfs", "pages", course.id);
       await mkdir(outputDir, { recursive: true });
 
