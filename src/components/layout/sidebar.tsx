@@ -14,6 +14,7 @@ import {
   Library,
   ClipboardList,
   NotebookPen,
+  Medal,
   LogOut
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -33,6 +34,7 @@ const adminNavItems = [
   { href: "/admin/students", label: "Quản lý học sinh", icon: Library },
   { href: "/admin/subjects", label: "Quản lý môn học", icon: ClipboardList },
   { href: "/admin/assignments", label: "Giao bài tập", icon: NotebookPen },
+  { href: "/admin/achievements", label: "Quản lý thành tựu", icon: Medal },
 ];
 
 export function Sidebar() {

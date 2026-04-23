@@ -54,6 +54,20 @@ model StudentProfile {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model Achievement {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String   @default("🏆")
+  ruleType    String
+  ruleValue   Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, ruleType])
+}
+
 model Subject {
   id          String     @id @default(cuid())
   name        String

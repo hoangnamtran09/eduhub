@@ -4,6 +4,32 @@ import { getAuthUser } from "@/lib/auth/get-auth-user";
 
 const dayLabels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
+function isAchievementUnlocked(ruleType: string, ruleValue: number, metrics: {
+  streakDays: number;
+  averageScore: number;
+  completedExercises: number;
+  totalStudySeconds: number;
+  weeklyStudySeconds: number;
+  diamonds: number;
+}) {
+  switch (ruleType) {
+    case "streak_days":
+      return metrics.streakDays >= ruleValue;
+    case "avg_quiz_score":
+      return metrics.averageScore >= ruleValue;
+    case "completed_exercises":
+      return metrics.completedExercises >= ruleValue;
+    case "total_study_hours":
+      return metrics.totalStudySeconds >= ruleValue * 3600;
+    case "weekly_study_hours":
+      return metrics.weeklyStudySeconds >= ruleValue * 3600;
+    case "diamonds":
+      return metrics.diamonds >= ruleValue;
+    default:
+      return false;
+  }
+}
+
 export async function GET() {
   try {
     const authUser = await getAuthUser();
@@ -80,36 +106,37 @@ export async function GET() {
       (attempt: any) => typeof attempt.score === "number" && attempt.score >= 80,
     ).length;
 
-    const achievements = [
-      {
-        id: "streak",
-        title: "Chăm chỉ",
-        description: "Học 7 ngày liên tiếp",
-        icon: "🔥",
-        unlocked: (user.profile?.streakDays || 0) >= 7,
-      },
-      {
-        id: "quiz",
-        title: "Điểm cao",
-        description: "Đạt từ 8 điểm quiz trở lên",
-        icon: "🎯",
-        unlocked: avgQuizScore >= 8,
-      },
-      {
-        id: "exercise",
-        title: "Bền bỉ",
-        description: "Hoàn thành 5 bài tập AI đạt yêu cầu",
-        icon: "📚",
-        unlocked: completedExercises >= 5,
-      },
-      {
-        id: "time",
-        title: "Tập trung",
-        description: "Tích lũy ít nhất 5 giờ học",
-        icon: "⭐",
-        unlocked: totalStudySeconds >= 5 * 3600,
-      },
-    ];
+    const metrics = {
+      streakDays: user.profile?.streakDays || 0,
+      averageScore: avgQuizScore,
+      completedExercises,
+      totalStudySeconds,
+      weeklyStudySeconds,
+      diamonds: user.diamonds || 0,
+    };
+
+    let achievementConfigs: any[] = [];
+
+    try {
+      const dbAchievements = await prismaAny.achievement.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: "asc" },
+      });
+
+      if (Array.isArray(dbAchievements) && dbAchievements.length > 0) {
+        achievementConfigs = dbAchievements;
+      }
+    } catch (achievementError) {
+      console.warn("Achievement query failed, falling back to defaults:", achievementError);
+    }
+
+    const achievements = achievementConfigs.map((achievement: any) => ({
+      id: achievement.id,
+      title: achievement.title,
+      description: achievement.description,
+      icon: achievement.icon,
+      unlocked: isAchievementUnlocked(achievement.ruleType, achievement.ruleValue, metrics),
+    }));
 
     const recentActivity = [
       ...(exerciseAttempts || []).slice(0, 3).map((attempt: any) => ({
@@ -149,7 +176,7 @@ export async function GET() {
         averageScore: Number(avgQuizScore.toFixed(1)),
         completedExercises,
         weeklyStudyHours: Number((weeklyStudySeconds / 3600).toFixed(1)),
-        achievementCount: achievements.filter((item) => item.unlocked).length,
+        achievementCount: achievements.filter((item: { unlocked: boolean }) => item.unlocked).length,
         totalAchievements: achievements.length,
         streakDays: user.profile?.streakDays || 0,
         diamonds: user.diamonds || 0,

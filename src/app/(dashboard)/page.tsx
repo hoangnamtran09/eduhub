@@ -114,6 +114,8 @@ export default function DashboardPage() {
     }
   }, [user?.role]);
 
+  const hasAchievements = (progress?.achievements?.length || 0) > 0;
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -137,7 +139,7 @@ export default function DashboardPage() {
   );
   
   const QuickFacts = () => (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div className={`grid grid-cols-2 gap-4 ${hasAchievements ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
        {progress?.stats && (
         <>
           <StatCard 
@@ -161,13 +163,15 @@ export default function DashboardPage() {
             color="text-brand-600"
             bgColor="bg-brand-100"
           />
-          <StatCard 
-            icon={Award}
-            label="Thành tích"
-            value={`${progress.stats.achievementCount || 0}/${progress.stats.totalAchievements || 4}`}
-            color="text-amber-500"
-            bgColor="bg-amber-100"
-          />
+          {hasAchievements && (
+            <StatCard 
+              icon={Award}
+              label="Thành tích"
+              value={`${progress.stats.achievementCount || 0}/${progress.stats.totalAchievements || 0}`}
+              color="text-amber-500"
+              bgColor="bg-amber-100"
+            />
+          )}
         </>
       )}
     </div>
@@ -271,7 +275,7 @@ export default function DashboardPage() {
         
         {/* Sidebar */}
         <div className="space-y-8">
-           {user?.role === "STUDENT" && progress && (
+           {user?.role === "STUDENT" && progress && hasAchievements && (
             <>
               <WeeklyProgressChart />
               <Achievements />
@@ -290,4 +294,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

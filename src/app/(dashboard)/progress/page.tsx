@@ -73,6 +73,8 @@ export default function ProgressPage() {
     return Math.max(...data.weeklyProgress.map((item) => item.hours), 1);
   }, [data]);
 
+  const hasAchievements = (data?.achievements?.length || 0) > 0;
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -99,11 +101,11 @@ export default function ProgressPage() {
         <p className="mt-1 text-slate-500">Theo dõi dữ liệu học tập thật được ghi nhận từ hệ thống</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className={`grid grid-cols-2 gap-4 ${hasAchievements ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
         <StatCard icon={Trophy} value={String(data.stats.averageScore)} label="Điểm quiz TB" />
         <StatCard icon={Target} value={String(data.stats.completedExercises)} label="Bài tập đạt" />
         <StatCard icon={Calendar} value={`${data.stats.weeklyStudyHours}h`} label="Tuần này" />
-        <StatCard icon={Award} value={`${data.stats.achievementCount}/${data.stats.totalAchievements}`} label="Thành tựu" />
+        {hasAchievements && <StatCard icon={Award} value={`${data.stats.achievementCount}/${data.stats.totalAchievements}`} label="Thành tựu" />}
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -136,6 +138,7 @@ export default function ProgressPage() {
         </CardContent>
       </Card>
 
+      {hasAchievements && (
       <div>
         <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900">
           <Award className="h-5 w-5 text-accent-500" />
@@ -162,6 +165,7 @@ export default function ProgressPage() {
           ))}
         </div>
       </div>
+      )}
 
       <Card className="border-white/80 bg-white/94 shadow-soft">
         <CardHeader>
