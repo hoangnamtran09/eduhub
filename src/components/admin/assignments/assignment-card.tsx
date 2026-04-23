@@ -18,7 +18,7 @@ interface AssignmentCardProps {
 
 export function AssignmentCard({ assignment }: AssignmentCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const submittedCount = assignment.recipients.filter((r: AssignmentRecipient) => r.status === 'submitted').length;
+  const submittedCount = assignment.recipients.filter((r: AssignmentRecipient) => r.status === 'accepted').length;
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -33,7 +33,7 @@ export function AssignmentCard({ assignment }: AssignmentCardProps) {
           </CardTitle>
           <div className="flex items-center gap-4">
             <Badge variant={submittedCount === assignment.recipients.length ? "default" : "secondary"}>
-              {submittedCount} / {assignment.recipients.length} đã nộp
+              {submittedCount} / {assignment.recipients.length} đã nhận
             </Badge>
             {isExpanded ? (
               <ChevronDown className="w-5 h-5 text-gray-500" />
@@ -58,8 +58,8 @@ export function AssignmentCard({ assignment }: AssignmentCardProps) {
               {assignment.recipients.map((recipient: AssignmentRecipient) => (
                 <div key={recipient.id} className="flex justify-between items-center p-2 rounded-md bg-gray-50">
                     <p className="font-medium text-sm">{recipient.student.fullName || recipient.student.email}</p>
-                    <Badge variant={recipient.status === 'submitted' ? 'default' : 'outline'}>
-                      {recipient.status === 'submitted' ? 'Đã nộp' : 'Chưa nộp'}
+                    <Badge variant={recipient.status === 'accepted' ? 'default' : 'outline'}>
+                      {recipient.status === 'accepted' ? 'Đã nhận' : 'Chưa nhận'}
                     </Badge>
                 </div>
               ))}

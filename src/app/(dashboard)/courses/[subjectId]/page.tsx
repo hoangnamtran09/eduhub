@@ -144,8 +144,8 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-8 space-y-8">
+        <div className="grid grid-cols-1 gap-8 items-start">
+          <div className="space-y-8">
             {courses.length > 0 ? (
               courses.map((course) => (
                 <div key={course.id} className="space-y-6">
@@ -223,66 +223,6 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
                 <p className="text-slate-500 max-w-xs mx-auto">Môn học này hiện chưa được cập nhật nội dung bài học. Vui lòng quay lại sau.</p>
               </div>
             )}
-          </div>
-
-          {/* Sidebar Stats Area */}
-          <div className="lg:col-span-4 space-y-6">
-              <Card className="rounded-[32px] border-none bg-[linear-gradient(135deg,#111827_0%,#1f2a3d_52%,#153f3d_100%)] p-8 text-white shadow-2xl shadow-slate-200 relative overflow-hidden group">
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center">
-                    <Trophy className="w-6 h-6 text-brand-400" />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-white/5 px-3 py-1 rounded-full">Tiến độ</span>
-                </div>
-                
-                <h3 className="text-2xl font-bold mb-2">Chương trình học</h3>
-                <p className="text-slate-400 text-sm mb-8 leading-relaxed">Hãy bắt đầu bài học đầu tiên để theo dõi tiến độ của bạn nhé!</p>
-                
-                <div className="space-y-6">
-                  <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-500 w-[4%] rounded-full shadow-[0_0_12px_rgba(239,68,68,0.5)]" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Đã học</p>
-                      <p className="text-2xl font-bold tracking-tight">0 <span className="text-sm font-medium text-slate-500">/ {totalLessons}</span></p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Thời gian</p>
-                      <p className="text-2xl font-bold tracking-tight">0 <span className="text-sm font-medium text-slate-500">h</span></p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-brand-500/20 transition-colors" />
-            </Card>
-
-              <Card className="rounded-[32px] border-white/80 p-8 shadow-soft bg-white/94">
-              <h3 className="text-lg font-bold text-slate-900 mb-6">Liên kết hữu ích</h3>
-              <div className="space-y-3">
-                <Button variant="ghost" className="w-full justify-between h-12 px-4 rounded-xl hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-blue-500" />
-                    </div>
-                    <span className="text-sm font-semibold">Tài liệu ôn tập</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" className="w-full justify-between h-12 px-4 rounded-xl hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                      <PlayCircle className="w-4 h-4 text-emerald-500" />
-                    </div>
-                    <span className="text-sm font-semibold">Video bài giảng</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </Card>
           </div>
         </div>
       </div>

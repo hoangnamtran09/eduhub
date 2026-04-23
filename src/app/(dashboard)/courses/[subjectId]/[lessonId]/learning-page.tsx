@@ -108,6 +108,7 @@ export default function LearningPage({
   const [isEndingLesson, setIsEndingLesson] = useState(false);
   const [studySessionActive, setStudySessionActive] = useState(false);
   const [chatMode, setChatMode] = useState<"text" | "math">("text");
+  const [studyTimeSeconds, setStudyTimeSeconds] = useState(0);
 
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 
@@ -250,8 +251,10 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, sending, isStarting]);
 
-  const startStudySession = async () => {
+  const startStudySession = useCallback(async () => {
     if (loading || !user?.id || studyStartedRef.current) return true;
+
+    studyStartedRef.current = true;
 
     try {
       const response = await fetch("/api/study-sessions", {
@@ -261,25 +264,33 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
       });
 
       if (!response.ok) {
+        studyStartedRef.current = false;
         return false;
       }
 
       const session = await response.json();
       studySessionIdRef.current = session.id;
-      studyStartedRef.current = true;
       setStudySessionActive(true);
+      setStudyTimeSeconds(0);
       return true;
     } catch (error) {
+      studyStartedRef.current = false;
       console.error("Failed to start study session:", error);
       return false;
     }
-  };
+  }, [loading, params.lessonId, user?.id]);
+
+  useEffect(() => {
+    if (loading || !user?.id || studySessionActive) return;
+    startStudySession();
+  }, [loading, user?.id, studySessionActive, startStudySession]);
 
   useEffect(() => {
     if (!studySessionActive || !studySessionIdRef.current) return;
 
     const timer = window.setInterval(() => {
       studyUnsyncedSecondsRef.current += 1;
+      setStudyTimeSeconds((prev) => prev + 1);
 
       if (studyUnsyncedSecondsRef.current < STUDY_PING_SECONDS) {
         return;
@@ -367,6 +378,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
       studySessionIdRef.current = null;
       studyStartedRef.current = false;
       setStudySessionActive(false);
+      setStudyTimeSeconds(0);
     } catch (error) {
       console.error("Failed to end study session:", error);
     } finally {
@@ -602,6 +614,17 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
     }
   };
 
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleStartChat = async () => {
     const started = await startStudySession();
     if (!started) return;
@@ -763,6 +786,12 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
         {/* User Stats / Diamonds */}
         <div className="flex items-center gap-3">
+          {studySessionActive && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 rounded-lg border border-emerald-200">
+              <Clock className="w-4 h-4 text-emerald-600" />
+              <span className="text-sm font-bold text-emerald-700">{formatTime(studyTimeSeconds)}</span>
+            </div>
+          )}
           <div className="flex items-center gap-1.5 px-3 py-1 bg-accent-50 rounded-full border border-accent-100">
             <Gem className="w-4 h-4 text-amber-500 fill-amber-500" />
             <span className="text-xs font-bold text-amber-700">{user?.diamonds || 0}</span>
@@ -771,6 +800,18 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
             <Trophy className="w-4 h-4 text-brand-500" />
             <span className="text-xs font-bold text-brand-700">Cấp 1</span>
           </div>
+          {studySessionActive && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={handleEndLesson}
+              disabled={isEndingLesson}
+            >
+              {isEndingLesson ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+              Kết thúc học
+            </Button>
+          )}
         </div>
       </div>
 
@@ -925,16 +966,6 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-[10px] text-red-500 hover:text-red-600"
-                onClick={handleEndLesson}
-                disabled={!studySessionActive || isEndingLesson}
-                title="Kết thúc bài học"
-              >
-                {isEndingLesson ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-              </Button>
-              <Button
-                variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-slate-400"
                 onClick={handleNewChat}
@@ -945,9 +976,6 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
                 <History className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
-                <X className="w-4 h-4" />
               </Button>
             </div>
           </div>

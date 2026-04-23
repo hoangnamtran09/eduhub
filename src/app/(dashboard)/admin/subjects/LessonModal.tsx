@@ -17,6 +17,7 @@ interface LessonModalProps {
   uploadSuccess: boolean;
   LESSON_TYPES: { value: string; label: string; color: string }[];
   onAutoContent: () => void;
+  existingPdfUrl?: string | null;
 }
 
 export const LessonModal: React.FC<LessonModalProps> = ({
@@ -33,6 +34,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
   uploadSuccess,
   LESSON_TYPES,
   onAutoContent,
+  existingPdfUrl,
 }) => {
   if (!open) return null;
   return (
@@ -100,6 +102,26 @@ export const LessonModal: React.FC<LessonModalProps> = ({
           </div> */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">File PDF bài học</label>
+            {existingPdfUrl && !pdfFile && (
+              <div className="mb-3 p-3 rounded-lg border border-brand-200 bg-brand-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <File className="w-4 h-4 text-brand-600" />
+                    <div>
+                      <p className="text-sm font-medium text-brand-900">PDF đã có sẵn</p>
+                      <a 
+                        href={existingPdfUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-brand-600 hover:underline"
+                      >
+                        Xem file hiện tại
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className={`border-2 border-dashed rounded-xl p-4 text-center transition-colors ${pdfFile ? "border-emerald-300 bg-emerald-50" : "border-slate-200 hover:border-brand-400"}`}>
               <input
                 type="file"
@@ -125,7 +147,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                 ) : (
                   <div className="text-slate-400">
                     <Upload className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-sm font-medium">Chọn file PDF hoặc kéo thả vào đây</p>
+                    <p className="text-sm font-medium">{existingPdfUrl ? "Chọn file PDF mới để thay thế" : "Chọn file PDF hoặc kéo thả vào đây"}</p>
                     <p className="text-xs mt-1">Định dạng: .pdf</p>
                   </div>
                 )}
