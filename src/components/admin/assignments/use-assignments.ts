@@ -6,6 +6,7 @@ const emptyForm: AssignmentForm = {
   title: "",
   description: "",
   pdfUrl: "",
+  pdfStorageKey: "",
   subjectId: "",
   lessonId: "",
   dueDate: "",
@@ -132,7 +133,11 @@ export function useAssignments() {
       }
 
       const data = await response.json();
-      setForm((current: AssignmentForm) => ({ ...current, pdfUrl: data.fileUrl }));
+      setForm((current: AssignmentForm) => ({
+        ...current,
+        pdfUrl: data.fileUrl,
+        pdfStorageKey: data.storageKey || "",
+      }));
       setAssignmentPdfName(data.fileName || file.name);
     } catch (error) {
       console.error(error);

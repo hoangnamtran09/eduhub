@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
+import { isR2Configured, uploadFileToR2 } from "@/lib/storage/r2";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,22 +18,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Please upload a PDF file" }, { status: 400 });
     }
 
-    const uploadsDir = path.join(process.cwd(), "public", "pdfs", "assignments");
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
+    if (!isR2Configured()) {
+      return NextResponse.json(
+        { error: "R2 storage is not configured" },
+        { status: 500 },
+      );
     }
 
-    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-    const filePath = path.join(uploadsDir, fileName);
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    await writeFile(filePath, buffer);
+    const uploadResult = await uploadFileToR2({
+      file,
+      folder: "pdfs/assignments",
+      fileNamePrefix: "assignment",
+      contentType: "application/pdf",
+    });
 
     return NextResponse.json({
       success: true,
       fileName: file.name,
-      fileUrl: `/pdfs/assignments/${fileName}`,
+      fileUrl: uploadResult.url,
+      storageKey: uploadResult.key,
       fileSize: file.size,
     });
   } catch (error) {

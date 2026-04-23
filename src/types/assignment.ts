@@ -24,6 +24,7 @@ export interface AssignmentRecord {
   title: string;
   description: string;
   pdfUrl?: string | null;
+  pdfStorageKey?: string | null;
   dueDate: string | null;
   maxScore: number;
   targetGradeLevel: number | null;
@@ -35,6 +36,7 @@ export interface AssignmentForm {
     title: string;
     description: string;
     pdfUrl: string;
+    pdfStorageKey?: string;
     subjectId: string;
     lessonId: string;
     dueDate: string;

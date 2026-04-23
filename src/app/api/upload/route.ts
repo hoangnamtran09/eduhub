@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
 import path from "path";
 import { z } from "zod";
 import { requireAdminOrTeacher } from "@/lib/auth/require-role";
+import { isR2Configured, uploadFileToR2 } from "@/lib/storage/r2";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,12 +12,6 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const uploadSchema = z.object({
   subjectName: z.string().trim().min(1).max(120),
 });
-
-function sanitizeFileName(name: string) {
-  const extension = path.extname(name).toLowerCase();
-  const baseName = path.basename(name, extension).replace(/[^a-zA-Z0-9-_]/g, "_");
-  return `${baseName || "document"}${extension}`;
-}
 
 export async function POST(request: NextRequest) {
   const authorization = await requireAdminOrTeacher();
@@ -67,30 +60,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create uploads directory if not exists
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
+    if (!isR2Configured()) {
+      return NextResponse.json(
+        { error: "R2 storage is not configured" },
+        { status: 500 },
+      );
     }
-    
-    // Generate unique filename
-    const timestamp = Date.now();
-    const fileName = `${timestamp}-${sanitizeFileName(file.name)}`;
-    const filePath = path.join(uploadsDir, fileName);
 
-    // Save file to public/uploads
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
+    const normalizedSubject = parsed.data.subjectName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "subject";
 
-    // Return public URL
-    const fileUrl = `/uploads/${fileName}`;
+    const uploadResult = await uploadFileToR2({
+      file,
+      folder: `uploads/${normalizedSubject}`,
+      fileNamePrefix: "document",
+      contentType: "application/pdf",
+    });
 
     return NextResponse.json({
       success: true,
-      fileUrl,
+      fileUrl: uploadResult.url,
       fileName: file.name,
       subjectName: parsed.data.subjectName,
+      storageKey: uploadResult.key,
     });
 
   } catch (error) {

@@ -96,6 +96,7 @@ model Course {
   description String?
   thumbnail   String?
   pdfUrl      String?
+  pdfStorageKey String?
   gradeLevel  Int
   isPublished Boolean      @default(false)
   createdAt   DateTime     @default(now())
@@ -116,6 +117,7 @@ model Lesson {
   type            String           @default("theory")
   isPublished     Boolean          @default(true)
   pdfUrl          String?
+  pdfStorageKey   String?
   slug            String?
   chapterId       String?
   aiConversations AICo[]
@@ -134,6 +136,7 @@ model Assignment {
   title            String
   description      String                @db.Text
   pdfUrl           String?
+   pdfStorageKey   String?
   lessonId         String?
   createdById      String?
   dueDate          DateTime?
