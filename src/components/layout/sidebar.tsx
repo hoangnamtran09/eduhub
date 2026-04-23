@@ -46,11 +46,38 @@ export function Sidebar() {
   const logout = useAuthStore((state) => state.logout);
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [streakDays, setStreakDays] = useState(0);
   const navItems = user?.role === "ADMIN" ? adminNavItems : defaultNavItems;
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!user || user.role === "ADMIN") return;
+
+    let cancelled = false;
+
+    const loadProgressSummary = async () => {
+      try {
+        const response = await fetch("/api/progress");
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (!cancelled) {
+          setStreakDays(Number(data?.stats?.streakDays || 0));
+        }
+      } catch (error) {
+        console.error("Failed to load streak summary:", error);
+      }
+    };
+
+    loadProgressSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, user]);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -149,11 +176,11 @@ export function Sidebar() {
                 <Flame className="h-5 w-5 text-accent-300" />
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55">Học tập 7 ngày</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55">Chuỗi học hiện tại</p>
                 <div className="flex items-center gap-1">
-                  <span className="text-lg font-semibold text-white">Chuỗi: 7</span>
+                  <span className="text-lg font-semibold text-white">Chuỗi: {streakDays}</span>
                   <div className="flex gap-0.5">
-                    {[1, 2, 3].map(i => (
+                    {Array.from({ length: Math.min(3, streakDays) }).map((_, i) => (
                        <div key={i} className="h-1 w-1 rounded-full bg-brand-300" />
                     ))}
                   </div>
