@@ -118,16 +118,18 @@ export async function GET() {
     let achievementConfigs: any[] = [];
 
     try {
-      const dbAchievements = await prismaAny.achievement.findMany({
-        where: { isActive: true },
-        orderBy: { createdAt: "asc" },
-      });
+      if (prismaAny.achievement) {
+        const dbAchievements = await prismaAny.achievement.findMany({
+          where: { isActive: true },
+          orderBy: { createdAt: "asc" },
+        });
 
-      if (Array.isArray(dbAchievements) && dbAchievements.length > 0) {
-        achievementConfigs = dbAchievements;
+        if (Array.isArray(dbAchievements) && dbAchievements.length > 0) {
+          achievementConfigs = dbAchievements;
+        }
       }
     } catch (achievementError) {
-      console.warn("Achievement query failed, falling back to defaults:", achievementError);
+      console.warn("Achievement query failed:", achievementError);
     }
 
     const achievements = achievementConfigs.map((achievement: any) => ({

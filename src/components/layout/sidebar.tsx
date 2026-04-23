@@ -8,6 +8,7 @@ import {
   BookOpen, 
   Trophy, 
   Settings,
+  ChevronDown,
   ChevronLeft,
   Flame,
   GraduationCap,
@@ -22,6 +23,18 @@ import { Button } from "@/components/ui/button";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { useAuthStore } from "@/stores/auth-store";
 
+type NavLeafItem = {
+  href: string;
+  label: string;
+  icon: any;
+};
+
+type NavGroupItem = {
+  label: string;
+  icon: any;
+  children: NavLeafItem[];
+};
+
 const defaultNavItems = [
   { href: "/", label: "Trang chủ", icon: LayoutDashboard },
   { href: "/courses", label: "Khóa học", icon: BookOpen },
@@ -34,7 +47,16 @@ const adminNavItems = [
   { href: "/admin/students", label: "Quản lý học sinh", icon: Library },
   { href: "/admin/subjects", label: "Quản lý môn học", icon: ClipboardList },
   { href: "/admin/assignments", label: "Giao bài tập", icon: NotebookPen },
-  { href: "/admin/achievements", label: "Quản lý thành tựu", icon: Medal },
+];
+
+const adminNavGroups: NavGroupItem[] = [
+  {
+    label: "Quản lí bổ sung",
+    icon: Settings,
+    children: [
+      { href: "/admin/achievements", label: "Quản lý thành tựu", icon: Medal },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -47,6 +69,9 @@ export function Sidebar() {
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [streakDays, setStreakDays] = useState(0);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    "Quản lí bổ sung": true,
+  });
   const navItems = user?.role === "ADMIN" ? adminNavItems : defaultNavItems;
 
   useEffect(() => {
@@ -79,6 +104,20 @@ export function Sidebar() {
     };
   }, [pathname, user]);
 
+  useEffect(() => {
+    if (user?.role !== "ADMIN") return;
+
+    setOpenGroups(() => {
+      const nextState: Record<string, boolean> = {};
+
+      adminNavGroups.forEach((group) => {
+        nextState[group.label] = group.children.some((item) => pathname.startsWith(item.href));
+      });
+
+      return nextState;
+    });
+  }, [pathname, user?.role]);
+
   const handleLogout = async () => {
     if (isLoggingOut) return;
 
@@ -95,6 +134,13 @@ export function Sidebar() {
       router.refresh();
       setIsLoggingOut(false);
     }
+  };
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups((current) => ({
+      ...current,
+      [label]: !current[label],
+    }));
   };
 
   return (
@@ -164,6 +210,58 @@ export function Sidebar() {
                     )}>{item.label}</span>
                   )}
                 </Link>
+              );
+            })}
+
+        {!mounted || isAuthLoading || user?.role !== "ADMIN" || collapsed
+          ? null
+          : adminNavGroups.map((group) => {
+              const Icon = group.icon;
+              const isGroupActive = group.children.some((item) => pathname.startsWith(item.href));
+              const isOpen = openGroups[group.label] ?? false;
+
+              return (
+                <div key={group.label} className="space-y-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(group.label)}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-left transition-all duration-200",
+                      isGroupActive
+                        ? "border-white/16 bg-white/8 text-white"
+                        : "text-white/72 hover:border-white/10 hover:bg-white/8 hover:text-white",
+                    )}
+                  >
+                    <Icon className={cn("h-5 w-5 flex-shrink-0", isGroupActive ? "text-accent-300" : "text-white/72")} />
+                    <span className="flex-1 text-sm font-medium">{group.label}</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+                  </button>
+
+                  {isOpen && (
+                    <div className="ml-4 space-y-2 border-l border-white/10 pl-4">
+                      {group.children.map((item) => {
+                        const ChildIcon = item.icon;
+                        const isActive = pathname === item.href || pathname.startsWith(item.href);
+
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className={cn(
+                              "group flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 transition-all duration-200",
+                              isActive
+                                ? "border-white/20 bg-white/12 text-white shadow-soft backdrop-blur-sm"
+                                : "text-white/68 hover:border-white/10 hover:bg-white/8 hover:text-white",
+                            )}
+                          >
+                            <ChildIcon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-accent-300" : "group-hover:text-white")} />
+                            <span className={cn("text-sm font-medium", isActive ? "text-white" : "text-white/72 group-hover:text-white")}>{item.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
       </nav>
