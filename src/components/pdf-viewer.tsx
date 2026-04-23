@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { pageNavigationPlugin } from "@react-pdf-viewer/page-navigation";
 
 // Dynamically import PDF components to avoid SSR issues
 const PDFViewerContent = dynamic(() => import("./pdf-viewer-content").then((mod) => mod.PDFViewerContent), {
@@ -23,8 +22,6 @@ interface PDFViewerProps {
 }
 
 export function PDFViewer({ url, initialPage = 1, onPageChange }: PDFViewerProps) {
-  const pageNavigationPluginInstance = pageNavigationPlugin();
-
   return (
     <div className="flex flex-col h-full bg-white rounded-2xl overflow-hidden">
       <div className="flex-1 overflow-hidden bg-slate-100/50">
@@ -32,7 +29,6 @@ export function PDFViewer({ url, initialPage = 1, onPageChange }: PDFViewerProps
           url={url}
           initialPage={initialPage}
           onPageChange={onPageChange}
-          pageNavigationPluginInstance={pageNavigationPluginInstance}
         />
       </div>
     </div>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Viewer, Worker, type DocumentLoadEvent, type PageChangeEvent } from "@react-pdf-viewer/core";
-import type { PageNavigationPlugin } from "@react-pdf-viewer/page-navigation";
+import { pageNavigationPlugin } from "@react-pdf-viewer/page-navigation";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -10,19 +10,18 @@ interface PDFViewerContentProps {
   url: string;
   initialPage?: number;
   onPageChange?: (page: number, totalPages: number) => void;
-  pageNavigationPluginInstance: PageNavigationPlugin;
 }
 
 export function PDFViewerContent({
   url,
   initialPage = 1,
   onPageChange,
-  pageNavigationPluginInstance,
 }: PDFViewerContentProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [viewerKey, setViewerKey] = useState(0);
   const [currentPage, setCurrentPage] = useState(Math.max(initialPage, 1));
   const totalPagesRef = useRef(0);
+  const pageNavigationPluginInstance = pageNavigationPlugin();
   const { jumpToNextPage, jumpToPreviousPage } = pageNavigationPluginInstance || {};
 
   const getFullUrl = useCallback(() => {
