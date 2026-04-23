@@ -14,6 +14,7 @@ describe("AI prompt helpers", () => {
     expect(prompt).toContain("Môn: Toán");
     expect(prompt).toContain("Khối lớp: 9");
     expect(prompt).toContain("Nội dung bài học mẫu");
+    expect(prompt).toContain('luôn xưng "mình" và gọi học sinh là "bạn"');
   });
 
   it("uses fallback lesson content when no content is available", () => {
@@ -42,5 +43,6 @@ describe("AI prompt helpers", () => {
 
     expect(prompt).toContain("**Câu hỏi:** 2 + 2 bằng bao nhiêu?");
     expect(prompt).toContain("**Câu trả lời của học sinh:** Bằng 4");
+    expect(prompt).toContain('xưng "mình", gọi học sinh là "bạn"');
   });
 });
