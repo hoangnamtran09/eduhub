@@ -1,11 +1,29 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { z } from "zod";
+import { requireAdminOrTeacher } from "@/lib/auth/require-role";
+
+const lessonMutationSchema = z.object({
+  title: z.string().trim().min(1).max(160),
+  content: z.string().optional().default(""),
+  type: z.string().trim().min(1).max(40).optional().default("theory"),
+  duration: z.coerce.number().int().min(1).max(600).optional().nullable(),
+  videoUrl: z.union([z.string().trim().url(), z.literal(""), z.null()]).optional(),
+});
+
+const lessonUpdateSchema = lessonMutationSchema.extend({
+  order: z.coerce.number().int().min(1).max(10_000).optional(),
+  isPublished: z.boolean().optional(),
+});
 
 // GET /api/admin/subjects/[subjectId]/lessons - Lấy danh sách bài học
 export async function GET(
   request: Request,
   { params }: { params: { subjectId: string } }
 ) {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   const { subjectId } = params;
   try {
     const prismaAny = prisma as any;
@@ -28,10 +46,23 @@ export async function POST(
   request: Request,
   { params }: { params: { subjectId: string } }
 ) {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   const { subjectId } = params;
   try {
-    const body = await request.json();
-    const { title, content, type, duration, videoUrl } = body;
+    const parsed = lessonMutationSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid lesson payload",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const { title, content, type, duration, videoUrl } = parsed.data;
 
     const prismaAny = prisma as any;
     const maxOrderLesson = await prismaAny.lesson.findFirst({
@@ -48,8 +79,8 @@ export async function POST(
         content: content || "",
         type: type || "theory",
         order,
-        duration: duration ? parseInt(duration) : null,
-        videoUrl,
+        duration: duration ?? null,
+        videoUrl: videoUrl || null,
         isPublished: true,
       },
     });
@@ -69,15 +100,29 @@ export async function PUT(
   request: Request,
   { params }: { params: { subjectId: string } }
 ) {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    const body = await request.json();
-    const { title, content, type, duration, videoUrl, order, isPublished } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Lesson ID is required" }, { status: 400 });
     }
+
+    const parsed = lessonUpdateSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid lesson payload",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const { title, content, type, duration, videoUrl, order, isPublished } = parsed.data;
 
     const prismaAny = prisma as any;
     const lesson = await prismaAny.lesson.update({
@@ -86,8 +131,8 @@ export async function PUT(
         title,
         content,
         type,
-        duration,
-        videoUrl,
+        duration: duration ?? null,
+        videoUrl: videoUrl || null,
         order,
         isPublished,
       },
@@ -108,6 +153,9 @@ export async function DELETE(
   request: Request,
   { params }: { params: { subjectId: string } }
 ) {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

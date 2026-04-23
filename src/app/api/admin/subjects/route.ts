@@ -1,11 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { generateSlug } from "@/lib/slug";
+import { z } from "zod";
+import { requireAdminOrTeacher } from "@/lib/auth/require-role";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const subjectMutationSchema = z.object({
+  id: z.string().min(1).optional(),
+  name: z.string().trim().min(1).max(120),
+  slug: z.string().trim().min(1).max(140).optional(),
+  description: z.string().max(500).optional().nullable(),
+  icon: z.string().trim().max(20).optional().nullable(),
+  color: z.string().trim().max(40).optional().nullable(),
+});
+
 export async function GET() {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   try {
     const prismaAny = prisma as any;
     const subjects = await prismaAny.subject.findMany({
@@ -29,16 +43,22 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { name, slug, description, icon, color } = body;
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
 
-    if (!name) {
+  try {
+    const parsed = subjectMutationSchema.safeParse(await request.json());
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Subject name is required" },
-        { status: 400 }
+        {
+          error: "Invalid subject payload",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
       );
     }
+
+    const { name, slug, description, icon, color } = parsed.data;
 
     const baseSlug = slug || generateSlug(name);
     // Ensure slug is unique by appending timestamp if it already exists
@@ -73,9 +93,22 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   try {
-    const body = await request.json();
-    const { id, name, slug, description, icon, color } = body;
+    const parsed = subjectMutationSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid subject payload",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const { id, name, slug, description, icon, color } = parsed.data;
 
     if (!id) {
       return NextResponse.json(
@@ -107,6 +140,9 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

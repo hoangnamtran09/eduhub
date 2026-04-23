@@ -1,10 +1,26 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { z } from "zod";
+import { requireAdminOrTeacher } from "@/lib/auth/require-role";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const updateStudentSchema = z.object({
+  id: z.string().min(1),
+  email: z.string().trim().email(),
+  fullName: z.string().trim().max(120).optional().nullable(),
+  gradeLevel: z.coerce.number().int().min(1).max(12).optional().nullable(),
+  diamonds: z.coerce.number().int().min(0).max(1_000_000).optional(),
+  goals: z.array(z.string().trim().min(1).max(120)).optional(),
+  strengths: z.array(z.string().trim().min(1).max(120)).optional(),
+  weaknesses: z.array(z.string().trim().min(1).max(120)).optional(),
+});
+
 export async function GET() {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   try {
     const prismaAny = prisma as any;
     const students = await prismaAny.user.findMany({
@@ -43,11 +59,24 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  try {
-    const body = await request.json();
-    const { id, email, fullName, gradeLevel, diamonds, goals, strengths, weaknesses } = body;
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
 
-    if (!id || !email?.trim()) {
+  try {
+    const parsed = updateStudentSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid student payload",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const { id, email, fullName, gradeLevel, diamonds, goals, strengths, weaknesses } = parsed.data;
+
+    if (!id || !email.trim()) {
       return NextResponse.json({ error: "Missing student id or email" }, { status: 400 });
     }
 
@@ -108,6 +137,9 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
