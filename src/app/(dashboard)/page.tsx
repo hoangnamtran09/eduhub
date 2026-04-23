@@ -75,6 +75,29 @@ interface StudentReportData {
   totalStudySeconds: number;
   totalSessions: number;
   sessions: StudentSessionItem[];
+  leaderboard?: Array<{
+    id: string;
+    fullName: string | null;
+    gradeLevel: number | null;
+    totalStudySeconds: number;
+    totalSessions: number;
+    lastActive: string | null;
+    rank: number;
+    isCurrentUser: boolean;
+  }>;
+  currentStudentRank?: number | null;
+  peers?: Array<{
+    id: string;
+    fullName: string | null;
+    gradeLevel: number | null;
+    totalStudySeconds: number;
+    totalSessions: number;
+    lastActive: string | null;
+  }>;
+  communitySummary?: {
+    totalVisiblePeers: number;
+    activePeers7d: number;
+  };
 }
 
 type ReportData = AdminReportData | ParentReportData | StudentReportData | null;
@@ -435,85 +458,209 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
   );
 }
 
-function StudentDashboard({ progress, hasAchievements }: { progress: ProgressData; hasAchievements: boolean }) {
+function StudentDashboard({ report, progress, hasAchievements }: { report: StudentReportData; progress: ProgressData; hasAchievements: boolean }) {
+  const leaderboard = report.leaderboard || [];
+  const peers = report.peers || [];
+  const currentLeaderboardEntry = leaderboard.find((student) => student.isCurrentUser);
+
   return (
-    <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
-      <div className="space-y-8 lg:col-span-2">
-        <div className={`grid grid-cols-2 gap-4 ${hasAchievements ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
-          <StatCard icon={TrendingUp} label="Giờ học (tuần)" value={progress.stats.weeklyStudyHours || 0} color="text-blue-600" bgColor="bg-blue-100" />
-          <StatCard icon={Target} label="Điểm trung bình" value={progress.stats.averageScore || 0} color="text-emerald-600" bgColor="bg-emerald-100" />
-          <StatCard icon={CheckCircle} label="Bài tập AI" value={progress.stats.completedExercises || 0} color="text-brand-600" bgColor="bg-brand-100" />
-          {hasAchievements && (
-            <StatCard
-              icon={Award}
-              label="Thành tích"
-              value={`${progress.stats.achievementCount || 0}/${progress.stats.totalAchievements || 0}`}
-              color="text-amber-500"
-              bgColor="bg-amber-100"
-            />
-          )}
+    <div className="space-y-8">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr),360px]">
+        <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+            Student Workspace
+          </div>
+          <div className="space-y-3">
+            <h1 className="font-serif text-4xl font-semibold tracking-tight text-slate-900">Không gian học tập cá nhân</h1>
+            <p className="max-w-3xl text-sm leading-6 text-slate-600">
+              Theo dõi tiến độ của bạn, nhìn thấy bạn học khác và giữ nhịp học ổn định với bảng xếp hạng theo thời lượng học tập.
+            </p>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/courses">
+              <Button className="h-11 rounded-2xl bg-slate-900 px-5 text-white hover:bg-slate-800">
+                <Play className="mr-2 h-4 w-4 fill-current" />
+                Vào học ngay
+              </Button>
+            </Link>
+            <Link href="/progress">
+              <Button variant="outline" className="h-11 rounded-2xl border-slate-200 bg-white px-5 text-slate-700 hover:bg-slate-50">
+                <TrendingUp className="mr-2 h-4 w-4" />
+                Xem tiến độ
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        <section className="space-y-3">
-          <h3 className="px-2 text-lg font-bold text-slate-800">Hoạt động gần đây</h3>
-          {progress.recentActivity.length > 0 ? (
-            progress.recentActivity.map((item, index) => (
-              <div key={`${item.timestamp}-${index}`} className="flex items-center gap-3 rounded-xl p-2 hover:bg-slate-100/80">
-                <div className={cn("flex h-7 w-7 items-center justify-center rounded-md", item.bgColor)}>
-                  <span className="text-sm">{item.icon}</span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-700">{item.title}</p>
-                  <p className="text-xs text-slate-500">{item.time}</p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-6 text-center text-sm text-slate-500">
-              Chưa có hoạt động nào được ghi nhận.
+        <div className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Snapshot cá nhân</p>
+          <div className="mt-4 space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-sm text-white/65">Vị trí bảng xếp hạng</p>
+              <p className="mt-1 text-2xl font-semibold text-white">{report.currentStudentRank ? `#${report.currentStudentRank}` : "Chưa xếp hạng"}</p>
+              <p className="mt-1 text-xs text-white/50">
+                {currentLeaderboardEntry
+                  ? `${formatStudyTime(currentLeaderboardEntry.totalStudySeconds, true)} • ${currentLeaderboardEntry.totalSessions} phiên học`
+                  : "Bắt đầu học để xuất hiện trên bảng xếp hạng"}
+              </p>
             </div>
-          )}
-        </section>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs text-white/55">Bạn học hiển thị</p>
+                <p className="mt-1 text-xl font-semibold">{report.communitySummary?.totalVisiblePeers ?? peers.length}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs text-white/55">Hoạt động 7 ngày</p>
+                <p className="mt-1 text-xl font-semibold">{report.communitySummary?.activePeers7d || 0}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-8">
-        <section className="space-y-3">
-          <h3 className="px-2 text-lg font-bold text-slate-800">Mục tiêu tuần</h3>
-          <div className="grid grid-cols-7 gap-2 rounded-xl border border-slate-200/80 bg-white/80 p-4">
-            {progress.weeklyProgress.map((day, index) => (
-              <div key={`${day.day}-${index}`} className="text-center">
-                <div className="text-xs font-bold text-slate-500">{day.day}</div>
-                <div className={cn("my-2 mx-auto h-10 w-10 rounded-lg", day.completed ? "bg-brand-200" : "bg-slate-100")} />
-                <div className="text-[11px] font-medium text-slate-400">{day.hours}h</div>
-              </div>
-            ))}
-          </div>
-        </section>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <StatCard icon={TrendingUp} label="Giờ học (tuần)" value={progress.stats.weeklyStudyHours || 0} color="text-blue-600" bgColor="bg-blue-100" />
+        <StatCard icon={Target} label="Điểm trung bình" value={progress.stats.averageScore || 0} color="text-emerald-600" bgColor="bg-emerald-100" />
+        <StatCard icon={CheckCircle} label="Bài tập AI" value={progress.stats.completedExercises || 0} color="text-brand-600" bgColor="bg-brand-100" />
+        <StatCard icon={Award} label="Chuỗi học" value={progress.stats.streakDays || 0} color="text-amber-500" bgColor="bg-amber-100" />
+      </div>
 
-        {hasAchievements && (
-          <section className="space-y-3">
-            <h3 className="px-2 text-lg font-bold text-slate-800">Thành tích đã đạt được</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {progress.achievements.map((ach) => (
-                <div key={ach.id} className={cn("rounded-xl p-3", ach.unlocked ? "border border-amber-200/90 bg-amber-100/80" : "bg-slate-100/80")}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{ach.icon}</span>
-                    <p className={cn("text-sm font-bold", ach.unlocked ? "text-amber-900" : "text-slate-600")}>{ach.title}</p>
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
+        <div className="space-y-8 lg:col-span-2">
+          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <SectionTitle
+                title="Bảng xếp hạng học tập"
+                description="Xếp hạng theo tổng thời lượng học đã ghi nhận. Bạn có thể thấy vị trí của mình so với các bạn học khác."
+              />
+              <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                {leaderboard.length} vị trí hiển thị
+              </div>
+            </div>
+            <div className="space-y-3">
+              {leaderboard.map((student) => (
+                <div
+                  key={student.id}
+                  className={cn(
+                    "grid gap-3 rounded-2xl border border-slate-100 p-4 lg:grid-cols-[44px,minmax(0,1fr),120px,120px,140px] lg:items-center",
+                    student.isCurrentUser ? "bg-brand-50/70 ring-1 ring-brand-200" : "bg-slate-50/70",
+                  )}
+                >
+                  <div className="text-sm font-semibold text-slate-500">#{student.rank}</div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate font-semibold text-slate-900">{student.fullName || "Học sinh"}</p>
+                      {student.isCurrentUser && (
+                        <span className="rounded-full bg-brand-100 px-2 py-1 text-[11px] font-medium text-brand-700">Bạn</span>
+                      )}
+                    </div>
+                    <p className="truncate text-sm text-slate-500">{student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}</p>
                   </div>
-                  <p className={cn("mt-1 text-xs", ach.unlocked ? "text-amber-700" : "text-slate-500")}>{ach.description}</p>
+                  <div>
+                    <p className="text-xs text-slate-500">Thời lượng học</p>
+                    <p className="text-sm font-semibold text-slate-900">{formatStudyTime(student.totalStudySeconds, true)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Phiên học</p>
+                    <p className="text-sm font-semibold text-slate-900">{student.totalSessions}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Hoạt động gần nhất</p>
+                    <p className="text-sm font-semibold text-slate-900">{formatLastActive(student.lastActive)}</p>
+                  </div>
+                </div>
+              ))}
+              {!leaderboard.length && (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
+                  Chưa có bảng xếp hạng để hiển thị.
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="px-2 text-lg font-bold text-slate-800">Hoạt động gần đây</h3>
+            {progress.recentActivity.length > 0 ? (
+              progress.recentActivity.map((item, index) => (
+                <div key={`${item.timestamp}-${index}`} className="flex items-center gap-3 rounded-xl p-2 hover:bg-slate-100/80">
+                  <div className={cn("flex h-7 w-7 items-center justify-center rounded-md", item.bgColor)}>
+                    <span className="text-sm">{item.icon}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-700">{item.title}</p>
+                    <p className="text-xs text-slate-500">{item.time}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-6 text-center text-sm text-slate-500">
+                Chưa có hoạt động nào được ghi nhận.
+              </div>
+            )}
+          </section>
+        </div>
+
+        <div className="space-y-8">
+          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+            <SectionTitle
+              title="Bạn học của bạn"
+              description="Một số học sinh khác đang học cùng khối lớp hoặc cùng hệ thống để bạn dễ theo dõi nhịp học chung."
+            />
+            <div className="mt-5 space-y-3">
+              {peers.map((student) => (
+                <div key={student.id} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-slate-900">{student.fullName || "Học sinh"}</p>
+                      <p className="mt-1 text-sm text-slate-500">{student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}</p>
+                    </div>
+                    <div className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                      {student.totalSessions} phiên
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                    <span>{formatStudyTime(student.totalStudySeconds, true)}</span>
+                    <span>{formatLastActive(student.lastActive)}</span>
+                  </div>
+                </div>
+              ))}
+              {!peers.length && (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
+                  Chưa có danh sách bạn học để hiển thị.
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="px-2 text-lg font-bold text-slate-800">Mục tiêu tuần</h3>
+            <div className="grid grid-cols-7 gap-2 rounded-xl border border-slate-200/80 bg-white/80 p-4">
+              {progress.weeklyProgress.map((day, index) => (
+                <div key={`${day.day}-${index}`} className="text-center">
+                  <div className="text-xs font-bold text-slate-500">{day.day}</div>
+                  <div className={cn("my-2 mx-auto h-10 w-10 rounded-lg", day.completed ? "bg-brand-200" : "bg-slate-100")} />
+                  <div className="text-[11px] font-medium text-slate-400">{day.hours}h</div>
                 </div>
               ))}
             </div>
           </section>
-        )}
 
-        <div className="rounded-2xl bg-slate-800 p-6 text-white">
-          <h3 className="text-lg font-bold">Ghi chú nhanh</h3>
-          <textarea
-            className="mt-3 w-full resize-none rounded-lg border-slate-600 bg-slate-700 p-3 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-            placeholder="Viết nhanh một ý tưởng..."
-            rows={4}
-          />
+          {hasAchievements && (
+            <section className="space-y-3">
+              <h3 className="px-2 text-lg font-bold text-slate-800">Thành tích đã đạt được</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {progress.achievements.map((ach) => (
+                  <div key={ach.id} className={cn("rounded-xl p-3", ach.unlocked ? "border border-amber-200/90 bg-amber-100/80" : "bg-slate-100/80")}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{ach.icon}</span>
+                      <p className={cn("text-sm font-bold", ach.unlocked ? "text-amber-900" : "text-slate-600")}>{ach.title}</p>
+                    </div>
+                    <p className={cn("mt-1 text-xs", ach.unlocked ? "text-amber-700" : "text-slate-500")}>{ach.description}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </div>
@@ -645,7 +792,7 @@ export default function DashboardPage() {
 
       {user?.role === "ADMIN" && report.role === "ADMIN" && <AdminDashboard report={report} />}
       {user?.role === "PARENT" && report.role === "PARENT" && <ParentDashboard report={report} />}
-      {user?.role === "STUDENT" && progress && <StudentDashboard progress={progress} hasAchievements={hasAchievements} />}
+      {user?.role === "STUDENT" && report.role === "STUDENT" && progress && <StudentDashboard report={report} progress={progress} hasAchievements={hasAchievements} />}
     </div>
   );
 }

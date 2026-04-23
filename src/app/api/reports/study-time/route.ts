@@ -150,6 +150,85 @@ export async function GET() {
 
     const totalStudySeconds = sessions.reduce((sum: number, session: any) => sum + (session.durationSec || 0), 0);
 
+    if (authUser.role === "STUDENT") {
+      const currentStudent = await prismaAny.user.findUnique({
+        where: { id: authUser.userId },
+        select: {
+          id: true,
+          gradeLevel: true,
+          fullName: true,
+        },
+      });
+
+      const peerCandidates = await prismaAny.user.findMany({
+        where: {
+          role: "STUDENT",
+          ...(currentStudent?.gradeLevel ? { gradeLevel: currentStudent.gradeLevel } : {}),
+        },
+        include: {
+          studySessions: true,
+          profile: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      const normalizedPeers = peerCandidates.map((student: any) => {
+        const peerStudySeconds = (student.studySessions || []).reduce((sum: number, session: any) => sum + (session.durationSec || 0), 0);
+        return {
+          id: student.id,
+          fullName: student.fullName,
+          gradeLevel: student.gradeLevel,
+          totalStudySeconds: peerStudySeconds,
+          totalSessions: (student.studySessions || []).length,
+          lastActive: student.profile?.lastActive || null,
+        };
+      });
+
+      type PeerRecord = (typeof normalizedPeers)[number];
+
+      const leaderboard = [...normalizedPeers]
+        .sort((a: PeerRecord, b: PeerRecord) => {
+          if (b.totalStudySeconds !== a.totalStudySeconds) {
+            return b.totalStudySeconds - a.totalStudySeconds;
+          }
+          return b.totalSessions - a.totalSessions;
+        })
+        .map((student: PeerRecord, index: number) => ({
+          ...student,
+          rank: index + 1,
+          isCurrentUser: student.id === authUser.userId,
+        }));
+
+      const currentStudentRank = leaderboard.find((student: PeerRecord & { rank: number; isCurrentUser: boolean }) => student.id === authUser.userId)?.rank || null;
+      const peers = normalizedPeers
+        .filter((student: PeerRecord) => student.id !== authUser.userId)
+        .sort((a: PeerRecord, b: PeerRecord) => {
+          const aActive = a.lastActive ? new Date(a.lastActive).getTime() : 0;
+          const bActive = b.lastActive ? new Date(b.lastActive).getTime() : 0;
+          return bActive - aActive;
+        })
+        .slice(0, 10);
+
+      const activePeers7d = peers.filter((student: PeerRecord) => {
+        if (!student.lastActive) return false;
+        return diffInDays(new Date(student.lastActive), new Date()) <= 7;
+      }).length;
+
+      return NextResponse.json({
+        role: authUser.role,
+        totalStudySeconds,
+        totalSessions: sessions.length,
+        sessions,
+        leaderboard: leaderboard.slice(0, 10),
+        currentStudentRank,
+        peers,
+        communitySummary: {
+          totalVisiblePeers: peers.length,
+          activePeers7d,
+        },
+      });
+    }
+
     return NextResponse.json({
       role: authUser.role,
       totalStudySeconds,
