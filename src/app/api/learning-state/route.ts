@@ -3,6 +3,10 @@ import { z } from "zod";
 import { getAuthUser } from "@/lib/auth/get-auth-user";
 import { getLearningState, updateLessonProgressPage } from "@/lib/learning-state";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const pageUpdateSchema = z.object({
   lessonId: z.string().min(1),
   page: z.coerce.number().int().min(1),

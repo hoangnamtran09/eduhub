@@ -4,6 +4,10 @@ import { SignJWT } from "jose";
 import { cookies } from "next/headers";
 import * as crypto from "crypto";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "default_secret_key_change_me"
 );

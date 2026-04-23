@@ -5,6 +5,10 @@ import path from "path";
 import { z } from "zod";
 import { requireAdminOrTeacher } from "@/lib/auth/require-role";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const uploadSchema = z.object({
   subjectName: z.string().trim().min(1).max(120),

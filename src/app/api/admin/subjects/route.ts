@@ -4,6 +4,7 @@ import { generateSlug } from "@/lib/slug";
 import { z } from "zod";
 import { requireAdminOrTeacher } from "@/lib/auth/require-role";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 

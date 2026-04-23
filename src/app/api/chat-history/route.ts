@@ -3,6 +3,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma/client";
 import { getAuthUser } from "@/lib/auth/get-auth-user";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const messageSchema = z.object({
   role: z.enum(["user", "assistant", "system"]),
   content: z.string().trim().min(1).max(10_000),

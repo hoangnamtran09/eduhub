@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma/client";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "default_secret_key_change_me"
 );

@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getAuthUser } from "@/lib/auth/get-auth-user";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const dayLabels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
 function isAchievementUnlocked(ruleType: string, ruleValue: number, metrics: {
