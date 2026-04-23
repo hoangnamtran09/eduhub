@@ -48,6 +48,12 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+function getAssistantMessageVariant(content: string) {
+  const normalized = content.toLowerCase();
+  const questionSignals = ["hãy trả lời", "câu hỏi", "bài tập", "hãy nhập", "trả lời", "### 📝", "?"];
+  return questionSignals.some((signal) => normalized.includes(signal)) ? "question" : "theory";
+}
+
 type FilterTab = "all" | "file" | "link" | "question";
 
 const mathSymbols = [
@@ -1076,40 +1082,62 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                 )}
               </div>
             ) : (
-              messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex flex-col",
-                    msg.role === "user" ? "items-end" : "items-start"
-                  )}
-                >
+              messages.map((msg) => {
+                const assistantVariant = msg.role === "assistant" ? getAssistantMessageVariant(msg.content) : null;
+
+                return (
                   <div
+                    key={msg.id}
                     className={cn(
-                      "max-w-[85%] px-4 py-2.5 text-sm prose prose-slate prose-sm",
-                      msg.role === "user"
-                        ? "bg-brand-500 text-white"
-                        : "bg-white border border-paper-200 text-slate-700"
+                      "flex flex-col",
+                      msg.role === "user" ? "items-end" : "items-start"
                     )}
                   >
-                    {msg.role === "assistant" ? (
-                      <MarkdownMessage 
-                        content={msg.content} 
-                        onQuizCorrect={handleQuizCorrect}
-                        onQuizAnswered={handleQuizAnswered}
-                      />
-                    ) : (
-                      msg.content
-                    )}
+                    <div
+                      className={cn(
+                        "mb-1 px-1 text-[10px] font-bold uppercase tracking-[0.18em]",
+                        msg.role === "user"
+                          ? "text-brand-500"
+                          : assistantVariant === "question"
+                            ? "text-amber-600"
+                            : "text-sky-600"
+                      )}
+                    >
+                      {msg.role === "user"
+                        ? "Cau hoi"
+                        : assistantVariant === "question"
+                          ? "AI Dat cau hoi"
+                          : "AI Giai thich"}
+                    </div>
+                    <div
+                      className={cn(
+                        "max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm",
+                        msg.role === "user"
+                          ? "bg-brand-500 text-white prose-invert"
+                          : assistantVariant === "question"
+                            ? "border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-white text-amber-950 ring-1 ring-amber-100"
+                            : "border border-sky-200 bg-gradient-to-br from-sky-50 via-cyan-50 to-white text-slate-800 ring-1 ring-sky-100"
+                      )}
+                    >
+                      {msg.role === "assistant" ? (
+                        <MarkdownMessage 
+                          content={msg.content} 
+                          onQuizCorrect={handleQuizCorrect}
+                          onQuizAnswered={handleQuizAnswered}
+                        />
+                      ) : (
+                        msg.content
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-400 mt-1">
+                      {msg.timestamp.toLocaleTimeString("vi-VN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </div>
-                  <span className="text-[10px] text-slate-400 mt-1">
-                    {msg.timestamp.toLocaleTimeString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-              ))
+                );
+              })
             )}
             {sending && (
               <div className="flex justify-start">
