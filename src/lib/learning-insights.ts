@@ -219,7 +219,10 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
           },
         },
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: [
+        { lastStudiedAt: "desc" },
+        { startedAt: "desc" },
+      ],
       take: 40,
     }),
   ]);
