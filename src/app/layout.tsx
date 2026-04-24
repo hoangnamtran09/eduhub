@@ -5,6 +5,7 @@ import "katex/dist/katex.min.css";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/components/auth-provider";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,6 +38,7 @@ export default function RootLayout({
             },
           }}
         />
+        <Analytics />
       </body>
     </html>
   );
