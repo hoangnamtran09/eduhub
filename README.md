@@ -40,7 +40,7 @@ npx prisma db push
 npm run dev
 ```
 
-## ⚙️ Cấu hình môi trường
+## ⚙️ Cấu hình môi trườn
 
 Tạo file `.env.local` với các biến môi trường sau:
 
