@@ -154,6 +154,30 @@ export default function LearningPage({
     }
   };
 
+  const recordWeaknessSignal = useCallback(async (input: {
+    topic?: string;
+    question?: string;
+    reason: string;
+    source: "QUIZ" | "EXERCISE";
+  }) => {
+    try {
+      const response = await fetch("/api/weakness-signals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to record weakness signal (${response.status})`);
+      }
+
+      const data = await response.json();
+      console.log("Weakness signal recorded:", data);
+    } catch (error) {
+      console.error("Failed to record weakness signal:", error);
+    }
+  }, []);
+
   const handleQuizAnswered = async (payload: QuizAnswerPayload) => {
     if (sending || !hasUnlockedChat) return;
 
@@ -184,6 +208,15 @@ Câu hỏi: ${payload.question}
 Giải thích của quiz: ${payload.explanation}
 
 Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích ngắn gọn vì sao đáp án đúng hợp lý, chỉ ra lỗi hiểu bài một cách nhẹ nhàng, rồi đặt một câu hỏi dễ hơn hoặc câu hỏi nối tiếp để cuộc chat tiếp tục tự nhiên.`;
+
+    if (!payload.isCorrect) {
+      void recordWeaknessSignal({
+        topic: subject?.name,
+        question: payload.question,
+        reason: `Trả lời sai quiz: chọn ${payload.selectedOptionText}, đáp án đúng là ${payload.correctOptionText}`,
+        source: "QUIZ",
+      });
+    }
 
     setSending(true);
 
@@ -726,7 +759,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
   const handleGradeExercise = async (userAnswer: string) => {
     if (!currentExercise) return;
-    
+
     setSending(true);
     setInput("");
     
@@ -755,7 +788,16 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
       if (response.ok) {
         const data = await response.json();
-        
+
+        if (typeof data.score === "number" && data.score < 80) {
+          void recordWeaknessSignal({
+            topic: subject?.name,
+            question: currentExercise.question,
+            reason: `Bài tập tự luận có điểm ${data.score}/100, cần ôn tập thêm`,
+            source: "EXERCISE",
+          });
+        }
+
         let feedbackContent = `### 📊 Kết quả bài làm:\n\n**Điểm số:** ${data.score}/10\n\n${data.feedback}`;
         
         if (data.diamondsEarned > 0) {
