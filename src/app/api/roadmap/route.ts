@@ -29,6 +29,7 @@ export async function GET() {
         severity: item.severity,
         score: item.score,
         lessonId: item.lessonId ?? null,
+        lessonTitle: item.lessonTitle ?? null,
         subjectId: item.subjectId ?? null,
         subjectName: item.subjectName ?? item.topic,
         reason: item.reason,

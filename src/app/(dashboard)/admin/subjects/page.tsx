@@ -40,6 +40,11 @@ interface Subject {
   icon: string | null;
   color: string | null;
   lessons: Lesson[];
+  courses?: Array<{
+    id: string;
+    title: string;
+    gradeLevel: number;
+  }>;
 }
 
 const COLORS = [
@@ -76,6 +81,7 @@ export default function AdminSubjectsPage() {
     description: "",
     icon: "📐",
     color: "blue",
+    gradeLevel: "6",
   });
 
   const [lessonForm, setLessonForm] = useState({
@@ -126,6 +132,7 @@ export default function AdminSubjectsPage() {
         description: subject.description || "",
         icon: subject.icon || "📐",
         color: subject.color || "blue",
+        gradeLevel: subject.courses?.[0]?.gradeLevel ? String(subject.courses[0].gradeLevel) : "6",
       });
     } else {
       setEditingSubject(null);
@@ -134,6 +141,7 @@ export default function AdminSubjectsPage() {
         description: "",
         icon: "📐",
         color: "blue",
+        gradeLevel: "6",
       });
     }
     setShowSubjectModal(true);
@@ -146,8 +154,8 @@ export default function AdminSubjectsPage() {
       const url = "/api/admin/subjects";
       const method = editingSubject ? "PUT" : "POST";
       const body = editingSubject
-        ? JSON.stringify({ id: editingSubject.id, ...subjectForm })
-        : JSON.stringify(subjectForm);
+        ? JSON.stringify({ id: editingSubject.id, ...subjectForm, gradeLevel: Number(subjectForm.gradeLevel) })
+        : JSON.stringify({ ...subjectForm, gradeLevel: Number(subjectForm.gradeLevel) });
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -350,6 +358,7 @@ export default function AdminSubjectsPage() {
                         <h3 className="text-lg font-bold">{subject.name}</h3>
                         <p className="text-white/80 text-sm">
                           {subject.lessons?.length || 0} bài học
+                          {subject.courses?.[0]?.gradeLevel ? ` · Lớp ${subject.courses[0].gradeLevel}` : ""}
                         </p>
                       </div>
                     </div>
@@ -501,6 +510,21 @@ export default function AdminSubjectsPage() {
                   placeholder="Mô tả ngắn về môn học..."
                   className="w-full h-20 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Lớp áp dụng</label>
+                <select
+                  value={subjectForm.gradeLevel}
+                  onChange={(e) => setSubjectForm({...subjectForm, gradeLevel: e.target.value})}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                >
+                  {Array.from({ length: 12 }, (_, index) => index + 1).map((grade) => (
+                    <option key={grade} value={grade}>
+                      Lớp {grade}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-slate-500">Hệ thống sẽ tạo/cập nhật khóa học tương ứng cho lớp này.</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Biểu tượng</label>

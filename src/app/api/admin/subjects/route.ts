@@ -15,6 +15,7 @@ const subjectMutationSchema = z.object({
   description: z.string().max(500).optional().nullable(),
   icon: z.string().trim().max(20).optional().nullable(),
   color: z.string().trim().max(40).optional().nullable(),
+  gradeLevel: z.coerce.number().int().min(1).max(12).optional().nullable(),
 });
 
 export async function GET() {
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, slug, description, icon, color } = parsed.data;
+    const { name, slug, description, icon, color, gradeLevel } = parsed.data;
 
     const baseSlug = slug || generateSlug(name);
     // Ensure slug is unique by appending timestamp if it already exists
@@ -77,6 +78,20 @@ export async function POST(request: Request) {
         description: description || null,
         icon: icon || "📚",
         color: color || "blue",
+        courses: gradeLevel
+          ? {
+              create: {
+                title: `${name} - Lớp ${gradeLevel}`,
+                slug: `${finalSlug}-lop-${gradeLevel}`,
+                gradeLevel,
+                isPublished: true,
+              },
+            }
+          : undefined,
+      },
+      include: {
+        lessons: true,
+        courses: true,
       },
     });
 
@@ -109,7 +124,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { id, name, slug, description, icon, color } = parsed.data;
+    const { id, name, slug, description, icon, color, gradeLevel } = parsed.data;
 
     if (!id) {
       return NextResponse.json(
@@ -119,15 +134,53 @@ export async function PUT(request: Request) {
     }
 
     const prismaAny = prisma as any;
-    const subject = await prismaAny.subject.update({
-      where: { id },
-      data: {
-        name,
-        slug: slug || (name ? generateSlug(name) : undefined),
-        description,
-        icon,
-        color,
-      },
+    const subject = await prismaAny.$transaction(async (tx: any) => {
+      const updatedSubject = await tx.subject.update({
+        where: { id },
+        data: {
+          name,
+          slug: slug || (name ? generateSlug(name) : undefined),
+          description,
+          icon,
+          color,
+        },
+      });
+
+      if (gradeLevel) {
+        const existingCourse = await tx.course.findFirst({
+          where: { subjectId: id },
+          orderBy: { createdAt: "asc" },
+        });
+
+        if (existingCourse) {
+          await tx.course.update({
+            where: { id: existingCourse.id },
+            data: {
+              title: `${name} - Lớp ${gradeLevel}`,
+              gradeLevel,
+              isPublished: true,
+            },
+          });
+        } else {
+          await tx.course.create({
+            data: {
+              subjectId: id,
+              title: `${name} - Lớp ${gradeLevel}`,
+              slug: `${updatedSubject.slug}-lop-${gradeLevel}`,
+              gradeLevel,
+              isPublished: true,
+            },
+          });
+        }
+      }
+
+      return tx.subject.findUnique({
+        where: { id },
+        include: {
+          lessons: true,
+          courses: true,
+        },
+      });
     });
 
     return NextResponse.json(subject);

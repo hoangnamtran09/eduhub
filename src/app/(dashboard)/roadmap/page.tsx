@@ -27,6 +27,7 @@ type FocusArea = {
   severity: "high" | "medium" | "low";
   score: number;
   lessonId?: string | null;
+  lessonTitle?: string | null;
   subjectId?: string | null;
   subjectName?: string | null;
   reason: string;
@@ -221,7 +222,9 @@ export default function RoadmapPage() {
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-slate-600">{item.description}</p>
-                <p className="mt-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-400">Tập trung: {item.focusTopic}</p>
+                <p className="mt-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-400">
+                  Tập trung vào bài: {data.focusAreas.find((area) => area.topic === item.focusTopic)?.lessonTitle || item.focusTopic}
+                </p>
               </div>
               <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
                 <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -266,7 +269,7 @@ export default function RoadmapPage() {
                   <p className="text-xs text-slate-500">Hành động đề xuất</p>
                   <p className="mt-1 text-sm text-slate-700">{item.recommendedAction}</p>
                 </div>
-                <Link href={item.lessonId && item.subjectName ? `/courses/${encodeURIComponent(item.subjectName)}/${item.lessonId}` : "/courses"}>
+                <Link href={item.lessonId && item.subjectId ? `/courses/${item.subjectId}/${item.lessonId}` : "/courses"}>
                   <Button variant="outline" className="h-full min-h-14 rounded-2xl border-slate-200 bg-white px-5 text-slate-700 hover:bg-slate-50">
                     <BookOpen className="mr-2 h-4 w-4" />
                     {item.lessonId ? "Mở bài học liên quan" : "Xem khóa học"}

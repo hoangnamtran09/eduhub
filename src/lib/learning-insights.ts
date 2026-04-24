@@ -12,6 +12,7 @@ export interface WeaknessInsight {
   recommendedAction: string;
   score: number;
   lessonId?: string | null;
+  lessonTitle?: string | null;
   subjectId?: string | null;
   subjectName?: string | null;
   signalBreakdown?: Array<{
@@ -86,6 +87,7 @@ type TopicSignal = {
   weight: number;
   reason: string;
   lessonId?: string | null;
+  lessonTitle?: string | null;
   subjectId?: string | null;
   subjectName?: string | null;
 };
@@ -95,6 +97,7 @@ type TopicAggregate = {
   evidenceCount: number;
   signals: TopicSignal[];
   lessonId: string | null;
+  lessonTitle: string | null;
   subjectId: string | null;
   subjectName: string | null;
 };
@@ -165,6 +168,7 @@ function buildWeaknessInsights(topicScores: Map<string, TopicAggregate>): Weakne
         recommendedAction: buildRecommendedAction(topic, strongestSignal),
         score: normalizedScore,
         lessonId: item.lessonId,
+        lessonTitle: item.lessonTitle,
         subjectId: item.subjectId,
         subjectName: item.subjectName || topic,
         signalBreakdown: sortedSignals.slice(0, 3).map((signal) => ({
@@ -228,6 +232,7 @@ export function normalizeExerciseAttemptsToWeaknesses(
       evidenceCount: 0,
       signals: [],
       lessonId: null,
+      lessonTitle: null,
       subjectId: null,
       subjectName: topic,
     };
@@ -364,6 +369,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
       evidenceCount: 0,
       signals: [],
       lessonId: signal.lessonId ?? null,
+      lessonTitle: signal.lessonTitle ?? null,
       subjectId: signal.subjectId ?? null,
       subjectName: signal.subjectName ?? normalizedTopic,
     };
@@ -372,6 +378,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
     current.evidenceCount += 1;
     current.signals.push(signal);
     current.lessonId = current.lessonId ?? signal.lessonId ?? null;
+    current.lessonTitle = current.lessonTitle ?? signal.lessonTitle ?? null;
     current.subjectId = current.subjectId ?? signal.subjectId ?? null;
     current.subjectName = current.subjectName ?? signal.subjectName ?? normalizedTopic;
     topicScores.set(normalizedTopic, current);
@@ -383,6 +390,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
       weight: 3,
       reason: "Được giáo viên hoặc hồ sơ học sinh đánh dấu là điểm yếu",
       lessonId: null,
+      lessonTitle: null,
       subjectId: null,
       subjectName: normalizeTopic(weakness),
     });
@@ -404,6 +412,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 3,
         reason: `Điểm quiz thấp (${Math.round(percentage)}%)`,
         lessonId: attempt.quiz?.lesson?.id ?? null,
+        lessonTitle: attempt.quiz?.lesson?.title ?? null,
         subjectId: attempt.quiz?.lesson?.subject?.id ?? null,
         subjectName: normalizeTopic(attempt.quiz?.lesson?.subject?.name),
       });
@@ -413,6 +422,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 1.5,
         reason: `Điểm quiz cần cải thiện (${Math.round(percentage)}%)`,
         lessonId: attempt.quiz?.lesson?.id ?? null,
+        lessonTitle: attempt.quiz?.lesson?.title ?? null,
         subjectId: attempt.quiz?.lesson?.subject?.id ?? null,
         subjectName: normalizeTopic(attempt.quiz?.lesson?.subject?.name),
       });
@@ -429,6 +439,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 2.5,
         reason: `Bài tập AI dưới ngưỡng mong muốn (${score}/100)`,
         lessonId: attempt.lessonId ?? null,
+        lessonTitle: null,
         subjectId: null,
         subjectName: null,
       });
@@ -438,6 +449,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 1.5,
         reason: `Bài tập AI cần cải thiện (${score}/100)`,
         lessonId: attempt.lessonId ?? null,
+        lessonTitle: null,
         subjectId: null,
         subjectName: null,
       });
@@ -447,6 +459,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 0.5,
         reason: "Có bài tập đang làm dở hoặc chưa được chấm",
         lessonId: attempt.lessonId ?? null,
+        lessonTitle: null,
         subjectId: null,
         subjectName: null,
       });
@@ -462,6 +475,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 1,
         reason: "Đã học khá lâu nhưng bài vẫn chưa hoàn tất",
         lessonId: item.lessonId ?? null,
+        lessonTitle: item.lesson?.title ?? null,
         subjectId: item.lesson?.subject?.id ?? null,
         subjectName: normalizeTopic(item.lesson?.subject?.name),
       });
