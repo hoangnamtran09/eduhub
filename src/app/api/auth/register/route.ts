@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { createAuthToken, setAuthCookie } from "@/lib/auth/session";
 import { hashPassword } from "@/lib/auth/password";
+import { isJwtSecretConfigurationError } from "@/lib/auth/jwt-secret";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,6 +70,13 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Registration error:", error);
+    if (isJwtSecretConfigurationError(error)) {
+      return NextResponse.json(
+        { error: "Authentication is not configured. Missing JWT_SECRET." },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Có lỗi xảy ra trong quá trình đăng ký" },
       { status: 500 }
