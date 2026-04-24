@@ -79,6 +79,39 @@ export async function updateLessonProgressStudyTime(userId: string, lessonId: st
   });
 }
 
+export async function completeLessonProgress(userId: string, lessonId: string, seconds = 0) {
+  const extraSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+  const now = new Date();
+
+  return prismaAny.lessonProgress.upsert({
+    where: {
+      lessonId_userId: {
+        lessonId,
+        userId,
+      },
+    },
+    create: {
+      lessonId,
+      userId,
+      startedAt: now,
+      lastStudiedAt: now,
+      completed: true,
+      completedAt: now,
+      totalStudySec: extraSeconds,
+      status: "COMPLETED",
+    },
+    update: {
+      lastStudiedAt: now,
+      completed: true,
+      completedAt: now,
+      totalStudySec: {
+        increment: extraSeconds,
+      },
+      status: "COMPLETED",
+    },
+  });
+}
+
 export async function updateLessonProgressPage(
   userId: string,
   lessonId: string,

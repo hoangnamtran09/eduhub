@@ -48,6 +48,33 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+type CompletionQuizQuestion = {
+  id: string;
+  question: string;
+  options: Array<{ id: string; text: string }>;
+  explanation: string;
+};
+
+type CompletionQuiz = {
+  id: string;
+  title?: string | null;
+  questions: CompletionQuizQuestion[];
+};
+
+type CompletionQuizResult = {
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  results: Array<{
+    questionId: string;
+    question: string;
+    selectedOptionText: string | null;
+    correctOptionText: string | null;
+    isCorrect: boolean;
+    explanation: string;
+  }>;
+};
+
 function toChatHistoryMessages(messages: ChatMessage[]) {
   return messages
     .map((message) => {
@@ -133,6 +160,10 @@ export default function LearningPage({
   const [studySessionActive, setStudySessionActive] = useState(false);
   const [chatMode, setChatMode] = useState<"text" | "math">("text");
   const [studyTimeSeconds, setStudyTimeSeconds] = useState(0);
+  const [completionQuiz, setCompletionQuiz] = useState<CompletionQuiz | null>(null);
+  const [completionAnswers, setCompletionAnswers] = useState<Record<string, string>>({});
+  const [completionResult, setCompletionResult] = useState<CompletionQuizResult | null>(null);
+  const [isSubmittingCompletionQuiz, setIsSubmittingCompletionQuiz] = useState(false);
 
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 
@@ -750,8 +781,77 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
   };
 
   const handleEndLesson = async () => {
-    await endStudySession();
-    router.push(`/courses/${params.subjectId}`);
+    if (isEndingLesson) return;
+
+    const sessionId = studySessionIdRef.current;
+    const seconds = studyUnsyncedSecondsRef.current;
+    studyUnsyncedSecondsRef.current = 0;
+    setIsEndingLesson(true);
+
+    try {
+      if (sessionId) {
+        await fetch(`/api/study-sessions/${sessionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ seconds, ended: true }),
+        });
+      }
+
+      const response = await fetch(`/api/lessons/${params.lessonId}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seconds: 0 }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to complete lesson (${response.status})`);
+      }
+
+      const data = await response.json();
+      studySessionIdRef.current = null;
+      studyStartedRef.current = false;
+      setStudySessionActive(false);
+      setStudyTimeSeconds(0);
+      setCompletionResult(null);
+      setCompletionAnswers({});
+      setCompletionQuiz(data.quiz || null);
+
+      if (!data.quiz) {
+        router.push(`/courses/${params.subjectId}`);
+      }
+    } catch (error) {
+      console.error("Failed to complete lesson:", error);
+      studyUnsyncedSecondsRef.current += seconds;
+    } finally {
+      setIsEndingLesson(false);
+    }
+  };
+
+  const handleSubmitCompletionQuiz = async () => {
+    if (!completionQuiz || isSubmittingCompletionQuiz) return;
+
+    setIsSubmittingCompletionQuiz(true);
+    try {
+      const response = await fetch(`/api/lessons/${params.lessonId}/completion-quiz/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quizId: completionQuiz.id,
+          answers: completionAnswers,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to submit completion quiz (${response.status})`);
+      }
+
+      const result = await response.json();
+      setCompletionResult(result);
+    } catch (error) {
+      console.error("Failed to submit completion quiz:", error);
+    } finally {
+      setIsSubmittingCompletionQuiz(false);
+    }
   };
 
   const handleGenerateExercise = async () => {
@@ -814,7 +914,6 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
           lessonId: params.lessonId,
           question: currentExercise.question,
           userAnswer: userAnswer,
-          userId: user?.id,
         }),
       });
 
@@ -895,6 +994,121 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
   return (
     <div className="h-screen bg-[linear-gradient(180deg,#fffefb_0%,#f8f4eb_58%,#f3ecde_100%)] flex flex-col overflow-hidden">
+      {completionQuiz && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-ink-900/60 p-4 backdrop-blur-sm">
+          <div className="mx-auto my-8 max-w-3xl rounded-[28px] border border-white/80 bg-white p-5 shadow-panel sm:p-6">
+            <div className="flex items-start justify-between gap-4 border-b border-paper-200 pb-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-600">Đánh giá cuối phiên</p>
+                <h2 className="mt-1 text-2xl font-semibold text-ink-900">Kiểm tra ghi nhớ bài học</h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  Bài học đã được lưu là hoàn thành. Trả lời nhanh vài câu để hệ thống cập nhật roadmap và điểm yếu chính xác hơn.
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push(`/courses/${params.subjectId}`)}
+                className="text-slate-500 hover:text-slate-900"
+                title="Đóng đánh giá"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="mt-5 space-y-5">
+              {completionQuiz.questions.map((question, questionIndex) => {
+                const result = completionResult?.results.find((item) => item.questionId === question.id);
+
+                return (
+                  <div key={question.id} className="rounded-3xl border border-paper-200 bg-paper-50/70 p-4">
+                    <div className="flex gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">
+                        {questionIndex + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-ink-900">{question.question}</p>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {question.options.map((option) => {
+                            const isSelected = completionAnswers[question.id] === option.id;
+                            const isCorrectAfterSubmit = result?.correctOptionText === option.text;
+                            const isWrongSelection = result && isSelected && !result.isCorrect;
+
+                            return (
+                              <button
+                                key={option.id}
+                                type="button"
+                                disabled={Boolean(completionResult)}
+                                onClick={() => setCompletionAnswers((current) => ({ ...current, [question.id]: option.id }))}
+                                className={cn(
+                                  "rounded-2xl border px-3 py-2 text-left text-sm transition-all",
+                                  isCorrectAfterSubmit
+                                    ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                                    : isWrongSelection
+                                      ? "border-red-300 bg-red-50 text-red-700"
+                                      : isSelected
+                                        ? "border-brand-400 bg-brand-50 text-brand-800"
+                                        : "border-paper-200 bg-white text-slate-700 hover:border-brand-200 hover:bg-brand-50/60",
+                                )}
+                              >
+                                {option.text}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {result && (
+                          <div className={cn(
+                            "mt-3 rounded-2xl border px-3 py-2 text-sm",
+                            result.isCorrect ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800",
+                          )}>
+                            <p className="font-semibold">{result.isCorrect ? "Đúng" : "Cần ôn lại"}</p>
+                            <p className="mt-1">Đáp án đúng: {result.correctOptionText}</p>
+                            {result.explanation && <p className="mt-1">{result.explanation}</p>}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 border-t border-paper-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              {completionResult ? (
+                <div>
+                  <p className="text-lg font-semibold text-ink-900">
+                    Kết quả: {completionResult.score}/{completionResult.totalQuestions} câu đúng ({completionResult.percentage}%)
+                  </p>
+                  <p className="text-sm text-slate-600">Roadmap và điểm yếu đã được cập nhật từ kết quả này.</p>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-600">
+                  Đã chọn {Object.keys(completionAnswers).length}/{completionQuiz.questions.length} câu.
+                </p>
+              )}
+
+              <div className="flex gap-2">
+                {completionResult ? (
+                  <Button onClick={() => router.push(`/courses/${params.subjectId}`)} className="bg-ink-900 text-white hover:bg-ink-800">
+                    Về danh sách bài học
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmitCompletionQuiz}
+                    disabled={isSubmittingCompletionQuiz || Object.keys(completionAnswers).length < completionQuiz.questions.length}
+                    className="bg-ink-900 text-white hover:bg-ink-800"
+                  >
+                    {isSubmittingCompletionQuiz ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Nộp đánh giá
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Inline navigation - no header */}
       <div className="h-12 bg-white/90 border-b border-white/80 px-4 flex items-center justify-between shrink-0 backdrop-blur-sm">
         <div className="flex items-center gap-4">
