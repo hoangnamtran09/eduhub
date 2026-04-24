@@ -1,23 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { getAuthUser } from "@/lib/auth/get-auth-user";
+import { requireAdmin } from "@/lib/auth/require-role";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-async function requireAdmin() {
-  const authUser = await getAuthUser();
-  if (!authUser || authUser.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  return null;
-}
-
 export async function GET() {
-  const unauthorized = await requireAdmin();
-  if (unauthorized) return unauthorized;
+  const authorization = await requireAdmin();
+  if (authorization instanceof NextResponse) return authorization;
 
   try {
     const prismaAny = prisma as any;
@@ -49,8 +40,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const unauthorized = await requireAdmin();
-  if (unauthorized) return unauthorized;
+  const authorization = await requireAdmin();
+  if (authorization instanceof NextResponse) return authorization;
 
   try {
     const body = await request.json();
@@ -100,8 +91,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const unauthorized = await requireAdmin();
-  if (unauthorized) return unauthorized;
+  const authorization = await requireAdmin();
+  if (authorization instanceof NextResponse) return authorization;
 
   try {
     const body = await request.json();
@@ -153,8 +144,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const unauthorized = await requireAdmin();
-  if (unauthorized) return unauthorized;
+  const authorization = await requireAdmin();
+  if (authorization instanceof NextResponse) return authorization;
 
   try {
     const { searchParams } = new URL(request.url);

@@ -27,6 +27,7 @@ type FocusArea = {
   severity: "high" | "medium" | "low";
   score: number;
   lessonId?: string | null;
+  subjectId?: string | null;
   subjectName?: string | null;
   reason: string;
   recommendedAction: string;
@@ -106,9 +107,9 @@ export default function RoadmapPage() {
     [data],
   );
   const primaryLessonHref = useMemo(() => {
-    const target = data?.focusAreas.find((item) => item.lessonId && item.subjectName);
-    if (!target?.lessonId || !target.subjectName) return "/courses";
-    return `/courses/${encodeURIComponent(target.subjectName)}/${target.lessonId}`;
+    const target = data?.focusAreas.find((item) => item.lessonId && item.subjectId);
+    if (!target?.lessonId || !target.subjectId) return "/courses";
+    return `/courses/${target.subjectId}/${target.lessonId}`;
   }, [data]);
 
   if (loading) {

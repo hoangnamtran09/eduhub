@@ -2,9 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { chatWithAI } from "@/lib/beeknoee/client";
 import { prisma } from "@/lib/prisma/client";
 import { getExercisePrompt } from "@/lib/ai/prompts";
+import { getAuthUser } from "@/lib/auth/get-auth-user";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimitResponse = checkRateLimit(`ai-exercise:${authUser.userId}:${getClientIp(request)}`, 12, 60 * 1000);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
     const { lessonId, subjectId } = body;
 
@@ -34,7 +44,7 @@ export async function POST(request: NextRequest) {
       { role: "system", content: systemPrompt },
       {
         role: "user",
-        content: `Dựa trên nội dung sau, hãy tạo 1 câu hỏi trắc nghiệm ngẫu nhiên gồm 4 đáp án và chỉ 1 đáp án đúng. Tra ve dung JSON theo prompt he thong.\n\n${lessonContent}`,
+        content: `Dựa trên nội dung sau, hãy tạo 1 câu hỏi trắc nghiệm ngẫu nhiên gồm 4 đáp án và chỉ 1 đáp án đúng. Tra ve dung JSON theo prompt he thong.\n\n${lessonContent.slice(0, 12_000)}`,
       }
     ];
 

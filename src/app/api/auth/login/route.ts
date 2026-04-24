@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import * as crypto from "crypto";
 import { createAuthToken, setAuthCookie } from "@/lib/auth/session";
+import { hashPassword, needsPasswordRehash, verifyPassword } from "@/lib/auth/password";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-function hashPassword(password: string) {
-  return crypto.createHash("sha256").update(password).digest("hex");
-}
 
 export async function POST(request: Request) {
   try {
@@ -37,12 +33,19 @@ export async function POST(request: Request) {
 
     // Verify password if hash exists
     if (user.passwordHash) {
-      const hashedPassword = hashPassword(password);
-      if (user.passwordHash !== hashedPassword) {
+      const isValidPassword = await verifyPassword(password, user.passwordHash);
+      if (!isValidPassword) {
         return NextResponse.json(
           { error: "Email hoặc mật khẩu không chính xác" },
           { status: 401 }
         );
+      }
+
+      if (needsPasswordRehash(user.passwordHash)) {
+        await prismaAny.user.update({
+          where: { id: user.id },
+          data: { passwordHash: await hashPassword(password) },
+        });
       }
     }
     

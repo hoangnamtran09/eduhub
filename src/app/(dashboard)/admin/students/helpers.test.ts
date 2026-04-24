@@ -13,6 +13,8 @@ const sampleStudent: StudentRecord = {
   fullName: "Nguyen Van A",
   gradeLevel: 8,
   diamonds: 15,
+  parentId: null,
+  parent: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   profile: {
     goals: ["Làm tốt đại số", "Tăng tốc độ giải bài"],
@@ -42,6 +44,7 @@ describe("student admin helpers", () => {
       fullName: "Nguyen Van A",
       gradeLevel: "8",
       diamonds: "15",
+      parentId: "",
       goals: "Làm tốt đại số\nTăng tốc độ giải bài",
       strengths: "Hình học",
       weaknesses: "Phân tích đề",

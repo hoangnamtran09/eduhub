@@ -161,11 +161,12 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r border-white/10 bg-[linear-gradient(180deg,rgba(17,24,39,0.98)_0%,rgba(20,41,58,0.96)_42%,rgba(21,63,61,0.94)_100%)] text-white backdrop-blur-xl",
-        collapsed ? "w-20" : "w-72"
+        "fixed left-0 top-0 z-40 border-white/10 bg-[linear-gradient(180deg,rgba(17,24,39,0.98)_0%,rgba(20,41,58,0.96)_42%,rgba(21,63,61,0.94)_100%)] text-white backdrop-blur-xl lg:h-screen lg:border-r",
+        "h-16 w-full border-b lg:w-auto",
+        collapsed ? "lg:w-20" : "lg:w-72"
       )}
     >
-      <div className="flex h-20 items-center border-b border-white/10 px-6">
+      <div className="flex h-16 items-center border-white/10 px-4 lg:h-20 lg:border-b lg:px-6">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-brand-200/70 bg-gradient-to-br from-brand-500 to-accent-500 text-white shadow-lg shadow-brand-500/15">
             <GraduationCap className="h-5 w-5 text-white" />
@@ -183,7 +184,7 @@ export function Sidebar() {
         </Link>
       </div>
 
-      <nav className="space-y-2 px-3 py-5">
+      <nav className="hidden space-y-2 px-3 py-5 lg:block">
         {!mounted || isAuthLoading
           ? Array.from({ length: collapsed ? 5 : 6 }).map((_, index) => (
               <div
@@ -281,7 +282,7 @@ export function Sidebar() {
             })}
       </nav>
 
-      <div className={cn("absolute left-5 right-5", collapsed ? "bottom-24 left-3 right-3" : "bottom-24")}>
+      <div className={cn("absolute left-5 right-5 hidden lg:block", collapsed ? "bottom-24 left-3 right-3" : "bottom-24")}>
         {!collapsed && user?.role !== "ADMIN" && (
           <div className="rounded-[28px] border border-white/10 bg-white/8 p-4 shadow-soft transition-all backdrop-blur-sm">
             <div className="flex items-center gap-3">
@@ -333,10 +334,31 @@ export function Sidebar() {
         variant="ghost"
         size="icon"
         onClick={toggleCollapsed}
-        className="absolute bottom-10 right-0 z-50 h-10 w-10 translate-x-1/2 border border-white/10 bg-ink-900 text-white shadow-soft transition-all hover:bg-ink-800 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0"
+        className="absolute right-4 top-3 z-50 h-10 w-10 border border-white/10 bg-ink-900 text-white shadow-soft transition-all hover:bg-ink-800 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0 lg:bottom-10 lg:right-0 lg:top-auto lg:translate-x-1/2"
       >
         <ChevronLeft className={cn("h-4 w-4 text-white", collapsed && "rotate-180")} />
       </Button>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-5 gap-1 border-t border-white/10 bg-ink-900/95 px-2 py-2 text-white backdrop-blur-xl lg:hidden">
+        {navItems.slice(0, 5).map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-medium",
+                isActive ? "bg-white/12 text-white" : "text-white/65",
+              )}
+            >
+              <Icon className={cn("h-4 w-4", isActive && "text-accent-300")} />
+              <span className="max-w-full truncate">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
     </aside>
   );
 }

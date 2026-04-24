@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { requireAdminOrTeacher } from "@/lib/auth/require-role";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   try {
     const prismaAny = prisma as any;
     const assignments = await prismaAny.assignment.findMany({
@@ -51,6 +55,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   try {
     const body = await request.json();
     const {
@@ -63,7 +70,6 @@ export async function POST(request: Request) {
       maxScore,
       targetGradeLevel,
       studentIds,
-      createdById,
     } = body;
 
     if (!title?.trim() || !description?.trim()) {
@@ -102,7 +108,7 @@ export async function POST(request: Request) {
         pdfUrl: typeof pdfUrl === "string" && pdfUrl ? pdfUrl : null,
         pdfStorageKey: typeof pdfStorageKey === "string" && pdfStorageKey ? pdfStorageKey : null,
         lessonId: lessonId || null,
-        createdById: createdById || null,
+        createdById: authorization.authUser.userId,
         dueDate: dueDate ? new Date(dueDate) : null,
         maxScore: Number(maxScore) > 0 ? Number(maxScore) : 10,
         targetGradeLevel: targetGradeLevel ? Number(targetGradeLevel) : null,

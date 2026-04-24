@@ -1,9 +1,6 @@
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "default_secret_key_change_me",
-);
+import { getJwtSecret } from "@/lib/auth/jwt-secret";
 
 export async function createAuthToken(payload: {
   userId: string;
@@ -13,7 +10,7 @@ export async function createAuthToken(payload: {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("24h")
-    .sign(JWT_SECRET);
+    .sign(getJwtSecret());
 }
 
 export async function setAuthCookie(token: string) {

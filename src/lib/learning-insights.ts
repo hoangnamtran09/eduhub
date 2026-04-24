@@ -12,6 +12,7 @@ export interface WeaknessInsight {
   recommendedAction: string;
   score: number;
   lessonId?: string | null;
+  subjectId?: string | null;
   subjectName?: string | null;
   signalBreakdown?: Array<{
     source: "QUIZ" | "EXERCISE" | "PROFILE" | "PROGRESS";
@@ -85,6 +86,7 @@ type TopicSignal = {
   weight: number;
   reason: string;
   lessonId?: string | null;
+  subjectId?: string | null;
   subjectName?: string | null;
 };
 
@@ -93,6 +95,7 @@ type TopicAggregate = {
   evidenceCount: number;
   signals: TopicSignal[];
   lessonId: string | null;
+  subjectId: string | null;
   subjectName: string | null;
 };
 
@@ -162,6 +165,7 @@ function buildWeaknessInsights(topicScores: Map<string, TopicAggregate>): Weakne
         recommendedAction: buildRecommendedAction(topic, strongestSignal),
         score: normalizedScore,
         lessonId: item.lessonId,
+        subjectId: item.subjectId,
         subjectName: item.subjectName || topic,
         signalBreakdown: sortedSignals.slice(0, 3).map((signal) => ({
           source: signal.source,
@@ -224,6 +228,7 @@ export function normalizeExerciseAttemptsToWeaknesses(
       evidenceCount: 0,
       signals: [],
       lessonId: null,
+      subjectId: null,
       subjectName: topic,
     };
 
@@ -235,6 +240,7 @@ export function normalizeExerciseAttemptsToWeaknesses(
         weight: 2.5,
         reason: `Bài tập AI dưới ngưỡng mong muốn (${attempt.score}/100)`,
         lessonId: null,
+        subjectId: null,
         subjectName: topic,
       });
     } else if (typeof attempt.score === "number" && attempt.score < 80) {
@@ -245,6 +251,7 @@ export function normalizeExerciseAttemptsToWeaknesses(
         weight: 1.5,
         reason: `Bài tập AI cần cải thiện (${attempt.score}/100)`,
         lessonId: null,
+        subjectId: null,
         subjectName: topic,
       });
     } else if (attempt.score == null) {
@@ -255,6 +262,7 @@ export function normalizeExerciseAttemptsToWeaknesses(
         weight: 0.5,
         reason: "Có bài tập đang làm dở hoặc chưa được chấm",
         lessonId: null,
+        subjectId: null,
         subjectName: topic,
       });
     }
@@ -280,6 +288,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
             title: true,
             subject: {
               select: {
+                id: true,
                 name: true,
               },
             },
@@ -296,9 +305,11 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
           include: {
             lesson: {
               select: {
+                id: true,
                 title: true,
                 subject: {
                   select: {
+                    id: true,
                     name: true,
                   },
                 },
@@ -323,6 +334,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
             title: true,
             subject: {
               select: {
+                id: true,
                 name: true,
               },
             },
@@ -352,6 +364,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
       evidenceCount: 0,
       signals: [],
       lessonId: signal.lessonId ?? null,
+      subjectId: signal.subjectId ?? null,
       subjectName: signal.subjectName ?? normalizedTopic,
     };
 
@@ -359,6 +372,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
     current.evidenceCount += 1;
     current.signals.push(signal);
     current.lessonId = current.lessonId ?? signal.lessonId ?? null;
+    current.subjectId = current.subjectId ?? signal.subjectId ?? null;
     current.subjectName = current.subjectName ?? signal.subjectName ?? normalizedTopic;
     topicScores.set(normalizedTopic, current);
   };
@@ -369,6 +383,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
       weight: 3,
       reason: "Được giáo viên hoặc hồ sơ học sinh đánh dấu là điểm yếu",
       lessonId: null,
+      subjectId: null,
       subjectName: normalizeTopic(weakness),
     });
   }
@@ -389,6 +404,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 3,
         reason: `Điểm quiz thấp (${Math.round(percentage)}%)`,
         lessonId: attempt.quiz?.lesson?.id ?? null,
+        subjectId: attempt.quiz?.lesson?.subject?.id ?? null,
         subjectName: normalizeTopic(attempt.quiz?.lesson?.subject?.name),
       });
     } else if (percentage < 75) {
@@ -397,6 +413,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 1.5,
         reason: `Điểm quiz cần cải thiện (${Math.round(percentage)}%)`,
         lessonId: attempt.quiz?.lesson?.id ?? null,
+        subjectId: attempt.quiz?.lesson?.subject?.id ?? null,
         subjectName: normalizeTopic(attempt.quiz?.lesson?.subject?.name),
       });
     }
@@ -412,6 +429,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 2.5,
         reason: `Bài tập AI dưới ngưỡng mong muốn (${score}/100)`,
         lessonId: attempt.lessonId ?? null,
+        subjectId: null,
         subjectName: null,
       });
     } else if (score !== null && score < 80) {
@@ -420,6 +438,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 1.5,
         reason: `Bài tập AI cần cải thiện (${score}/100)`,
         lessonId: attempt.lessonId ?? null,
+        subjectId: null,
         subjectName: null,
       });
     } else if (score === null) {
@@ -428,6 +447,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 0.5,
         reason: "Có bài tập đang làm dở hoặc chưa được chấm",
         lessonId: attempt.lessonId ?? null,
+        subjectId: null,
         subjectName: null,
       });
     }
@@ -442,6 +462,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
         weight: 1,
         reason: "Đã học khá lâu nhưng bài vẫn chưa hoàn tất",
         lessonId: item.lessonId ?? null,
+        subjectId: item.lesson?.subject?.id ?? null,
         subjectName: normalizeTopic(item.lesson?.subject?.name),
       });
     }

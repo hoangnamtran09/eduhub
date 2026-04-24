@@ -2,15 +2,44 @@ import { NextRequest, NextResponse } from "next/server";
 import { chatWithAI } from "@/lib/beeknoee/client";
 import { prisma } from "@/lib/prisma/client";
 import { getGraderPrompt } from "@/lib/ai/prompts";
+import { getAuthUser } from "@/lib/auth/get-auth-user";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+
+function clampNumber(value: unknown, min: number, max: number, fallback: number) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return fallback;
+  return Math.min(max, Math.max(min, numericValue));
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimitResponse = checkRateLimit(`ai-grade:${authUser.userId}:${getClientIp(request)}`, 20, 60 * 1000);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
-    const { lessonId, question, userAnswer, userId } = body;
+    const { lessonId, question, userAnswer } = body;
 
-    console.log("Grading exercise request:", { lessonId, userId });
+    if (!question || !userAnswer) {
+      return NextResponse.json({ error: "Missing exercise content" }, { status: 400 });
+    }
 
-    const systemPrompt = getGraderPrompt(question, userAnswer);
+    if (lessonId) {
+      const lesson = await prisma.lesson.findUnique({
+        where: { id: lessonId },
+        select: { id: true },
+      });
+
+      if (!lesson) {
+        return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
+      }
+    }
+
+    const systemPrompt = getGraderPrompt(String(question).slice(0, 4_000), String(userAnswer).slice(0, 4_000));
     
     const messages = [
       { role: "system", content: systemPrompt },
@@ -38,42 +67,43 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // Save attempt and update diamonds if passed (only if userId is provided)
-    if (userId) {
-      try {
-        await prisma.$transaction(async (tx) => {
-          // Check if exerciseAttempt exists on tx (Prisma client)
-          // Based on schema, it should be exerciseAttempt
-          await tx.exerciseAttempt.create({
-            data: {
-              userId,
-              lessonId,
-              exerciseTitle: "Bài tập AI",
-              question,
-              userAnswer,
-              aiFeedback: gradeData.feedback,
-              score: gradeData.score,
-              diamondsEarned: gradeData.isPassed ? (gradeData.diamondsEarned || 10) : 0,
-            }
-          });
+    gradeData = {
+      score: clampNumber(gradeData.score, 0, 100, 0),
+      feedback: typeof gradeData.feedback === "string" ? gradeData.feedback : response,
+      isPassed: Boolean(gradeData.isPassed),
+      diamondsEarned: clampNumber(gradeData.diamondsEarned, 0, 10, 0),
+    };
 
-          if (gradeData.isPassed) {
-            await tx.user.update({
-              where: { id: userId },
-              data: {
-                diamonds: {
-                  increment: gradeData.diamondsEarned || 10
-                }
-              }
-            });
+    try {
+      await prisma.$transaction(async (tx) => {
+        const diamondsEarned = gradeData.isPassed ? gradeData.diamondsEarned : 0;
+
+        await tx.exerciseAttempt.create({
+          data: {
+            userId: authUser.userId,
+            lessonId: lessonId || null,
+            exerciseTitle: "Bài tập AI",
+            question,
+            userAnswer,
+            aiFeedback: gradeData.feedback,
+            score: gradeData.score,
+            diamondsEarned,
           }
         });
-      } catch (error) {
-        console.error("Failed to save exercise attempt or update diamonds:", error);
-        // We still return the grade data even if saving fails
-      }
-    } else {
-      console.warn("No userId provided, skipping reward and saving attempt.");
+
+        if (diamondsEarned > 0) {
+          await tx.user.update({
+            where: { id: authUser.userId },
+            data: {
+              diamonds: {
+                increment: diamondsEarned
+              }
+            }
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Failed to save exercise attempt or update diamonds:", error);
     }
 
     return NextResponse.json(gradeData);

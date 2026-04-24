@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { isR2Configured, uploadFileToR2 } from "@/lib/storage/r2";
+import { requireAdminOrTeacher } from "@/lib/auth/require-role";
+import { validatePdfFile } from "@/lib/upload/pdf-validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function POST(request: NextRequest) {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -18,8 +23,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (!file.name.toLowerCase().endsWith(".pdf")) {
-      return NextResponse.json({ error: "Please upload a PDF file" }, { status: 400 });
+    const pdfError = await validatePdfFile(file);
+    if (pdfError) {
+      return NextResponse.json({ error: pdfError }, { status: 400 });
     }
 
     if (!isR2Configured()) {

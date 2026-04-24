@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import * as crypto from "crypto";
 import { createAuthToken, setAuthCookie } from "@/lib/auth/session";
+import { hashPassword } from "@/lib/auth/password";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-function hashPassword(password: string) {
-  return crypto.createHash("sha256").update(password).digest("hex");
-}
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, fullName, role } = body;
+    const { email, password, fullName } = body;
 
     if (!email || !password || !fullName) {
       return NextResponse.json(
@@ -42,8 +38,8 @@ export async function POST(request: Request) {
       data: {
         email,
         fullName,
-        role: role || "STUDENT",
-        passwordHash: hashPassword(password),
+        role: "STUDENT",
+        passwordHash: await hashPassword(password),
       },
     });
 

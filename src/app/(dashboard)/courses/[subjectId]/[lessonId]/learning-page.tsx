@@ -70,7 +70,7 @@ function getAssistantMessageVariant(content: string) {
   return questionSignals.some((signal) => normalized.includes(signal)) ? "question" : "theory";
 }
 
-type FilterTab = "all" | "file" | "link" | "question";
+type FilterTab = "all" | "file" | "question";
 
 const mathSymbols = [
   { label: "x²", value: "^2" },
@@ -146,7 +146,6 @@ export default function LearningPage({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user.id,
           amount: diamondAward,
         }),
       });
@@ -944,9 +943,9 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
       </div>
 
       {/* Main 3-Column Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-auto lg:flex-row lg:overflow-hidden">
         {/* ==================== LEFT SIDEBAR ==================== */}
-        <div className="w-72 bg-white/88 border-r border-white/80 flex flex-col shrink-0 backdrop-blur-sm">
+        <div className="max-h-64 w-full shrink-0 border-b border-white/80 bg-white/88 backdrop-blur-sm lg:max-h-none lg:w-72 lg:border-b-0 lg:border-r lg:flex lg:flex-col">
           {/* Sidebar Header */}
           <div className="p-4 border-b border-slate-100">
             <h2 className="text-sm font-semibold text-slate-900 mb-3">
@@ -966,7 +965,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
           {/* Filter Tabs */}
           <div className="px-4 py-2 border-b border-slate-100 flex gap-1">
-            {(["all", "file", "link", "question"] as FilterTab[]).map((tab) => (
+            {(["all", "file", "question"] as FilterTab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveFilter(tab)}
@@ -977,13 +976,13 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                     : "text-slate-500 hover:bg-slate-100"
                 )}
               >
-                {tab === "all" ? "Tất cả" : tab === "file" ? "File" : tab === "link" ? "Link" : "Câu hỏi"}
+                {tab === "all" ? "Tất cả" : tab === "file" ? "File" : "Câu hỏi"}
               </button>
             ))}
           </div>
 
           {/* Lesson List */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <div className="max-h-40 space-y-2 overflow-y-auto p-3 lg:max-h-none lg:flex-1">
             {filteredLessons().map((lesson) => (
                 <div
                   key={lesson.id}
@@ -1033,8 +1032,8 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         </div>
 
         {/* ==================== CENTER CONTENT ==================== */}
-        <div className="flex-1 flex flex-col bg-paper-50/40 overflow-hidden">
-          <div className="flex-1 p-3 lg:p-4 overflow-auto">
+        <div className="flex min-h-[520px] flex-1 flex-col overflow-hidden bg-paper-50/40 lg:min-h-0">
+          <div className="flex-1 overflow-auto p-3 lg:p-4">
             {pdfUrl ? (
               <div className="flex h-full flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/96 shadow-soft">
                 <div className="flex items-center justify-between border-b border-paper-200 px-4 py-3">
@@ -1090,7 +1089,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         </div>
 
         {/* ==================== RIGHT CHAT PANEL ==================== */}
-        <div className="w-80 bg-white/92 border-l border-white/80 flex flex-col shrink-0 backdrop-blur-sm">
+        <div className="min-h-[520px] w-full shrink-0 border-t border-white/80 bg-white/92 backdrop-blur-sm lg:min-h-0 lg:w-80 lg:border-l lg:border-t-0 lg:flex lg:flex-col">
           {/* Chat Header */}
           <div className="p-4 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2">

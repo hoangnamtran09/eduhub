@@ -1,9 +1,6 @@
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "default_secret_key_change_me"
-);
+import { getJwtSecret } from "@/lib/auth/jwt-secret";
 
 export interface AuthUser {
   userId: string;
@@ -19,7 +16,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
       return null;
     }
 
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
 
     return {
       userId: payload.userId as string,
