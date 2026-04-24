@@ -43,7 +43,13 @@ export function useAssignments() {
       ]);
 
       setAssignments(Array.isArray(assignmentData) ? assignmentData : []);
-      setStudents(Array.isArray(studentData) ? studentData : []);
+
+      const normalizedStudents = Array.isArray(studentData)
+        ? studentData
+        : Array.isArray(studentData?.students)
+          ? studentData.students
+          : [];
+      setStudents(normalizedStudents);
 
       const normalizedSubjects = Array.isArray(subjectData) ? subjectData : [];
       const lessonOptions = normalizedSubjects.flatMap((subject: any) =>
