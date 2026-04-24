@@ -32,6 +32,7 @@ export async function GET() {
         subjectName: item.subjectName ?? item.topic,
         reason: item.reason,
         recommendedAction: item.recommendedAction,
+        signalBreakdown: item.signalBreakdown ?? [],
       })),
     });
   } catch (error) {

@@ -13,6 +13,12 @@ type MistakeItem = {
   createdAt?: string | null;
 };
 
+type WeaknessSignal = {
+  source: "QUIZ" | "EXERCISE" | "PROFILE" | "PROGRESS";
+  weight: number;
+  reason: string;
+};
+
 type WeaknessItem = {
   id: string;
   topic: string;
@@ -24,6 +30,7 @@ type WeaknessItem = {
   score: number;
   lessonId?: string | null;
   subjectName?: string | null;
+  signalBreakdown?: WeaknessSignal[];
 };
 
 type MistakesPayload = {
@@ -55,6 +62,13 @@ function sourceLabel(source: MistakeItem["source"]) {
   if (source === "QUIZ") return "Quiz";
   if (source === "EXERCISE") return "Bài tập AI";
   return "Hồ sơ học sinh";
+}
+
+function signalLabel(source: WeaknessSignal["source"]) {
+  if (source === "QUIZ") return "Quiz";
+  if (source === "EXERCISE") return "Bài tập AI";
+  if (source === "PROGRESS") return "Tiến độ học";
+  return "Hồ sơ cá nhân";
 }
 
 export default function MistakesPage() {
@@ -203,6 +217,27 @@ export default function MistakesPage() {
                   <p className="mt-1 text-sm text-slate-700">{item.recommendedAction}</p>
                 </div>
               </div>
+              {!!item.signalBreakdown?.length && (
+                <div className="mt-4 rounded-2xl bg-white px-4 py-4 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Vì sao hệ thống xếp ưu tiên</p>
+                    <p className="text-xs text-slate-400">Top {item.signalBreakdown.length} tín hiệu mạnh nhất</p>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {item.signalBreakdown.map((signal, index) => (
+                      <div key={`${item.id}-${signal.source}-${index}`} className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+                            {signalLabel(signal.source)}
+                          </span>
+                          <span className="text-xs font-medium text-slate-400">Trọng số {signal.weight}</span>
+                        </div>
+                        <p className="mt-2 text-sm text-slate-700">{signal.reason}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )) : (
             <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">

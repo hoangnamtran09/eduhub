@@ -13,6 +13,11 @@ export interface WeaknessInsight {
   score: number;
   lessonId?: string | null;
   subjectName?: string | null;
+  signalBreakdown?: Array<{
+    source: "QUIZ" | "EXERCISE" | "PROFILE" | "PROGRESS";
+    weight: number;
+    reason: string;
+  }>;
 }
 
 export interface RoadmapStep {
@@ -73,37 +78,135 @@ export function inferTopicFromText(value: string | null | undefined) {
   return toTitleCase(preferred || normalized.slice(0, 60));
 }
 
+type SignalSource = "QUIZ" | "EXERCISE" | "PROFILE" | "PROGRESS";
+
+type TopicSignal = {
+  source: SignalSource;
+  weight: number;
+  reason: string;
+  lessonId?: string | null;
+  subjectName?: string | null;
+};
+
+type TopicAggregate = {
+  score: number;
+  evidenceCount: number;
+  signals: TopicSignal[];
+  lessonId: string | null;
+  subjectName: string | null;
+};
+
+function clampScore(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getSeverity(score: number): WeaknessInsight["severity"] {
+  if (score >= 80) return "high";
+  if (score >= 45) return "medium";
+  return "low";
+}
+
+function getConfidence(evidenceCount: number, signalSources: Set<SignalSource>): WeaknessInsight["confidence"] {
+  if (evidenceCount >= 4 || signalSources.size >= 3) return "high";
+  if (evidenceCount >= 2 || signalSources.size >= 2) return "medium";
+  return "low";
+}
+
+function buildRecommendedAction(topic: string, strongestSignal?: TopicSignal) {
+  switch (strongestSignal?.source) {
+    case "QUIZ":
+      return `Ôn lại lý thuyết trọng tâm của ${topic.toLowerCase()}, sau đó làm quiz ngắn để kiểm tra lại độ chính xác.`;
+    case "EXERCISE":
+      return `Luyện thêm bài tập theo từng bước cho ${topic.toLowerCase()}, ưu tiên các dạng đã bị mất điểm gần đây.`;
+    case "PROGRESS":
+      return `Chia nhỏ phần ${topic.toLowerCase()} thành các phiên học 15-20 phút và hoàn tất bài đang học dở trước khi mở nội dung mới.`;
+    case "PROFILE":
+      return `Xếp ${topic.toLowerCase()} vào nhóm ôn tập cố định trong tuần và theo dõi lại sau mỗi lần luyện tập.`;
+    default:
+      return `Ưu tiên ôn tập và luyện thêm câu hỏi theo chủ đề ${topic.toLowerCase()}.`;
+  }
+}
+
+function buildPrimaryReason(signals: TopicSignal[]) {
+  const sortedSignals = [...signals].sort((a, b) => b.weight - a.weight);
+  const strongest = sortedSignals[0];
+  if (!strongest) return "Cần ôn tập thêm";
+
+  const uniqueSources = new Set(sortedSignals.map((signal) => signal.source));
+  if (uniqueSources.size >= 3) {
+    return `${strongest.reason}. Tín hiệu này còn được củng cố bởi nhiều nguồn học tập khác.`;
+  }
+
+  if (sortedSignals.length >= 2) {
+    return `${strongest.reason}. Ngoài ra còn có thêm ${sortedSignals.length - 1} tín hiệu liên quan cùng chủ đề.`;
+  }
+
+  return strongest.reason;
+}
+
+function buildWeaknessInsights(topicScores: Map<string, TopicAggregate>): WeaknessInsight[] {
+  return Array.from(topicScores.entries())
+    .map(([topic, item]): WeaknessInsight & { totalScore: number } => {
+      const sortedSignals = [...item.signals].sort((a, b) => b.weight - a.weight);
+      const signalSources = new Set(sortedSignals.map((signal) => signal.source));
+      const normalizedScore = clampScore(Math.round(item.score * 16), 10, 100);
+      const strongestSignal = sortedSignals[0];
+
+      return {
+        id: `weakness-${topic.toLowerCase().replace(/\s+/g, "-")}`,
+        topic,
+        confidence: getConfidence(item.evidenceCount, signalSources),
+        severity: getSeverity(normalizedScore),
+        reason: buildPrimaryReason(sortedSignals),
+        evidenceCount: item.evidenceCount,
+        recommendedAction: buildRecommendedAction(topic, strongestSignal),
+        score: normalizedScore,
+        lessonId: item.lessonId,
+        subjectName: item.subjectName || topic,
+        signalBreakdown: sortedSignals.slice(0, 3).map((signal) => ({
+          source: signal.source,
+          weight: signal.weight,
+          reason: signal.reason,
+        })),
+        totalScore: item.score,
+      };
+    })
+    .sort((a, b) => b.totalScore - a.totalScore || b.evidenceCount - a.evidenceCount)
+    .slice(0, 5)
+    .map(({ totalScore: _totalScore, ...item }): WeaknessInsight => item);
+}
+
 function createRoadmapSteps(weaknesses: WeaknessInsight[]): RoadmapStep[] {
   return weaknesses.slice(0, 3).flatMap((weakness, index) => {
-    const basePriority = index + 1;
+    const stepBase = index * 3;
 
     return [
       {
-        id: `${basePriority}-review`,
+        id: `${weakness.id}-review`,
         title: `Ôn lại nền tảng: ${weakness.topic}`,
-        description: `Đọc lại lý thuyết và ví dụ mẫu để xử lý vấn đề: ${weakness.reason.toLowerCase()}.`,
+        description: `Bắt đầu từ nguyên nhân chính: ${weakness.reason.toLowerCase()}`,
         focusTopic: weakness.topic,
         actionType: "review" as const,
-        priority: basePriority,
-        estimatedMinutes: 20,
+        priority: stepBase + 1,
+        estimatedMinutes: weakness.severity === "high" ? 25 : 20,
       },
       {
-        id: `${basePriority}-practice`,
+        id: `${weakness.id}-practice`,
         title: `Luyện tập có hướng dẫn: ${weakness.topic}`,
-        description: `Làm 3-5 bài tập ngắn, ưu tiên các câu từng làm sai hoặc còn lúng túng.`,
+        description: weakness.recommendedAction,
         focusTopic: weakness.topic,
         actionType: "practice" as const,
-        priority: basePriority + 1,
-        estimatedMinutes: 25,
+        priority: stepBase + 2,
+        estimatedMinutes: weakness.severity === "high" ? 30 : 25,
       },
       {
-        id: `${basePriority}-quiz`,
+        id: `${weakness.id}-quiz`,
         title: `Tự kiểm tra nhanh: ${weakness.topic}`,
-        description: `Tự làm một lượt quiz ngắn để xác nhận bạn đã cải thiện sau khi ôn tập.`,
+        description: `Làm một lượt kiểm tra ngắn để xác nhận ${weakness.topic.toLowerCase()} đã ổn định hơn sau khi ôn luyện.`,
         focusTopic: weakness.topic,
         actionType: "quiz" as const,
-        priority: basePriority + 2,
-        estimatedMinutes: 15,
+        priority: stepBase + 3,
+        estimatedMinutes: weakness.confidence === "high" ? 20 : 15,
       },
     ];
   });
@@ -112,47 +215,54 @@ function createRoadmapSteps(weaknesses: WeaknessInsight[]): RoadmapStep[] {
 export function normalizeExerciseAttemptsToWeaknesses(
   exerciseAttempts: Array<{ exerciseTitle?: string | null; question?: string | null; score?: number | null; createdAt?: Date | string | null }>,
 ): WeaknessInsight[] {
-  const topicScores = new Map<string, { score: number; evidenceCount: number; reasons: string[] }>();
+  const topicScores = new Map<string, TopicAggregate>();
 
   for (const attempt of exerciseAttempts || []) {
     const topic = inferTopicFromText(attempt.exerciseTitle || attempt.question);
-    const score = typeof attempt.score === "number" ? attempt.score : null;
-    const current = topicScores.get(topic) || { score: 0, evidenceCount: 0, reasons: [] };
+    const current = topicScores.get(topic) || {
+      score: 0,
+      evidenceCount: 0,
+      signals: [],
+      lessonId: null,
+      subjectName: topic,
+    };
 
-    if (score !== null && score < 70) {
+    if (typeof attempt.score === "number" && attempt.score < 70) {
       current.score += 2.5;
       current.evidenceCount += 1;
-      current.reasons.push(`Bài tập AI dưới ngưỡng mong muốn (${score}/100)`);
-    } else if (score !== null && score < 80) {
+      current.signals.push({
+        source: "EXERCISE",
+        weight: 2.5,
+        reason: `Bài tập AI dưới ngưỡng mong muốn (${attempt.score}/100)`,
+        lessonId: null,
+        subjectName: topic,
+      });
+    } else if (typeof attempt.score === "number" && attempt.score < 80) {
       current.score += 1.5;
       current.evidenceCount += 1;
-      current.reasons.push(`Bài tập AI cần cải thiện (${score}/100)`);
-    } else if (score === null) {
+      current.signals.push({
+        source: "EXERCISE",
+        weight: 1.5,
+        reason: `Bài tập AI cần cải thiện (${attempt.score}/100)`,
+        lessonId: null,
+        subjectName: topic,
+      });
+    } else if (attempt.score == null) {
       current.score += 0.5;
       current.evidenceCount += 1;
-      current.reasons.push("Có bài tập đang làm dở hoặc chưa được chấm");
+      current.signals.push({
+        source: "EXERCISE",
+        weight: 0.5,
+        reason: "Có bài tập đang làm dở hoặc chưa được chấm",
+        lessonId: null,
+        subjectName: topic,
+      });
     }
 
     topicScores.set(topic, current);
   }
 
-  return Array.from(topicScores.entries())
-    .map(([topic, item]): WeaknessInsight & { totalScore: number } => ({
-      id: `exercise-${topic.toLowerCase().replace(/\s+/g, "-")}`,
-      topic,
-      confidence: item.score >= 5 ? "high" : item.score >= 2.5 ? "medium" : "low",
-      severity: item.score >= 5 ? "high" : item.score >= 2.5 ? "medium" : "low",
-      reason: item.reasons[0] || "Cần ôn tập thêm",
-      evidenceCount: item.evidenceCount,
-      recommendedAction: `Ưu tiên ôn tập và luyện thêm câu hỏi theo chủ đề ${topic.toLowerCase()}.`,
-      score: Math.round(item.score * 10),
-      lessonId: null,
-      subjectName: topic,
-      totalScore: item.score,
-    }))
-    .sort((a, b) => b.totalScore - a.totalScore)
-    .slice(0, 5)
-    .map(({ totalScore: _totalScore, ...item }): WeaknessInsight => item);
+  return buildWeaknessInsights(topicScores);
 }
 
 export async function getLearningInsights(userId: string): Promise<LearningInsightsResult> {
@@ -230,19 +340,37 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
   const strengths = Array.isArray(user?.profile?.strengths) ? user.profile.strengths : [];
   const profileWeaknesses = Array.isArray(user?.profile?.weaknesses) ? user.profile.weaknesses : [];
 
-  const topicScores = new Map<string, { score: number; evidenceCount: number; reasons: string[] }>();
+  const topicScores = new Map<string, TopicAggregate>();
 
-  const pushWeaknessSignal = (topic: string, score: number, reason: string) => {
+  const pushWeaknessSignal = (
+    topic: string,
+    signal: TopicSignal,
+  ) => {
     const normalizedTopic = normalizeTopic(topic);
-    const current = topicScores.get(normalizedTopic) || { score: 0, evidenceCount: 0, reasons: [] };
-    current.score += score;
+    const current = topicScores.get(normalizedTopic) || {
+      score: 0,
+      evidenceCount: 0,
+      signals: [],
+      lessonId: signal.lessonId ?? null,
+      subjectName: signal.subjectName ?? normalizedTopic,
+    };
+
+    current.score += signal.weight;
     current.evidenceCount += 1;
-    current.reasons.push(reason);
+    current.signals.push(signal);
+    current.lessonId = current.lessonId ?? signal.lessonId ?? null;
+    current.subjectName = current.subjectName ?? signal.subjectName ?? normalizedTopic;
     topicScores.set(normalizedTopic, current);
   };
 
   for (const weakness of profileWeaknesses) {
-    pushWeaknessSignal(weakness, 3, "Được giáo viên hoặc hồ sơ học sinh đánh dấu là điểm yếu");
+    pushWeaknessSignal(weakness, {
+      source: "PROFILE",
+      weight: 3,
+      reason: "Được giáo viên hoặc hồ sơ học sinh đánh dấu là điểm yếu",
+      lessonId: null,
+      subjectName: normalizeTopic(weakness),
+    });
   }
 
   for (const attempt of quizAttempts || []) {
@@ -256,9 +384,21 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
     const percentage = totalQuestions > 0 && rawScore <= totalQuestions ? (rawScore / totalQuestions) * 100 : rawScore;
 
     if (percentage < 60) {
-      pushWeaknessSignal(topic, 3, `Điểm quiz thấp (${Math.round(percentage)}%)`);
+      pushWeaknessSignal(topic, {
+        source: "QUIZ",
+        weight: 3,
+        reason: `Điểm quiz thấp (${Math.round(percentage)}%)`,
+        lessonId: attempt.quiz?.lesson?.id ?? null,
+        subjectName: normalizeTopic(attempt.quiz?.lesson?.subject?.name),
+      });
     } else if (percentage < 75) {
-      pushWeaknessSignal(topic, 1.5, `Điểm quiz cần cải thiện (${Math.round(percentage)}%)`);
+      pushWeaknessSignal(topic, {
+        source: "QUIZ",
+        weight: 1.5,
+        reason: `Điểm quiz cần cải thiện (${Math.round(percentage)}%)`,
+        lessonId: attempt.quiz?.lesson?.id ?? null,
+        subjectName: normalizeTopic(attempt.quiz?.lesson?.subject?.name),
+      });
     }
   }
 
@@ -267,9 +407,29 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
     const score = typeof attempt.score === "number" ? attempt.score : null;
 
     if (score !== null && score < 70) {
-      pushWeaknessSignal(topic, 2.5, `Bài tập AI dưới ngưỡng mong muốn (${score}/100)`);
+      pushWeaknessSignal(topic, {
+        source: "EXERCISE",
+        weight: 2.5,
+        reason: `Bài tập AI dưới ngưỡng mong muốn (${score}/100)`,
+        lessonId: attempt.lessonId ?? null,
+        subjectName: null,
+      });
+    } else if (score !== null && score < 80) {
+      pushWeaknessSignal(topic, {
+        source: "EXERCISE",
+        weight: 1.5,
+        reason: `Bài tập AI cần cải thiện (${score}/100)`,
+        lessonId: attempt.lessonId ?? null,
+        subjectName: null,
+      });
     } else if (score === null) {
-      pushWeaknessSignal(topic, 0.5, "Có bài tập đang làm dở hoặc chưa được chấm");
+      pushWeaknessSignal(topic, {
+        source: "EXERCISE",
+        weight: 0.5,
+        reason: "Có bài tập đang làm dở hoặc chưa được chấm",
+        lessonId: attempt.lessonId ?? null,
+        subjectName: null,
+      });
     }
   }
 
@@ -277,27 +437,17 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
     const topic = normalizeTopic(item.lesson?.subject?.name) || inferTopicFromText(item.lesson?.title);
 
     if (item.status === "IN_PROGRESS" && Number(item.totalStudySec || 0) > 1800 && !item.completed) {
-      pushWeaknessSignal(topic, 1, "Đã học khá lâu nhưng bài vẫn chưa hoàn tất");
+      pushWeaknessSignal(topic, {
+        source: "PROGRESS",
+        weight: 1,
+        reason: "Đã học khá lâu nhưng bài vẫn chưa hoàn tất",
+        lessonId: item.lessonId ?? null,
+        subjectName: normalizeTopic(item.lesson?.subject?.name),
+      });
     }
   }
 
-  const weaknesses = Array.from(topicScores.entries())
-    .map(([topic, item]): WeaknessInsight & { totalScore: number } => ({
-      id: `weakness-${topic.toLowerCase().replace(/\s+/g, "-")}`,
-      topic,
-      confidence: item.score >= 5 ? "high" : item.score >= 2.5 ? "medium" : "low",
-      severity: item.score >= 5 ? "high" : item.score >= 2.5 ? "medium" : "low",
-      reason: item.reasons[0] || "Cần ôn tập thêm",
-      evidenceCount: item.evidenceCount,
-      recommendedAction: `Ưu tiên ôn tập và luyện thêm câu hỏi theo chủ đề ${topic.toLowerCase()}.`,
-      score: Math.round(item.score * 10),
-      lessonId: null,
-      subjectName: topic,
-      totalScore: item.score,
-    }))
-    .sort((a, b) => b.totalScore - a.totalScore)
-    .slice(0, 5)
-    .map(({ totalScore: _totalScore, ...item }): WeaknessInsight => item);
+  const weaknesses = buildWeaknessInsights(topicScores);
 
   const mistakes = [
     ...profileWeaknesses.slice(0, 5).map((topic: string) => ({

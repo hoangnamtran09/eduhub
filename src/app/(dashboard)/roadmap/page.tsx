@@ -5,6 +5,12 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, BrainCircuit, CheckCircle2, Clock3, Loader2, Sparkles, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+type RoadmapSignal = {
+  source: "QUIZ" | "EXERCISE" | "PROFILE" | "PROGRESS";
+  weight: number;
+  reason: string;
+};
+
 type RoadmapStep = {
   id: string;
   title: string;
@@ -24,6 +30,7 @@ type FocusArea = {
   subjectName?: string | null;
   reason: string;
   recommendedAction: string;
+  signalBreakdown?: RoadmapSignal[];
 };
 
 type RoadmapPayload = {
@@ -62,6 +69,13 @@ function severityClass(severity: FocusArea["severity"]) {
   return "bg-sky-100 text-sky-700 border-sky-200";
 }
 
+function signalLabel(source: RoadmapSignal["source"]) {
+  if (source === "QUIZ") return "Quiz";
+  if (source === "EXERCISE") return "Bài tập AI";
+  if (source === "PROGRESS") return "Tiến độ học";
+  return "Hồ sơ cá nhân";
+}
+
 export default function RoadmapPage() {
   const [data, setData] = useState<RoadmapPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,6 +105,11 @@ export default function RoadmapPage() {
     () => (data?.roadmap || []).reduce((sum, item) => sum + item.estimatedMinutes, 0),
     [data],
   );
+  const primaryLessonHref = useMemo(() => {
+    const target = data?.focusAreas.find((item) => item.lessonId && item.subjectName);
+    if (!target?.lessonId || !target.subjectName) return "/courses";
+    return `/courses/${encodeURIComponent(target.subjectName)}/${target.lessonId}`;
+  }, [data]);
 
   if (loading) {
     return (
@@ -129,10 +148,10 @@ export default function RoadmapPage() {
                 Xem phân tích điểm yếu
               </Button>
             </Link>
-            <Link href="/courses">
+            <Link href={primaryLessonHref}>
               <Button className="h-11 rounded-2xl bg-slate-900 px-5 text-white hover:bg-slate-800">
                 <BookOpen className="mr-2 h-4 w-4" />
-                Bắt đầu học
+                {primaryLessonHref === "/courses" ? "Bắt đầu học" : "Mở bài học ưu tiên"}
               </Button>
             </Link>
           </div>
@@ -241,10 +260,39 @@ export default function RoadmapPage() {
                   <p className="text-xl font-semibold text-slate-900">{item.score}</p>
                 </div>
               </div>
-              <div className="mt-4 rounded-2xl bg-white px-4 py-3 shadow-sm">
-                <p className="text-xs text-slate-500">Hành động đề xuất</p>
-                <p className="mt-1 text-sm text-slate-700">{item.recommendedAction}</p>
+              <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr),auto]">
+                <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                  <p className="text-xs text-slate-500">Hành động đề xuất</p>
+                  <p className="mt-1 text-sm text-slate-700">{item.recommendedAction}</p>
+                </div>
+                <Link href={item.lessonId && item.subjectName ? `/courses/${encodeURIComponent(item.subjectName)}/${item.lessonId}` : "/courses"}>
+                  <Button variant="outline" className="h-full min-h-14 rounded-2xl border-slate-200 bg-white px-5 text-slate-700 hover:bg-slate-50">
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    {item.lessonId ? "Mở bài học liên quan" : "Xem khóa học"}
+                  </Button>
+                </Link>
               </div>
+              {!!item.signalBreakdown?.length && (
+                <div className="mt-4 rounded-2xl bg-white px-4 py-4 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tín hiệu giải thích</p>
+                    <p className="text-xs text-slate-400">Top {item.signalBreakdown.length} nguồn ưu tiên</p>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {item.signalBreakdown.map((signal, index) => (
+                      <div key={`${item.id}-${signal.source}-${index}`} className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+                            {signalLabel(signal.source)}
+                          </span>
+                          <span className="text-xs font-medium text-slate-400">Trọng số {signal.weight}</span>
+                        </div>
+                        <p className="mt-2 text-sm text-slate-700">{signal.reason}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )) : (
             <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
@@ -262,10 +310,10 @@ export default function RoadmapPage() {
             <p className="mt-2 max-w-2xl text-sm text-white/70">Bắt đầu với bước đầu tiên, sau đó quay lại để kiểm tra xem điểm yếu đã giảm chưa.</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href="/courses">
+            <Link href={primaryLessonHref}>
               <Button className="h-11 rounded-2xl bg-white px-5 text-slate-900 hover:bg-slate-100">
                 <Target className="mr-2 h-4 w-4" />
-                Bắt đầu học
+                {primaryLessonHref === "/courses" ? "Bắt đầu học" : "Đi tới bài học ưu tiên"}
               </Button>
             </Link>
             <Link href="/mistakes">
