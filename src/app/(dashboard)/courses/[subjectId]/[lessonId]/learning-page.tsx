@@ -48,6 +48,16 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+function toChatHistoryMessages(messages: ChatMessage[]) {
+  return messages
+    .filter((message) => message.role === "user" || message.role === "assistant")
+    .map((message) => ({
+      role: message.role,
+      content: typeof message.content === "string" ? message.content.trim() : "",
+    }))
+    .filter((message) => message.content.length > 0);
+}
+
 function getAssistantMessageVariant(content: string) {
   const normalized = content.toLowerCase();
   const questionSignals = ["hãy trả lời", "câu hỏi", "bài tập", "hãy nhập", "trả lời", "### 📝", "?"];
@@ -542,16 +552,33 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
   useEffect(() => {
     if (messages.length > 0) {
       const saveHistory = async () => {
+        const sanitizedMessages = toChatHistoryMessages(messages);
+
+        if (sanitizedMessages.length === 0) {
+          return;
+        }
+
         try {
-          await fetch("/api/chat-history", {
+          const response = await fetch("/api/chat-history", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               lessonId: params.lessonId,
-              conversationId: activeConversationIdRef.current,
-              messages: messages
+              conversationId: activeConversationIdRef.current ?? undefined,
+              messages: sanitizedMessages,
             }),
           });
+
+          if (!response.ok) {
+            const errorPayload = await response.json().catch(() => null);
+            console.error("Failed to save chat history:", response.status, errorPayload);
+            return;
+          }
+
+          const data = await response.json();
+          if (data?.id) {
+            activeConversationIdRef.current = data.id;
+          }
         } catch (error) {
           console.error("Failed to save chat history:", error);
         }
