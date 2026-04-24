@@ -778,7 +778,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
           {
             id: Date.now().toString(),
             role: "assistant",
-            content: `### 📝 Bài tập dành cho bạn:\n\n${data.question}\n\n*Hãy nhập câu trả lời của bạn vào ô bên dưới nhé!*`,
+            content: `### 📝 Bài tập trắc nghiệm ngẫu nhiên dành cho bạn:\n\n${data.question}\n\n*Chọn đáp án đúng rồi gửi câu trả lời của bạn vào ô bên dưới nhé!*`,
             timestamp: new Date(),
           },
         ]);
@@ -1288,7 +1288,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                   ) : (
                     <Sparkles className="w-3.5 h-3.5" />
                   )}
-                  {currentExercise ? "Đang làm bài tập" : "Tạo bài tập AI"}
+                  {currentExercise ? "Đang làm bài tập" : "Tạo trắc nghiệm AI"}
                 </Button>
               </div>
 

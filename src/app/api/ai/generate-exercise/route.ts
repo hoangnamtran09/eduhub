@@ -32,7 +32,10 @@ export async function POST(request: NextRequest) {
     
     const messages = [
       { role: "system", content: systemPrompt },
-      { role: "user", content: `Dựa trên nội dung sau, hãy tạo 1 bài tập: \n\n${lessonContent}` }
+      {
+        role: "user",
+        content: `Dựa trên nội dung sau, hãy tạo 1 câu hỏi trắc nghiệm ngẫu nhiên gồm 4 đáp án và chỉ 1 đáp án đúng. Tra ve dung JSON theo prompt he thong.\n\n${lessonContent}`,
+      }
     ];
 
     const response = await chatWithAI(messages);
