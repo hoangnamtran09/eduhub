@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, 
-  BookOpen, 
-  Trophy, 
+  LayoutDashboard,
+  BookOpen,
+  Trophy,
   Settings,
   ChevronDown,
   ChevronLeft,
@@ -16,7 +16,9 @@ import {
   ClipboardList,
   NotebookPen,
   Medal,
-  LogOut
+  LogOut,
+  BrainCircuit,
+  Route,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,8 @@ const defaultNavItems = [
   { href: "/", label: "Trang chủ", icon: LayoutDashboard },
   { href: "/courses", label: "Khóa học", icon: BookOpen },
   { href: "/assignments", label: "Bài tập", icon: NotebookPen },
+  { href: "/mistakes", label: "Điểm yếu", icon: BrainCircuit },
+  { href: "/roadmap", label: "Roadmap", icon: Route },
   { href: "/progress", label: "Tiến độ", icon: Trophy },
   { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
