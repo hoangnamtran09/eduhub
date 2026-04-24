@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { z } from "zod";
 import { requireAdminOrTeacher } from "@/lib/auth/require-role";
+import { hashPassword } from "@/lib/auth/password";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,8 +12,19 @@ const updateStudentSchema = z.object({
   id: z.string().min(1),
   email: z.string().trim().email(),
   fullName: z.string().trim().max(120).optional().nullable(),
-  gradeLevel: z.coerce.number().int().min(1).max(12).optional().nullable(),
+  gradeLevel: z.coerce.number().int().min(1).max(12),
   diamonds: z.coerce.number().int().min(0).max(1_000_000).optional(),
+  parentId: z.string().trim().optional().nullable(),
+  goals: z.array(z.string().trim().min(1).max(120)).optional(),
+  strengths: z.array(z.string().trim().min(1).max(120)).optional(),
+  weaknesses: z.array(z.string().trim().min(1).max(120)).optional(),
+});
+
+const createStudentSchema = z.object({
+  email: z.string().trim().email(),
+  password: z.string().min(8).max(128),
+  fullName: z.string().trim().min(1).max(120),
+  gradeLevel: z.coerce.number().int().min(1).max(12),
   parentId: z.string().trim().optional().nullable(),
   goals: z.array(z.string().trim().min(1).max(120)).optional(),
   strengths: z.array(z.string().trim().min(1).max(120)).optional(),
@@ -81,6 +93,95 @@ export async function GET() {
       { error: "Failed to fetch students" },
       { status: 500 }
     );
+  }
+}
+
+export async function POST(request: Request) {
+  const authorization = await requireAdminOrTeacher();
+  if (authorization instanceof NextResponse) return authorization;
+
+  try {
+    const parsed = createStudentSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid student payload",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const { email, password, fullName, gradeLevel, parentId, goals, strengths, weaknesses } = parsed.data;
+    const prismaAny = prisma as any;
+    const normalizedParentId = parentId?.trim() || null;
+
+    if (normalizedParentId) {
+      const parentAccount = await prismaAny.user.findFirst({
+        where: {
+          id: normalizedParentId,
+          role: "PARENT",
+        },
+        select: { id: true },
+      });
+
+      if (!parentAccount) {
+        return NextResponse.json({ error: "Parent account not found" }, { status: 404 });
+      }
+    }
+
+    const student = await prismaAny.user.create({
+      data: {
+        email: email.trim(),
+        fullName: fullName.trim(),
+        role: "STUDENT",
+        gradeLevel,
+        parentId: normalizedParentId,
+        passwordHash: await hashPassword(password),
+        profile: {
+          create: {
+            goals: Array.isArray(goals) ? goals : [],
+            strengths: Array.isArray(strengths) ? strengths : [],
+            weaknesses: Array.isArray(weaknesses) ? weaknesses : [],
+          },
+        },
+      },
+      include: {
+        parent: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
+        profile: true,
+        studySessions: {
+          select: {
+            durationSec: true,
+          },
+        },
+        enrollments: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(student, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating student:", error);
+
+    if (error?.code === "P2002") {
+      return NextResponse.json({ error: "Email already exists" }, { status: 409 });
+    }
+
+    return NextResponse.json({ error: "Failed to create student" }, { status: 500 });
   }
 }
 

@@ -12,10 +12,11 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { email, password, fullName } = body;
+    const gradeLevel = Number(body.gradeLevel);
 
-    if (!email || !password || !fullName) {
+    if (!email || !password || !fullName || !Number.isInteger(gradeLevel) || gradeLevel < 1 || gradeLevel > 12) {
       return NextResponse.json(
-        { error: "Vui lòng điền đầy đủ thông tin" },
+        { error: "Vui lòng điền đầy đủ thông tin và chọn lớp" },
         { status: 400 }
       );
     }
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
         email,
         fullName,
         role: "STUDENT",
+        gradeLevel,
         passwordHash: await hashPassword(password),
       },
     });

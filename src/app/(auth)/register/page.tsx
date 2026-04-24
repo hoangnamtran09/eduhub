@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    gradeLevel: "6",
     password: "",
     confirmPassword: "",
   });
@@ -52,6 +53,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           fullName: formData.fullName,
           email: formData.email,
+          gradeLevel: Number(formData.gradeLevel),
           password: formData.password,
           role: selectedRole,
         }),
@@ -168,6 +170,19 @@ export default function RegisterPage() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <select
+                  value={formData.gradeLevel}
+                  onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
+                  className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
+                  required
+                >
+                  {Array.from({ length: 12 }, (_, index) => index + 1).map((grade) => (
+                    <option key={grade} value={grade}>Lớp {grade}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-1.5">

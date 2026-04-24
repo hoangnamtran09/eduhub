@@ -6,6 +6,7 @@ import {
   Link2,
   Loader2,
   PencilLine,
+  Plus,
   Save,
   Search,
   Trash2,
@@ -41,6 +42,14 @@ export default function AdminStudentsPage() {
   const [selectedGrade, setSelectedGrade] = useState("all");
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [form, setForm] = useState<StudentForm | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createFormState, setCreateFormState] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    gradeLevel: "6",
+    parentId: "",
+  });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -97,8 +106,58 @@ export default function AdminStudentsPage() {
     setForm(null);
   };
 
+  const openCreateModal = () => {
+    setCreateFormState({
+      fullName: "",
+      email: "",
+      password: "",
+      gradeLevel: "6",
+      parentId: "",
+    });
+    setShowCreateModal(true);
+  };
+
+  const closeCreateModal = () => {
+    if (saving) return;
+    setShowCreateModal(false);
+  };
+
+  const handleCreate = async () => {
+    if (!createFormState.fullName.trim() || !createFormState.email.trim() || !createFormState.password || !createFormState.gradeLevel) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch("/api/admin/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: createFormState.fullName,
+          email: createFormState.email,
+          password: createFormState.password,
+          gradeLevel: Number(createFormState.gradeLevel),
+          parentId: createFormState.parentId || null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create student");
+      }
+
+      const created = await response.json();
+      setStudents((current) => [created, ...current]);
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!form) return;
+    if (!form.gradeLevel) return;
 
     setSaving(true);
     try {
@@ -221,6 +280,10 @@ export default function AdminStudentsPage() {
               <Users className="h-4 w-4 text-slate-400" />
               <span>{parents.length} tài khoản phụ huynh có thể gắn</span>
             </div>
+            <Button type="button" onClick={openCreateModal} className="bg-slate-900 text-white hover:bg-slate-800">
+              <Plus className="mr-2 h-4 w-4" />
+              Thêm học sinh
+            </Button>
           </div>
 
           <div className="space-y-3">
@@ -348,13 +411,12 @@ export default function AdminStudentsPage() {
                         />
                       </Field>
 
-                      <Field label="Khối lớp">
+                       <Field label="Khối lớp bắt buộc">
                         <select
                           value={form.gradeLevel}
                           onChange={(event) => setForm((current) => current ? { ...current, gradeLevel: event.target.value } : current)}
                           className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                         >
-                          <option value="">Chưa phân lớp</option>
                           {gradeTabs.filter((item) => !["all", "none"].includes(item)).map((grade) => (
                             <option key={grade} value={grade}>Lớp {grade}</option>
                           ))}
@@ -435,11 +497,105 @@ export default function AdminStudentsPage() {
                 <Button type="button" variant="outline" onClick={closeEditModal} disabled={saving}>
                   Hủy
                 </Button>
-                <Button onClick={handleSave} disabled={saving} className="bg-slate-900 text-white hover:bg-slate-800">
+        <Button onClick={handleSave} disabled={saving || !form.gradeLevel} className="bg-slate-900 text-white hover:bg-slate-800">
                   {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                   Lưu thay đổi
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/45 p-4 backdrop-blur-sm sm:p-6">
+          <div className="mx-auto flex w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-2xl">
+            <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Tạo tài khoản học sinh</div>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-900">Thêm học sinh mới</h2>
+                <p className="mt-1 text-sm text-slate-500">Lớp là thông tin bắt buộc để phân tuyến nội dung học.</p>
+              </div>
+              <Button type="button" variant="ghost" size="icon" onClick={closeCreateModal} disabled={saving}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="space-y-5 px-6 py-5">
+              <Field label="Họ và tên">
+                <Input
+                  value={createFormState.fullName}
+                  onChange={(event) => setCreateFormState((current) => ({ ...current, fullName: event.target.value }))}
+                  className="border-slate-200 bg-white text-slate-900"
+                  required
+                />
+              </Field>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Email">
+                  <Input
+                    type="email"
+                    value={createFormState.email}
+                    onChange={(event) => setCreateFormState((current) => ({ ...current, email: event.target.value }))}
+                    className="border-slate-200 bg-white text-slate-900"
+                    required
+                  />
+                </Field>
+
+                <Field label="Mật khẩu tạm thời">
+                  <Input
+                    type="password"
+                    value={createFormState.password}
+                    onChange={(event) => setCreateFormState((current) => ({ ...current, password: event.target.value }))}
+                    className="border-slate-200 bg-white text-slate-900"
+                    required
+                  />
+                </Field>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Lớp bắt buộc">
+                  <select
+                    value={createFormState.gradeLevel}
+                    onChange={(event) => setCreateFormState((current) => ({ ...current, gradeLevel: event.target.value }))}
+                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                    required
+                  >
+                    {gradeTabs.filter((item) => !["all", "none"].includes(item)).map((grade) => (
+                      <option key={grade} value={grade}>Lớp {grade}</option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field label="Tài khoản phụ huynh">
+                  <select
+                    value={createFormState.parentId}
+                    onChange={(event) => setCreateFormState((current) => ({ ...current, parentId: event.target.value }))}
+                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                  >
+                    <option value="">Chưa gắn tài khoản phụ huynh</option>
+                    {parents.map((parent) => (
+                      <option key={parent.id} value={parent.id}>
+                        {(parent.fullName || parent.email) + (parent.children.length ? ` - ${parent.children.length} hoc sinh` : "")}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-6 py-4">
+              <Button type="button" variant="outline" onClick={closeCreateModal} disabled={saving}>
+                Hủy
+              </Button>
+              <Button
+                onClick={handleCreate}
+                disabled={saving || !createFormState.fullName.trim() || !createFormState.email.trim() || !createFormState.password || !createFormState.gradeLevel}
+                className="bg-slate-900 text-white hover:bg-slate-800"
+              >
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Tạo học sinh
+              </Button>
             </div>
           </div>
         </div>

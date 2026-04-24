@@ -65,7 +65,7 @@ export function createForm(student: StudentRecord): StudentForm {
     id: student.id,
     email: student.email,
     fullName: student.fullName || "",
-    gradeLevel: student.gradeLevel ? String(student.gradeLevel) : "",
+    gradeLevel: student.gradeLevel ? String(student.gradeLevel) : "6",
     diamonds: String(student.diamonds ?? 0),
     parentId: student.parentId || "",
     goals: toLineValue(student.profile?.goals),
