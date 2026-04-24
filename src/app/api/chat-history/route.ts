@@ -12,10 +12,12 @@ const messageSchema = z.object({
   content: z.string().trim().min(1).max(10_000),
 });
 
+const MAX_CHAT_HISTORY_MESSAGES = 200;
+
 const chatHistoryPayloadSchema = z.object({
   lessonId: z.string().min(1),
-  conversationId: z.string().min(1).optional(),
-  messages: z.array(messageSchema).max(200),
+  conversationId: z.string().trim().min(1).optional(),
+  messages: z.array(messageSchema).min(1),
 });
 
 // GET: /api/chat-history?lessonId=...
@@ -70,21 +72,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const parsed = chatHistoryPayloadSchema.safeParse(await req.json());
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: "Invalid chat history payload",
-        details: parsed.error.flatten(),
-      },
-      { status: 400 },
-    );
-  }
+  const body = await req.json();
 
-  const { lessonId, conversationId, messages } = parsed.data;
-  const prismaAny = prisma as any;
+  if (Array.isArray(body?.messages) && body.messages.length === 0) {
+    const emptyConversationSchema = z.object({
+      lessonId: z.string().min(1),
+      conversationId: z.string().trim().min(1).optional(),
+      messages: z.array(messageSchema).length(0),
+    });
 
-  if (messages.length === 0) {
+    const emptyParsed = emptyConversationSchema.safeParse(body);
+    if (!emptyParsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid empty chat history payload",
+          details: emptyParsed.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const { lessonId } = emptyParsed.data;
+    const prismaAny = prisma as any;
+
     const conversation = await prismaAny.aICo.create({
       data: {
         lessonId,
@@ -100,6 +110,21 @@ export async function POST(req: NextRequest) {
       messages: [],
     });
   }
+
+  const parsed = chatHistoryPayloadSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        error: "Invalid chat history payload",
+        details: parsed.error.flatten(),
+      },
+      { status: 400 },
+    );
+  }
+
+  const { lessonId, conversationId } = parsed.data;
+  const messages = parsed.data.messages.slice(-MAX_CHAT_HISTORY_MESSAGES);
+  const prismaAny = prisma as any;
 
   const existingConversation = conversationId
     ? await prismaAny.aICo.findFirst({

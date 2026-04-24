@@ -50,11 +50,17 @@ interface ChatMessage {
 
 function toChatHistoryMessages(messages: ChatMessage[]) {
   return messages
-    .filter((message) => message.role === "user" || message.role === "assistant")
-    .map((message) => ({
-      role: message.role,
-      content: typeof message.content === "string" ? message.content.trim() : "",
-    }))
+    .map((message) => {
+      const normalizedRole = message.role === "user" ? "user" : "assistant";
+      const normalizedContent = typeof message.content === "string"
+        ? message.content.trim().slice(0, 10_000)
+        : "";
+
+      return {
+        role: normalizedRole,
+        content: normalizedContent,
+      };
+    })
     .filter((message) => message.content.length > 0);
 }
 
