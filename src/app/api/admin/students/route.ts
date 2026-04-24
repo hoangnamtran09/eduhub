@@ -13,6 +13,7 @@ const updateStudentSchema = z.object({
   fullName: z.string().trim().max(120).optional().nullable(),
   gradeLevel: z.coerce.number().int().min(1).max(12).optional().nullable(),
   diamonds: z.coerce.number().int().min(0).max(1_000_000).optional(),
+  parentId: z.string().trim().optional().nullable(),
   goals: z.array(z.string().trim().min(1).max(120)).optional(),
   strengths: z.array(z.string().trim().min(1).max(120)).optional(),
   weaknesses: z.array(z.string().trim().min(1).max(120)).optional(),
@@ -24,32 +25,56 @@ export async function GET() {
 
   try {
     const prismaAny = prisma as any;
-    const students = await prismaAny.user.findMany({
-      where: { role: "STUDENT" },
-      include: {
-        profile: true,
-        studySessions: {
-          select: {
-            durationSec: true,
+    const [students, parents] = await Promise.all([
+      prismaAny.user.findMany({
+        where: { role: "STUDENT" },
+        include: {
+          parent: {
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+            },
           },
-        },
-        enrollments: {
-          include: {
-            course: {
-              select: {
-                id: true,
-                title: true,
+          profile: true,
+          studySessions: {
+            select: {
+              durationSec: true,
+            },
+          },
+          enrollments: {
+            include: {
+              course: {
+                select: {
+                  id: true,
+                  title: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      prismaAny.user.findMany({
+        where: { role: "PARENT" },
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          children: {
+            where: { role: "STUDENT" },
+            select: {
+              id: true,
+            },
+          },
+        },
+        orderBy: [{ fullName: "asc" }, { email: "asc" }],
+      }),
+    ]);
 
-    return NextResponse.json(students);
+    return NextResponse.json({ students, parents });
   } catch (error) {
     console.error("Error fetching students:", error);
     return NextResponse.json(
@@ -75,13 +100,29 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { id, email, fullName, gradeLevel, diamonds, goals, strengths, weaknesses } = parsed.data;
+    const { id, email, fullName, gradeLevel, diamonds, parentId, goals, strengths, weaknesses } = parsed.data;
 
     if (!id || !email.trim()) {
       return NextResponse.json({ error: "Missing student id or email" }, { status: 400 });
     }
 
     const prismaAny = prisma as any;
+
+    const normalizedParentId = parentId?.trim() || null;
+
+    if (normalizedParentId) {
+      const parentAccount = await prismaAny.user.findFirst({
+        where: {
+          id: normalizedParentId,
+          role: "PARENT",
+        },
+        select: { id: true },
+      });
+
+      if (!parentAccount) {
+        return NextResponse.json({ error: "Parent account not found" }, { status: 404 });
+      }
+    }
 
     const updatedStudent = await prismaAny.user.update({
       where: { id },
@@ -90,6 +131,7 @@ export async function PUT(request: Request) {
         fullName: fullName?.trim() || null,
         gradeLevel: gradeLevel ? Number(gradeLevel) : null,
         diamonds: Number.isFinite(Number(diamonds)) ? Number(diamonds) : 0,
+        parentId: normalizedParentId,
         profile: {
           upsert: {
             create: {
@@ -106,6 +148,13 @@ export async function PUT(request: Request) {
         },
       },
       include: {
+        parent: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
         profile: true,
         studySessions: {
           select: {

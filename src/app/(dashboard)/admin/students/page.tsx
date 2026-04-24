@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
+  Link2,
   Loader2,
   PencilLine,
   Save,
   Search,
   Trash2,
+  Unlink2,
+  Users,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,8 +26,16 @@ import {
 
 const gradeTabs = ["all", "none", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
 
+interface ParentOption {
+  id: string;
+  email: string;
+  fullName: string | null;
+  children: { id: string }[];
+}
+
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState<StudentRecord[]>([]);
+  const [parents, setParents] = useState<ParentOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
@@ -42,10 +53,12 @@ export default function AdminStudentsPage() {
       }
 
       const data = await response.json();
-      setStudents(Array.isArray(data) ? data : []);
+      setStudents(Array.isArray(data?.students) ? data.students : []);
+      setParents(Array.isArray(data?.parents) ? data.parents : []);
     } catch (error) {
       console.error("Failed to fetch students:", error);
       setStudents([]);
+      setParents([]);
     } finally {
       setLoading(false);
     }
@@ -97,6 +110,7 @@ export default function AdminStudentsPage() {
           goals: toListValue(form.goals),
           strengths: toListValue(form.strengths),
           weaknesses: toListValue(form.weaknesses),
+          parentId: form.parentId || null,
         }),
       });
 
@@ -198,10 +212,14 @@ export default function AdminStudentsPage() {
         </section>
 
         <section className="p-6">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-sm font-semibold text-slate-900">Danh sách học sinh</h2>
               <p className="text-xs text-slate-500">{filteredStudents.length} bản ghi phù hợp</p>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500 shadow-soft">
+              <Users className="h-4 w-4 text-slate-400" />
+              <span>{parents.length} tài khoản phụ huynh có thể gắn</span>
             </div>
           </div>
 
@@ -226,6 +244,22 @@ export default function AdminStudentsPage() {
                         <div className="mt-3 flex flex-wrap gap-2">
                           <MiniBadge label="Kim cương" value={student.diamonds} />
                           <MiniBadge label="Chuỗi học" value={student.profile?.streakDays || 0} />
+                        </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700">
+                            Phụ huynh: {student.parent?.fullName || student.parent?.email || "Chưa gắn tài khoản"}
+                          </span>
+                          {student.parent ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700">
+                              <Link2 className="h-3.5 w-3.5" />
+                              Đã liên kết
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-medium text-amber-700">
+                              <Unlink2 className="h-3.5 w-3.5" />
+                              Chưa liên kết
+                            </span>
+                          )}
                         </div>
                         <p className="mt-3 text-sm text-slate-600">
                           Thời gian học đã ghi nhận: <span className="font-semibold text-slate-900">{formatStudyTime(totalStudySeconds)}</span>
@@ -363,6 +397,33 @@ export default function AdminStudentsPage() {
                         className="min-h-[128px] w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                       />
                     </Field>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-slate-200 bg-white shadow-none">
+                  <CardContent className="space-y-5 p-5">
+                    <SectionTitle icon={Link2} title="Liên kết phụ huynh" />
+
+                    <Field label="Tài khoản phụ huynh">
+                      <select
+                        value={form.parentId}
+                        onChange={(event) => setForm((current) => current ? { ...current, parentId: event.target.value } : current)}
+                        className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                      >
+                        <option value="">Chưa gắn tài khoản phụ huynh</option>
+                        {parents.map((parent) => (
+                          <option key={parent.id} value={parent.id}>
+                            {(parent.fullName || parent.email) + (parent.children.length ? ` - ${parent.children.length} hoc sinh` : "")}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+
+                    <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                      {form.parentId
+                        ? `Tai khoan dang chon: ${parents.find((parent) => parent.id === form.parentId)?.fullName || parents.find((parent) => parent.id === form.parentId)?.email || "Khong xac dinh"}`
+                        : "Chon mot tai khoan phu huynh de cho phep phu huynh theo doi tien do, bai tap va canh bao hoc tap cua hoc sinh nay."}
+                    </div>
                   </CardContent>
                 </Card>
               </div>

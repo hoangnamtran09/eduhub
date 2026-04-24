@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Activity,
+  AlertTriangle,
   ArrowRight,
   Award,
   BookOpen,
@@ -13,6 +14,7 @@ import {
   Layers3,
   Loader2,
   Play,
+  ShieldAlert,
   Target,
   TrendingUp,
   Users,
@@ -55,9 +57,70 @@ interface AdminReportData {
   }>;
 }
 
+interface ParentAlertItem {
+  type: string;
+  level: "critical" | "warning" | "good";
+  label: string;
+}
+
+interface ParentAssignmentItem {
+  id: string;
+  title: string;
+  dueDate: string | null;
+  status: string;
+  lessonTitle: string | null;
+}
+
+interface ParentActivityItem {
+  id: string;
+  startedAt: string;
+  durationSec: number;
+  lessonTitle: string | null;
+}
+
+interface ParentChildItem extends ReportStudentItem {
+  assignmentSummary: {
+    total: number;
+    pending: number;
+    submitted: number;
+    overdue: number;
+    dueSoon: number;
+  };
+  weaknessSummary: {
+    count: number;
+    topics: string[];
+  };
+  recentAssignments: ParentAssignmentItem[];
+  recentActivity: ParentActivityItem[];
+  alertSummary: {
+    level: "critical" | "warning" | "good";
+    criticalCount: number;
+    warningCount: number;
+    items: ParentAlertItem[];
+  };
+}
+
 interface ParentReportData {
   role: "PARENT";
-  children: ReportStudentItem[];
+  summary: {
+    totalChildren: number;
+    activeChildren7d: number;
+    childrenNeedingAttention: number;
+    totalPendingAssignments: number;
+    totalOverdueAssignments: number;
+    totalDueSoonAssignments: number;
+  };
+  children: ParentChildItem[];
+  spotlightAlerts: Array<ParentAlertItem & {
+    childId: string;
+    childName: string;
+    childGradeLevel: number | null;
+  }>;
+  assignmentWatchlist: Array<ParentAssignmentItem & {
+    childId: string;
+    childName: string;
+    childGradeLevel: number | null;
+  }>;
 }
 
 interface StudentSessionItem {
@@ -148,6 +211,22 @@ function formatStudyTime(totalSeconds: number, compact = false) {
 function formatLastActive(lastActive: string | null | undefined) {
   if (!lastActive) return "Chưa có hoạt động";
   return new Date(lastActive).toLocaleDateString("vi-VN");
+}
+
+function formatDueDate(date: string | null | undefined) {
+  if (!date) return "Chưa có hạn nộp";
+  return new Date(date).toLocaleDateString("vi-VN");
+}
+
+function getAssignmentStatusLabel(status: string) {
+  switch (status?.toLowerCase()) {
+    case "submitted":
+      return "Da nop";
+    case "accepted":
+      return "Da nhan";
+    default:
+      return "Cho xu ly";
+  }
 }
 
 function BlockIcon({ icon: Icon, color, bgColor }: { icon: React.ElementType; color: string; bgColor: string }) {
@@ -669,32 +748,162 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
 
 function ParentDashboard({ report }: { report: ParentReportData }) {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">Theo dõi con</h2>
-        <p className="text-sm text-slate-500">Báo cáo nhanh thời lượng học và mức độ hoạt động của từng hồ sơ học sinh.</p>
-      </div>
-      <div className="space-y-3">
-        {report.children.map((student) => (
-          <div key={student.id} className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200/80 bg-white/88 p-4 md:grid-cols-[minmax(0,1fr),130px,140px,140px] md:items-center">
-            <div className="min-w-0">
-              <p className="truncate font-semibold text-slate-900">{student.fullName || student.email}</p>
-              <p className="truncate text-sm text-slate-500">{student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}</p>
+    <div className="space-y-8">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr),360px]">
+        <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+            Parent Workspace
+          </div>
+          <div className="space-y-3">
+            <h2 className="font-serif text-4xl font-semibold tracking-tight text-slate-900">Bang dieu hanh phu huynh</h2>
+            <p className="max-w-3xl text-sm leading-6 text-slate-600">
+              Uu tien theo doi bai tap, canh bao hoc tap va muc do hoat dong gan day cua tung con trong cung mot man hinh.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Canh bao tong hop</p>
+          <div className="mt-4 space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-sm text-white/65">Con can uu tien</p>
+              <p className="mt-1 text-2xl font-semibold text-white">{report.summary.childrenNeedingAttention}</p>
+              <p className="mt-1 text-xs text-white/50">{report.summary.totalOverdueAssignments} bai qua han va {report.summary.totalDueSoonAssignments} bai sap den han</p>
             </div>
-            <div>
-              <p className="text-xs text-slate-500">Thời lượng học</p>
-              <p className="text-sm font-semibold text-slate-900">{formatStudyTime(student.totalStudySeconds, true)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Phiên học</p>
-              <p className="text-sm font-semibold text-slate-900">{student.totalSessions}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Hoạt động gần nhất</p>
-              <p className="text-sm font-semibold text-slate-900">{formatLastActive(student.lastActive)}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs text-white/55">Hoat dong 7 ngay</p>
+                <p className="mt-1 text-xl font-semibold">{report.summary.activeChildren7d}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs text-white/55">Bai dang mo</p>
+                <p className="mt-1 text-xl font-semibold">{report.summary.totalPendingAssignments}</p>
+              </div>
             </div>
           </div>
-        ))}
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard icon={Users} label="So con dang theo doi" value={report.summary.totalChildren} color="text-sky-600" bgColor="bg-sky-100" />
+        <StatCard icon={Activity} label="Hoat dong 7 ngay" value={report.summary.activeChildren7d} detail={`${Math.max(report.summary.totalChildren - report.summary.activeChildren7d, 0)} con can nhac nho`} color="text-emerald-600" bgColor="bg-emerald-100" />
+        <StatCard icon={BookOpen} label="Bai tap cho xu ly" value={report.summary.totalPendingAssignments} detail={`${report.summary.totalDueSoonAssignments} bai sap den han`} color="text-violet-600" bgColor="bg-violet-100" />
+        <StatCard icon={ShieldAlert} label="Qua han" value={report.summary.totalOverdueAssignments} detail={`${report.summary.childrenNeedingAttention} ho so can uu tien`} color="text-rose-600" bgColor="bg-rose-100" />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr),minmax(0,1fr)]">
+        <div className="space-y-6">
+          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <SectionTitle title="Canh bao uu tien" description="Tong hop cac tin hieu can phu huynh xu ly som nhat." />
+              <div className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">{report.spotlightAlerts.length} canh bao</div>
+            </div>
+            <div className="space-y-3">
+              {report.spotlightAlerts.map((alert, index) => (
+                <div key={`${alert.childId}-${alert.type}-${index}`} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                  <div className={cn("mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl", alert.level === "critical" ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600")}>
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-slate-900">{alert.childName}</p>
+                    <p className="text-sm text-slate-600">{alert.label}</p>
+                    <p className="mt-1 text-xs text-slate-500">{alert.childGradeLevel ? `Lop ${alert.childGradeLevel}` : "Chua phan lop"}</p>
+                  </div>
+                </div>
+              ))}
+              {!report.spotlightAlerts.length && (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
+                  Chua co canh bao nao can xu ly ngay.
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <SectionTitle title="Theo doi bai tap" description="Danh sach bai tap sap den han hoac can phu huynh nhac con xu ly." />
+              <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{report.assignmentWatchlist.length} muc</div>
+            </div>
+            <div className="space-y-3">
+              {report.assignmentWatchlist.map((assignment) => (
+                <div key={`${assignment.childId}-${assignment.id}`} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-slate-900">{assignment.title}</p>
+                      <p className="truncate text-sm text-slate-500">{assignment.childName} • {assignment.lessonTitle || "Chua gan bai hoc"}</p>
+                    </div>
+                    <div className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">{getAssignmentStatusLabel(assignment.status)}</div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full bg-slate-200/70 px-2.5 py-1 font-medium text-slate-700">Han nop: {formatDueDate(assignment.dueDate)}</span>
+                    {assignment.childGradeLevel && <span className="rounded-full bg-brand-50 px-2.5 py-1 font-medium text-brand-700">Lop {assignment.childGradeLevel}</span>}
+                  </div>
+                </div>
+              ))}
+              {!report.assignmentWatchlist.length && (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
+                  Chua co bai tap nao can theo doi.
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+
+        <div className="space-y-6">
+          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+            <SectionTitle title="Tong quan tung con" description="Tap trung vao nhip hoc, bai tap ton dong va cac chu de can cung co." />
+            <div className="mt-5 space-y-3">
+              {report.children.map((student) => (
+                <div key={student.id} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-slate-900">{student.fullName || student.email}</p>
+                      <p className="mt-1 text-sm text-slate-500">{student.gradeLevel ? `Lop ${student.gradeLevel}` : "Chua phan lop"}</p>
+                    </div>
+                    <div className={cn("rounded-full px-2.5 py-1 text-[11px] font-medium", student.alertSummary.level === "critical" ? "bg-rose-100 text-rose-700" : student.alertSummary.level === "warning" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700")}>
+                      {student.alertSummary.level === "critical" ? "Can uu tien" : student.alertSummary.level === "warning" ? "Can theo doi" : "On dinh"}
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs text-slate-500">Thoi luong hoc</p>
+                      <p className="font-semibold text-slate-900">{formatStudyTime(student.totalStudySeconds, true)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Hoat dong gan nhat</p>
+                      <p className="font-semibold text-slate-900">{formatLastActive(student.lastActive)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Bai cho xu ly</p>
+                      <p className="font-semibold text-slate-900">{student.assignmentSummary.pending}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Chu de yeu</p>
+                      <p className="font-semibold text-slate-900">{student.weaknessSummary.count}</p>
+                    </div>
+                  </div>
+                  {!!student.weaknessSummary.topics.length && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {student.weaknessSummary.topics.map((topic) => (
+                        <span key={topic} className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700">{topic}</span>
+                      ))}
+                    </div>
+                  )}
+                  {!!student.recentActivity.length && (
+                    <div className="mt-4 space-y-2 border-t border-slate-200 pt-3">
+                      {student.recentActivity.map((activity) => (
+                        <div key={activity.id} className="flex items-center justify-between gap-3 text-xs text-slate-500">
+                          <span className="truncate">{activity.lessonTitle || "Phien hoc gan day"}</span>
+                          <span>{formatStudyTime(activity.durationSec, true)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

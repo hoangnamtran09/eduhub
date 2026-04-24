@@ -19,6 +19,7 @@ import {
   LogOut,
   BrainCircuit,
   Route,
+  ShieldAlert,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,12 @@ const adminNavItems = [
   { href: "/admin/assignments", label: "Giao bài tập", icon: NotebookPen },
 ];
 
+const parentNavItems = [
+  { href: "/", label: "Tổng quan phụ huynh", icon: LayoutDashboard },
+  { href: "/assignments", label: "Bài tập", icon: NotebookPen },
+  { href: "/settings", label: "Cài đặt", icon: Settings },
+];
+
 const adminNavGroups: NavGroupItem[] = [
   {
     label: "Quản lí bổ sung",
@@ -76,7 +83,11 @@ export function Sidebar() {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     "Quản lí bổ sung": true,
   });
-  const navItems = user?.role === "ADMIN" ? adminNavItems : defaultNavItems;
+  const navItems = user?.role === "ADMIN"
+    ? adminNavItems
+    : user?.role === "PARENT"
+      ? parentNavItems
+      : defaultNavItems;
 
   useEffect(() => {
     setMounted(true);
@@ -275,17 +286,27 @@ export function Sidebar() {
           <div className="rounded-[28px] border border-white/10 bg-white/8 p-4 shadow-soft transition-all backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-accent-500/14">
-                <Flame className="h-5 w-5 text-accent-300" />
+                {user?.role === "PARENT" ? (
+                  <ShieldAlert className="h-5 w-5 text-accent-300" />
+                ) : (
+                  <Flame className="h-5 w-5 text-accent-300" />
+                )}
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55">Chuỗi học hiện tại</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                  {user?.role === "PARENT" ? "Ưu tiên theo dõi" : "Chuỗi học hiện tại"}
+                </p>
                 <div className="flex items-center gap-1">
-                  <span className="text-lg font-semibold text-white">Chuỗi: {streakDays}</span>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: Math.min(3, streakDays) }).map((_, i) => (
-                       <div key={i} className="h-1 w-1 rounded-full bg-brand-300" />
-                    ))}
-                  </div>
+                  <span className="text-lg font-semibold text-white">
+                    {user?.role === "PARENT" ? "Bài tập và cảnh báo" : `Chuỗi: ${streakDays}`}
+                  </span>
+                  {user?.role !== "PARENT" && (
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: Math.min(3, streakDays) }).map((_, i) => (
+                         <div key={i} className="h-1 w-1 rounded-full bg-brand-300" />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
