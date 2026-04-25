@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const body: ChatRequest = await request.json();
     const { messages, lessonId, subjectId, model } = body;
 
-    if (!Array.isArray(messages) || messages.length > 20) {
+    if (!Array.isArray(messages)) {
       return NextResponse.json({ error: "Invalid chat messages" }, { status: 400 });
     }
 
@@ -36,6 +36,10 @@ export async function POST(request: NextRequest) {
         role: message.role === "assistant" ? "assistant" : "user",
         content: message.content.trim().slice(0, 4_000),
       }));
+
+    if (sanitizedMessages.length === 0) {
+      return NextResponse.json({ error: "Invalid chat messages" }, { status: 400 });
+    }
 
     let lessonTitle = "";
     let subjectName = "";
