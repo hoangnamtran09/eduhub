@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { getAuthUser } from "@/lib/auth/get-auth-user";
 
 interface RouteParams {
   params: { subjectId: string };
@@ -8,6 +9,7 @@ interface RouteParams {
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { subjectId } = params;
+    const authUser = await getAuthUser();
     
     // Use any to bypass Prisma type sync issues
     const prismaAny = prisma as any;
@@ -27,6 +29,24 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Subject not found" }, { status: 404 });
     }
 
+    const lessonIds = (subject.lessons || []).map((lesson: any) => lesson.id);
+    const progressRecords = authUser && lessonIds.length
+      ? await prismaAny.lessonProgress.findMany({
+          where: {
+            userId: authUser.userId,
+            lessonId: { in: lessonIds },
+          },
+          select: {
+            lessonId: true,
+            completed: true,
+            completedAt: true,
+            status: true,
+          },
+        })
+      : [];
+    const progressByLessonId = new Map((progressRecords || []).map((progress: any) => [progress.lessonId, progress]));
+    const getLessonProgress = (lessonId: string) => progressByLessonId.get(lessonId) as any | undefined;
+
     // Transform data - Đơn giản hóa, bỏ qua Semester
     const response = {
       id: subject.id,
@@ -41,32 +61,46 @@ export async function GET(request: Request, { params }: RouteParams) {
           title: "Nội dung chính",
           slug: "main-content",
           gradeLevel: 6,
-          chapters: (subject.lessons || []).map((lesson: any, idx: number) => ({
-            id: lesson.id,
-            title: lesson.title,
-            order: idx + 1,
-            lessons: [{
+          chapters: (subject.lessons || []).map((lesson: any, idx: number) => {
+            const progress = getLessonProgress(lesson.id);
+
+            return {
               id: lesson.id,
               title: lesson.title,
-              order: lesson.order,
-              duration: lesson.duration || 30,
-              hasPdf: !!lesson.pdfUrl,
-              hasVideo: !!lesson.videoUrl,
-              hasQuiz: false,
-            }],
-          })),
+              order: idx + 1,
+              lessons: [{
+                id: lesson.id,
+                title: lesson.title,
+                order: lesson.order,
+                duration: lesson.duration || 30,
+                hasPdf: !!lesson.pdfUrl,
+                hasVideo: !!lesson.videoUrl,
+                hasQuiz: false,
+                completed: Boolean(progress?.completed),
+                completedAt: progress?.completedAt ?? null,
+                status: progress?.status ?? null,
+              }],
+            };
+          }),
         }
       ],
       // Structure phẳng cho Learning Page
-      lessons: (subject.lessons || []).map((lesson: any) => ({
-        id: lesson.id,
-        title: lesson.title,
-        order: lesson.order,
-        duration: lesson.duration || 30,
-        hasPdf: !!lesson.pdfUrl,
-        hasVideo: !!lesson.videoUrl,
-        hasQuiz: false,
-      })),
+      lessons: (subject.lessons || []).map((lesson: any) => {
+        const progress = getLessonProgress(lesson.id);
+
+        return {
+          id: lesson.id,
+          title: lesson.title,
+          order: lesson.order,
+          duration: lesson.duration || 30,
+          hasPdf: !!lesson.pdfUrl,
+          hasVideo: !!lesson.videoUrl,
+          hasQuiz: false,
+          completed: Boolean(progress?.completed),
+          completedAt: progress?.completedAt ?? null,
+          status: progress?.status ?? null,
+        };
+      }),
     };
 
     return NextResponse.json(response);

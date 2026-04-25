@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { 
   BookOpen, ChevronLeft, ChevronRight, PlayCircle, FileText, 
-  Loader2, AlertCircle, ArrowLeft, Trophy
+  Loader2, AlertCircle, ArrowLeft, Trophy, CheckCircle2
 } from "lucide-react";
 
 interface Subject {
@@ -42,6 +42,8 @@ interface Lesson {
   duration: number;
   hasExercise: boolean;
   hasQuiz: boolean;
+  completed?: boolean;
+  completedAt?: string | null;
 }
 
 export default function SubjectPage({ params }: { params: { subjectId: string } }) {
@@ -181,8 +183,17 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
                             className="flex items-center justify-between px-6 py-3.5 hover:bg-brand-50/40 transition-all cursor-pointer group/lesson"
                           >
                               <div className="flex items-center gap-5">
-                                <div className="w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center group-hover/lesson:border-brand-500 transition-colors">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-transparent group-hover/lesson:bg-brand-500 transition-all" />
+                                <div className={cn(
+                                  "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                                  lesson.completed
+                                    ? "border-emerald-500 bg-emerald-500 text-white"
+                                    : "border-slate-200 group-hover/lesson:border-brand-500",
+                                )}>
+                                  {lesson.completed ? (
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-transparent group-hover/lesson:bg-brand-500 transition-all" />
+                                  )}
                                 </div>
                                 <div>
                                   <h4 className="font-bold text-slate-700 group-hover/lesson:text-slate-900 transition-colors">
@@ -202,9 +213,14 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
                               </div>
                               <Button 
                                 size="sm" 
-                                className="bg-white text-slate-900 border border-paper-200 hover:bg-brand-500 hover:text-white hover:border-brand-500 rounded-xl px-5 h-9 font-bold text-xs transition-all shadow-sm"
+                                className={cn(
+                                  "rounded-xl px-5 h-9 font-bold text-xs transition-all shadow-sm",
+                                  lesson.completed
+                                    ? "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                    : "bg-white text-slate-900 border border-paper-200 hover:bg-brand-500 hover:text-white hover:border-brand-500",
+                                )}
                               >
-                                Học ngay
+                                {lesson.completed ? "Đã học" : "Học ngay"}
                               </Button>
                             </div>
                           ))}
