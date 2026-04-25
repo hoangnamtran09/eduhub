@@ -64,6 +64,10 @@ const LESSON_TYPES = [
   { value: "quiz", label: "Bài kiểm tra", color: "bg-violet-100 text-violet-700" },
 ];
 
+function getLessonTitleFromPdfName(fileName: string) {
+  return fileName.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim() || "Bài học PDF";
+}
+
 export default function AdminSubjectsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,6 +98,7 @@ export default function AdminSubjectsPage() {
   });
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [bulkPdfFiles, setBulkPdfFiles] = useState<File[]>([]);
+  const [bulkUploadProgress, setBulkUploadProgress] = useState({ current: 0, total: 0 });
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
@@ -282,6 +287,7 @@ export default function AdminSubjectsPage() {
   const openBulkUploadModal = (subjectId: string) => {
     setSelectedSubjectId(subjectId);
     setBulkPdfFiles([]);
+    setBulkUploadProgress({ current: 0, total: 0 });
     setUploading(false);
     setUploadSuccess(false);
     setShowBulkUploadModal(true);
@@ -292,19 +298,42 @@ export default function AdminSubjectsPage() {
 
     setUploading(true);
     setUploadSuccess(false);
+    setBulkUploadProgress({ current: 0, total: bulkPdfFiles.length });
 
     try {
-      const formData = new FormData();
-      bulkPdfFiles.forEach((file) => formData.append("files", file));
+      for (const [index, file] of bulkPdfFiles.entries()) {
+        setBulkUploadProgress({ current: index + 1, total: bulkPdfFiles.length });
 
-      const response = await fetch(`/api/admin/subjects/${selectedSubjectId}/lessons/bulk-pdf`, {
-        method: "POST",
-        body: formData,
-      });
+        const lessonResponse = await fetch(`/api/admin/subjects/${selectedSubjectId}/lessons`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: getLessonTitleFromPdfName(file.name),
+            content: "",
+            type: "theory",
+            duration: null,
+            videoUrl: "",
+          }),
+        });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => null);
-        throw new Error(errorPayload?.error || `Upload failed (${response.status})`);
+        if (!lessonResponse.ok) {
+          const errorPayload = await lessonResponse.json().catch(() => null);
+          throw new Error(errorPayload?.error || `Không thể tạo bài học cho ${file.name}`);
+        }
+
+        const lesson = await lessonResponse.json();
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const uploadResponse = await fetch(`/api/admin/subjects/${selectedSubjectId}/lessons/${lesson.id}/pdf`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          const errorPayload = await uploadResponse.json().catch(() => null);
+          throw new Error(errorPayload?.error || `Không thể tải lên ${file.name}`);
+        }
       }
 
       setUploadSuccess(true);
@@ -316,6 +345,7 @@ export default function AdminSubjectsPage() {
       alert(error instanceof Error ? error.message : "Không thể tải lên PDF hàng loạt");
     } finally {
       setUploading(false);
+      setBulkUploadProgress({ current: 0, total: 0 });
     }
   };
 
@@ -683,9 +713,24 @@ export default function AdminSubjectsPage() {
                 <label htmlFor="bulk-pdf-upload" className="block cursor-pointer">
                   <Upload className="mx-auto mb-3 h-10 w-10 text-brand-500" />
                   <p className="font-semibold text-slate-900">Chọn nhiều file PDF</p>
-                  <p className="mt-1 text-sm text-slate-500">Hỗ trợ tối đa 30 file, mỗi file tối đa 25MB.</p>
+                  <p className="mt-1 text-sm text-slate-500">Mỗi file sẽ được upload riêng để tránh vượt giới hạn request.</p>
                 </label>
               </div>
+
+              {uploading && bulkUploadProgress.total > 0 && (
+                <div className="rounded-2xl border border-brand-100 bg-brand-50 p-4">
+                  <div className="mb-2 flex items-center justify-between text-sm font-semibold text-brand-800">
+                    <span>Đang tạo bài học</span>
+                    <span>{bulkUploadProgress.current}/{bulkUploadProgress.total}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-white">
+                    <div
+                      className="h-full rounded-full bg-brand-500 transition-all"
+                      style={{ width: `${Math.round((bulkUploadProgress.current / bulkUploadProgress.total) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {bulkPdfFiles.length > 0 && (
                 <div className="rounded-2xl border border-slate-200 bg-white">
@@ -701,7 +746,7 @@ export default function AdminSubjectsPage() {
                   </div>
                   <div className="max-h-56 space-y-2 overflow-y-auto p-3">
                     {bulkPdfFiles.map((file, index) => {
-                      const lessonName = file.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+                      const lessonName = getLessonTitleFromPdfName(file.name);
 
                       return (
                         <div key={`${file.name}-${index}`} className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
