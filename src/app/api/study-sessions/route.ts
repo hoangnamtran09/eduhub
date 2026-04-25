@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const prismaAny = prisma as any;
     const now = new Date();
 
-    const session = await prismaAny.$transaction(async (tx: any) => {
+    const result = await prismaAny.$transaction(async (tx: any) => {
       const existingProfile = await tx.studentProfile.findUnique({
         where: { userId: authUser.userId },
       });
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         }
       }
 
-      await tx.studentProfile.upsert({
+      const profile = await tx.studentProfile.upsert({
         where: { userId: authUser.userId },
         create: {
           userId: authUser.userId,
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
       await ensureLessonProgressWithClient(tx, authUser.userId, lessonId);
 
-      return tx.studySession.create({
+      const session = await tx.studySession.create({
         data: {
           userId: authUser.userId,
           lessonId,
@@ -71,9 +71,14 @@ export async function POST(request: Request) {
           lastPingAt: now,
         },
       });
+
+      return { session, streakDays: profile.streakDays };
     });
 
-    return NextResponse.json(session);
+    return NextResponse.json({
+      ...result.session,
+      streakDays: result.streakDays,
+    });
   } catch (error) {
     console.error("Create study session error:", error);
     return NextResponse.json({ error: "Failed to create study session" }, { status: 500 });

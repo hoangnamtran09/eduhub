@@ -112,10 +112,22 @@ export function Sidebar() {
       }
     };
 
+    const handleStudyProgressUpdated = (event: Event) => {
+      const streakDays = (event as CustomEvent<{ streakDays?: number }>).detail?.streakDays;
+      if (typeof streakDays === "number") {
+        setStreakDays(streakDays);
+      }
+
+      loadProgressSummary();
+    };
+
+    setStreakDays(Number(user.profile?.streakDays || 0));
     loadProgressSummary();
+    window.addEventListener("study-progress-updated", handleStudyProgressUpdated);
 
     return () => {
       cancelled = true;
+      window.removeEventListener("study-progress-updated", handleStudyProgressUpdated);
     };
   }, [pathname, user]);
 

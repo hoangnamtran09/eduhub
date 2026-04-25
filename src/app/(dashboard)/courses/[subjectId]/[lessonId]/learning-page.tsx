@@ -442,6 +442,17 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
       const session = await response.json();
       studySessionIdRef.current = session.id;
+      if (typeof session.streakDays === "number") {
+        setUser({
+          ...user,
+          profile: user.profile
+            ? { ...user.profile, streakDays: session.streakDays }
+            : user.profile,
+        });
+        window.dispatchEvent(new CustomEvent("study-progress-updated", {
+          detail: { streakDays: session.streakDays },
+        }));
+      }
       setStudySessionActive(true);
       setStudyTimeSeconds(0);
       return true;
@@ -450,7 +461,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
       console.error("Failed to start study session:", error);
       return false;
     }
-  }, [loading, params.lessonId, user?.id]);
+  }, [loading, params.lessonId, setUser, user]);
 
   useEffect(() => {
     if (loading || !user?.id || studySessionActive) return;
