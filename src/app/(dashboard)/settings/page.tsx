@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, Bell, Shield, Palette, Save } from "lucide-react";
+import { useAuthStore } from "@/stores/auth-store";
+import { User, Bell, Shield, Palette, Save, Loader2, Lock } from "lucide-react";
 
 const tabs = [
   { id: "profile", label: "Hồ sơ", icon: User },
@@ -14,7 +15,104 @@ const tabs = [
 ];
 
 export default function SettingsPage() {
+  const { user, setUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState("profile");
+  const [profileForm, setProfileForm] = useState({ fullName: "", gradeLevel: "" });
+  const [profileStatus, setProfileStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [passwordStatus, setPasswordStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setProfileForm({
+      fullName: user.fullName || "",
+      gradeLevel: user.gradeLevel ? String(user.gradeLevel) : "",
+    });
+  }, [user]);
+
+  const initials = (user?.fullName || user?.email || "U")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "U";
+
+  const handleSaveProfile = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!user || isSavingProfile) return;
+
+    setProfileStatus(null);
+    setIsSavingProfile(true);
+
+    try {
+      const response = await fetch("/api/settings/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: profileForm.fullName,
+          gradeLevel: profileForm.gradeLevel ? Number(profileForm.gradeLevel) : null,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể lưu hồ sơ");
+      }
+
+      setUser(data.user);
+      setProfileStatus({ type: "success", message: "Đã lưu thay đổi hồ sơ" });
+    } catch (error) {
+      setProfileStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Không thể lưu hồ sơ",
+      });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleChangePassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isChangingPassword) return;
+
+    setPasswordStatus(null);
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordStatus({ type: "error", message: "Mật khẩu xác nhận không khớp" });
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      const response = await fetch("/api/settings/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể đổi mật khẩu");
+      }
+
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordStatus({ type: "success", message: data.message || "Đã đổi mật khẩu" });
+    } catch (error) {
+      setPasswordStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Không thể đổi mật khẩu",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -53,33 +151,51 @@ export default function SettingsPage() {
                 <CardTitle>Thông tin cá nhân</CardTitle>
                 <CardDescription>Cập nhật thông tin hồ sơ của bạn</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
+                <form className="space-y-4" onSubmit={handleSaveProfile}>
                 <div className="flex items-center gap-4">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-2xl font-bold">
-                    HN
+                    {initials}
                   </div>
-                  <Button variant="outline">Đổi ảnh đại diện</Button>
+                  <div>
+                    <Button type="button" variant="outline" disabled>Đổi ảnh đại diện</Button>
+                    <p className="mt-1 text-xs text-slate-500">Tính năng đổi ảnh sẽ được bổ sung sau.</p>
+                  </div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <Input label="Họ và tên" defaultValue="Nguyễn Học Sinh" />
-                  <Input label="Email" type="email" defaultValue="student@eduhub.vn" />
+                  <Input
+                    label="Họ và tên"
+                    value={profileForm.fullName}
+                    onChange={(event) => setProfileForm((current) => ({ ...current, fullName: event.target.value }))}
+                    required
+                  />
+                  <Input label="Email" type="email" value={user?.email || ""} disabled />
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Lớp</label>
-                    <select className="w-full h-10 px-3 rounded-sm border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                      <option>Lớp 9</option>
-                      <option>Lớp 10</option>
-                      <option>Lớp 11</option>
-                      <option>Lớp 12</option>
+                    <select
+                      className="w-full h-10 px-3 rounded-sm border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={profileForm.gradeLevel}
+                      onChange={(event) => setProfileForm((current) => ({ ...current, gradeLevel: event.target.value }))}
+                    >
+                      <option value="">Chưa chọn lớp</option>
+                      {Array.from({ length: 12 }, (_, index) => index + 1).map((grade) => (
+                        <option key={grade} value={grade}>Lớp {grade}</option>
+                      ))}
                     </select>
                   </div>
-                  <Input label="Trường" defaultValue="THCS XYZ" />
                 </div>
-                <Button className="gap-2">
-                  <Save className="w-4 h-4" />
-                  Lưu thay đổi
+                {profileStatus && (
+                  <p className={profileStatus.type === "success" ? "text-sm text-emerald-600" : "text-sm text-red-600"}>
+                    {profileStatus.message}
+                  </p>
+                )}
+                <Button className="gap-2" disabled={isSavingProfile || !profileForm.fullName.trim()}>
+                  {isSavingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isSavingProfile ? "Đang lưu..." : "Lưu thay đổi"}
                 </Button>
+                </form>
               </CardContent>
             </Card>
           )}
@@ -91,12 +207,18 @@ export default function SettingsPage() {
                 <CardDescription>Quản lý cách bạn nhận thông báo</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  Hệ thống thông báo đang được phát triển. Các tùy chọn bên dưới hiện được khóa để tránh hiểu nhầm.
+                </div>
                 {["Nhắc nhở học tập hàng ngày", "Thông báo khi có bài mới", "Email báo cáo tuần"].map((item) => (
                   <div key={item} className="flex items-center justify-between py-2">
-                    <span className="text-slate-700">{item}</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div>
+                      <span className="text-slate-500">{item}</span>
+                      <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">Sắp ra mắt</span>
+                    </div>
+                    <label className="relative inline-flex cursor-not-allowed items-center opacity-60">
+                      <input type="checkbox" className="sr-only peer" disabled />
+                      <div className="w-11 h-6 rounded-full bg-slate-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-['']"></div>
                     </label>
                   </div>
                 ))}
@@ -110,14 +232,40 @@ export default function SettingsPage() {
                 <CardTitle>Bảo mật</CardTitle>
                 <CardDescription>Quản lý mật khẩu và bảo mật</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <Input label="Mật khẩu hiện tại" type="password" />
-                <Input label="Mật khẩu mới" type="password" />
-                <Input label="Xác nhận mật khẩu mới" type="password" />
-                <Button className="gap-2">
-                  <Shield className="w-4 h-4" />
-                  Đổi mật khẩu
+              <CardContent>
+                <form className="space-y-4" onSubmit={handleChangePassword}>
+                <Input
+                  label="Mật khẩu hiện tại"
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(event) => setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))}
+                  required
+                />
+                <Input
+                  label="Mật khẩu mới"
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))}
+                  helperText="Tối thiểu 8 ký tự"
+                  required
+                />
+                <Input
+                  label="Xác nhận mật khẩu mới"
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))}
+                  required
+                />
+                {passwordStatus && (
+                  <p className={passwordStatus.type === "success" ? "text-sm text-emerald-600" : "text-sm text-red-600"}>
+                    {passwordStatus.message}
+                  </p>
+                )}
+                <Button className="gap-2" disabled={isChangingPassword || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}>
+                  {isChangingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                  {isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}
                 </Button>
+                </form>
               </CardContent>
             </Card>
           )}

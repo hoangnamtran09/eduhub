@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PDFViewer } from "@/components/pdf-viewer";
@@ -216,7 +216,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
     }
   };
 
-  const startNewChat = async () => {
+  const startNewChat = useCallback(async () => {
     if (!currentLesson || !subject) return;
 
     setInput("");
@@ -255,7 +255,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
     } finally {
       setSending(false);
     }
-  };
+  }, [currentLesson, subject]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -300,7 +300,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
     if (!loading && currentLesson && subject && messages.length === 0) {
       startNewChat();
     }
-  }, [loading, currentLesson?.id, subject?.id, messages.length]);
+  }, [loading, currentLesson, subject, messages.length, startNewChat]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
