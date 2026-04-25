@@ -143,6 +143,7 @@ model Assignment {
   createdById      String?
   dueDate          DateTime?
   maxScore         Int                   @default(10)
+  rubric           Json?
   targetGradeLevel Int?
   isPublished      Boolean               @default(true)
   createdAt        DateTime              @default(now())
@@ -158,8 +159,17 @@ model AssignmentRecipient {
   studentId      String
   status         String      @default("assigned")
   submissionText String?     @db.Text
+  submissionFiles Json?
+  score          Int?
+  aiScore        Int?
+  feedback       String?     @db.Text
+  rubricScores   Json?
+  feedbackHistory Json?
+  reviewedById   String?
   submittedAt    DateTime?
   reviewedAt     DateTime?
+  returnedAt     DateTime?
+  attemptCount   Int         @default(0)
   createdAt      DateTime    @default(now())
   assignment     Assignment  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student        User        @relation(fields: [studentId], references: [id], onDelete: Cascade)

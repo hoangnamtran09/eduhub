@@ -43,7 +43,7 @@ export async function GET() {
 
     const prismaAny = prisma as any;
 
-    const [user, studySessions, quizAttempts, exerciseAttempts, pendingAssignments] = await Promise.all([
+    const [user, studySessions, quizAttempts, exerciseAttempts, assignmentRecipients] = await Promise.all([
       prismaAny.user.findUnique({
         where: { id: authUser.userId },
         include: { profile: true },
@@ -68,11 +68,20 @@ export async function GET() {
         where: { userId: authUser.userId },
         orderBy: { createdAt: "desc" },
       }),
-      prismaAny.assignmentRecipient.count({
+      prismaAny.assignmentRecipient.findMany({
         where: {
           studentId: authUser.userId,
-          status: { not: "submitted" },
+          status: { notIn: ["submitted", "reviewed"] },
         },
+        include: {
+          assignment: {
+            select: {
+              title: true,
+              dueDate: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
       }),
     ]);
 
@@ -115,6 +124,17 @@ export async function GET() {
     const completedExercises = (exerciseAttempts || []).filter(
       (attempt: any) => typeof attempt.score === "number" && attempt.score >= 80,
     ).length;
+    const pendingAssignments = assignmentRecipients.length;
+    const overdueAssignments = assignmentRecipients.filter((recipient: any) => {
+      if (!recipient.assignment?.dueDate) return false;
+      return new Date(recipient.assignment.dueDate).getTime() < now.getTime();
+    }).length;
+    const dueSoonAssignment = assignmentRecipients
+      .filter((recipient: any) => recipient.assignment?.dueDate)
+      .sort((a: any, b: any) => new Date(a.assignment.dueDate).getTime() - new Date(b.assignment.dueDate).getTime())[0] || null;
+    const topWeakness = Array.isArray(user.profile?.weaknesses) && user.profile.weaknesses.length > 0
+      ? String(user.profile.weaknesses[0])
+      : null;
 
     const metrics = {
       streakDays: user.profile?.streakDays || 0,
@@ -193,6 +213,14 @@ export async function GET() {
         streakDays: user.profile?.streakDays || 0,
         diamonds: user.diamonds || 0,
         pendingAssignments,
+        overdueAssignments,
+        dueSoonAssignment: dueSoonAssignment
+          ? {
+              title: dueSoonAssignment.assignment?.title || "Bài tập",
+              dueDate: dueSoonAssignment.assignment?.dueDate || null,
+            }
+          : null,
+        topWeakness,
       },
       weeklyProgress,
       achievements,

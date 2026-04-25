@@ -58,7 +58,7 @@ export async function GET() {
       const assignments = await prismaAny.assignmentRecipient.findMany({
         where: {
           studentId: authUser.userId,
-          status: { not: "submitted" },
+          status: { notIn: ["submitted", "reviewed"] },
         },
         include: { assignment: true },
         orderBy: { createdAt: "desc" },

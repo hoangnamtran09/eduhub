@@ -72,8 +72,48 @@ export function CreateAssignmentModal({
             </div>
           </div>
           <div>
+            <Label htmlFor="maxScore">Điểm tối đa</Label>
+            <Input id="maxScore" type="number" min={1} value={form.maxScore} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({...form, maxScore: Number(e.target.value)})} />
+          </div>
+          <div>
             <Label htmlFor="description">Mô tả</Label>
             <Textarea id="description" value={form.description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm({...form, description: e.target.value})} />
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <Label>Rubric chấm điểm</Label>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {(form.rubric || []).map((criterion, index) => (
+                <div key={criterion.id} className="rounded-xl bg-white p-3 ring-1 ring-slate-100">
+                  <Input
+                    value={criterion.title}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => setForm({
+                      ...form,
+                      rubric: (form.rubric || []).map((item, itemIndex) => itemIndex === index ? { ...item, title: event.target.value } : item),
+                    })}
+                    placeholder="Tiêu chí"
+                  />
+                  <div className="mt-2 grid grid-cols-[1fr_90px] gap-2">
+                    <Input
+                      value={criterion.description || ""}
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setForm({
+                        ...form,
+                        rubric: (form.rubric || []).map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item),
+                      })}
+                      placeholder="Mô tả"
+                    />
+                    <Input
+                      type="number"
+                      min={1}
+                      value={criterion.maxScore}
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setForm({
+                        ...form,
+                        rubric: (form.rubric || []).map((item, itemIndex) => itemIndex === index ? { ...item, maxScore: Number(event.target.value) } : item),
+                      })}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <LessonSelector lessons={lessons} selectedLesson={form.lessonId} onSelect={handleLessonSelect}/>
           <div>

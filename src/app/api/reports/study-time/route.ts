@@ -328,6 +328,7 @@ export async function GET() {
           child.alertSummary.items.map((item: any) => ({
             childId: child.id,
             childName: child.fullName || child.email,
+            childEmail: child.email,
             childGradeLevel: child.gradeLevel,
             ...item,
           })),
@@ -366,8 +367,8 @@ export async function GET() {
     const sessions = await prismaAny.studySession.findMany({
       where: { userId: authUser.userId },
       include: {
-        lesson: {
-          select: { id: true, title: true },
+          lesson: {
+          select: { id: true, title: true, subjectId: true },
         },
       },
       orderBy: { startedAt: "desc" },
@@ -444,6 +445,13 @@ export async function GET() {
         totalStudySeconds,
         totalSessions: sessions.length,
         sessions,
+        continueLesson: sessions[0]?.lesson
+          ? {
+              id: sessions[0].lesson.id,
+              title: sessions[0].lesson.title,
+              subjectId: sessions[0].lesson.subjectId,
+            }
+          : null,
         leaderboard: leaderboard.slice(0, 10),
         currentStudentRank,
         peers,

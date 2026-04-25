@@ -68,6 +68,7 @@ export async function POST(request: Request) {
       lessonId,
       dueDate,
       maxScore,
+      rubric,
       targetGradeLevel,
       studentIds,
     } = body;
@@ -111,6 +112,7 @@ export async function POST(request: Request) {
         createdById: authorization.authUser.userId,
         dueDate: dueDate ? new Date(dueDate) : null,
         maxScore: Number(maxScore) > 0 ? Number(maxScore) : 10,
+        rubric: Array.isArray(rubric) ? rubric : undefined,
         targetGradeLevel: targetGradeLevel ? Number(targetGradeLevel) : null,
         recipients: {
           create: recipients.map((studentId: string) => ({

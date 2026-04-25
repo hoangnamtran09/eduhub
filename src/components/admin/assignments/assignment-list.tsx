@@ -6,9 +6,10 @@ interface AssignmentListProps {
   assignments: AssignmentRecord[];
   loading: boolean;
   searchQuery: string;
+  onReviewed?: () => void;
 }
 
-export function AssignmentList({ assignments, loading, searchQuery }: AssignmentListProps) {
+export function AssignmentList({ assignments, loading, searchQuery, onReviewed }: AssignmentListProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -26,7 +27,7 @@ export function AssignmentList({ assignments, loading, searchQuery }: Assignment
   return (
     <div className="grid gap-6">
       {filteredAssignments.map((assignment) => (
-        <AssignmentCard key={assignment.id} assignment={assignment} />
+        <AssignmentCard key={assignment.id} assignment={assignment} onReviewed={onReviewed} />
       ))}
     </div>
   );

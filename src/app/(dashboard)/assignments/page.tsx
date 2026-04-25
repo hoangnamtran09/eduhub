@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BookOpenCheck, CalendarClock, CheckCircle2, ClipboardList, Download, Loader2, Search, Send, SlidersHorizontal } from "lucide-react";
+import { BookOpenCheck, Bot, CalendarClock, CheckCircle2, ClipboardList, Download, FileText, Loader2, RotateCcw, Search, Send, SlidersHorizontal, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,16 @@ interface StudentAssignment {
   id: string;
   status: string;
   submissionText: string | null;
+  submissionFiles?: Array<{ name: string; url: string; type: string; size?: number }> | null;
+  score?: number | null;
+  aiScore?: number | null;
+  feedback?: string | null;
+  rubricScores?: Array<{ criterionId: string; title: string; score: number; maxScore: number; comment?: string }> | null;
+  feedbackHistory?: Array<{ status: string; score?: number | null; feedback?: string | null; createdAt: string; attemptCount?: number }> | null;
   submittedAt: string | null;
+  reviewedAt?: string | null;
+  returnedAt?: string | null;
+  attemptCount?: number;
   assignment: {
     id: string;
     title: string;
@@ -41,10 +50,12 @@ export default function AssignmentsPage() {
   const [submittingAssignment, setSubmittingAssignment] = useState<StudentAssignment | null>(null);
   const [accepting, setAccepting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingSubmission, setUploadingSubmission] = useState(false);
   const [submissionText, setSubmissionText] = useState("");
+  const [submissionFiles, setSubmissionFiles] = useState<Array<{ name: string; url: string; type: string; size?: number }>>([]);
   const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "accepted" | "submitted" | "overdue">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "accepted" | "submitted" | "reviewed" | "returned" | "overdue">("all");
 
   const loadAssignments = useCallback(async () => {
     if (!user?.id) return;
@@ -75,10 +86,12 @@ export default function AssignmentsPage() {
   const stats = useMemo(() => {
     const accepted = items.filter((item) => item.status === "accepted").length;
     const submitted = items.filter((item) => item.status === "submitted").length;
-    const pending = items.filter((item) => item.status !== "accepted" && item.status !== "submitted").length;
-    const overdue = items.filter((item) => item.assignment.dueDate && new Date(item.assignment.dueDate).getTime() < Date.now() && item.status !== "submitted").length;
+    const reviewed = items.filter((item) => item.status === "reviewed").length;
+    const returned = items.filter((item) => item.status === "returned").length;
+    const pending = items.filter((item) => !["accepted", "submitted", "reviewed", "returned"].includes(item.status)).length;
+    const overdue = items.filter((item) => item.assignment.dueDate && new Date(item.assignment.dueDate).getTime() < Date.now() && !["submitted", "reviewed"].includes(item.status)).length;
 
-    return { accepted, submitted, pending, overdue };
+    return { accepted, submitted, reviewed, returned, pending, overdue };
   }, [items]);
 
   const filteredItems = useMemo(() => {
@@ -86,11 +99,15 @@ export default function AssignmentsPage() {
 
     return items.filter((item) => {
       const isAccepted = item.status === "accepted";
-      const isSubmitted = item.status === "submitted";
+      const isSubmitted = ["submitted", "reviewed", "returned"].includes(item.status);
       const isOverdue = Boolean(item.assignment.dueDate && new Date(item.assignment.dueDate).getTime() < Date.now() && !isSubmitted);
+      const isReviewed = item.status === "reviewed";
+      const isReturned = item.status === "returned";
       const statusMatch = statusFilter === "all"
         || (statusFilter === "accepted" && isAccepted)
         || (statusFilter === "submitted" && isSubmitted)
+        || (statusFilter === "reviewed" && isReviewed)
+        || (statusFilter === "returned" && isReturned)
         || (statusFilter === "pending" && !isAccepted && !isSubmitted && !isOverdue)
         || (statusFilter === "overdue" && isOverdue);
       const haystack = [
@@ -141,11 +158,33 @@ export default function AssignmentsPage() {
   const openSubmitDialog = (assignment: StudentAssignment) => {
     setSubmittingAssignment(assignment);
     setSubmissionText(assignment.submissionText || "");
+    setSubmissionFiles(assignment.submissionFiles || []);
     setActionMessage(null);
   };
 
+  const handleSubmissionFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingSubmission(true);
+    setActionMessage(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/assignments/upload-submission", { method: "POST", body: formData });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Không thể tải file");
+      setSubmissionFiles((current) => [...current, { name: data.name, url: data.url, type: data.type, size: data.size }].slice(0, 5));
+    } catch (error) {
+      setActionMessage({ type: "error", message: error instanceof Error ? error.message : "Không thể tải file" });
+    } finally {
+      setUploadingSubmission(false);
+      event.target.value = "";
+    }
+  };
+
   const handleSubmitAssignment = async () => {
-    if (!submittingAssignment || submitting || !submissionText.trim()) return;
+    if (!submittingAssignment || submitting || (!submissionText.trim() && submissionFiles.length === 0)) return;
 
     setSubmitting(true);
     setActionMessage(null);
@@ -154,7 +193,7 @@ export default function AssignmentsPage() {
       const response = await fetch(`/api/assignments/${submittingAssignment.id}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submissionText }),
+        body: JSON.stringify({ submissionText, submissionFiles }),
       });
       const data = await response.json();
 
@@ -165,6 +204,7 @@ export default function AssignmentsPage() {
       await loadAssignments();
       setSubmittingAssignment(null);
       setSubmissionText("");
+      setSubmissionFiles([]);
       setActionMessage({ type: "success", message: "Đã nộp bài thành công." });
     } catch (error) {
       setActionMessage({ type: "error", message: error instanceof Error ? error.message : "Không thể nộp bài" });
@@ -200,10 +240,12 @@ export default function AssignmentsPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 gap-3 lg:grid-cols-6">
               <SmallStat label="Chưa nhận" value={stats.pending} />
               <SmallStat label="Đã nhận" value={stats.accepted} />
               <SmallStat label="Đã nộp" value={stats.submitted} />
+              <SmallStat label="Đã chấm" value={stats.reviewed} />
+              <SmallStat label="Cần sửa" value={stats.returned} />
               <SmallStat label="Quá hạn" value={stats.overdue} />
             </div>
           </div>
@@ -229,6 +271,8 @@ export default function AssignmentsPage() {
                 <option value="pending">Chưa nhận</option>
                 <option value="accepted">Đã nhận</option>
                 <option value="submitted">Đã nộp</option>
+                <option value="reviewed">Đã chấm</option>
+                <option value="returned">Cần sửa</option>
                 <option value="overdue">Quá hạn</option>
               </select>
             </label>
@@ -252,14 +296,16 @@ export default function AssignmentsPage() {
         <div className="space-y-5">
           {filteredItems.map((item) => {
             const isAccepted = item.status === "accepted";
-            const isSubmitted = item.status === "submitted";
-            const isOverdue = item.assignment.dueDate && new Date(item.assignment.dueDate).getTime() < Date.now() && !isSubmitted;
+            const isSubmitted = ["submitted", "reviewed", "returned"].includes(item.status);
+            const isReviewed = item.status === "reviewed";
+            const isReturned = item.status === "returned";
+            const isOverdue = item.assignment.dueDate && new Date(item.assignment.dueDate).getTime() < Date.now() && !["submitted", "reviewed"].includes(item.status);
 
             return (
               <Card key={item.id} className="overflow-hidden rounded-lg border border-ink-200 bg-white shadow-soft">
                 <div className={cn(
                   "px-6 py-5",
-                  isSubmitted ? "bg-sky-50" : isAccepted ? "bg-emerald-50" : isOverdue ? "bg-rose-50" : "bg-amber-50"
+                  isReviewed ? "bg-emerald-50" : isReturned ? "bg-orange-50" : isSubmitted ? "bg-sky-50" : isAccepted ? "bg-emerald-50" : isOverdue ? "bg-rose-50" : "bg-amber-50"
                 )}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
@@ -274,9 +320,9 @@ export default function AssignmentsPage() {
 
                     <span className={cn(
                       "rounded-md px-4 py-2 text-xs font-semibold",
-                      isSubmitted ? "bg-sky-100 text-sky-700" : isAccepted ? "bg-emerald-100 text-emerald-700" : isOverdue ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"
+                      isReviewed ? "bg-emerald-100 text-emerald-700" : isReturned ? "bg-orange-100 text-orange-700" : isSubmitted ? "bg-sky-100 text-sky-700" : isAccepted ? "bg-emerald-100 text-emerald-700" : isOverdue ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"
                     )}>
-                      {isSubmitted ? "Đã nộp" : isAccepted ? "Đã nhận" : isOverdue ? "Quá hạn" : "Chưa nhận"}
+                      {isReviewed ? "Đã chấm" : isReturned ? "Cần sửa" : isSubmitted ? "Đã nộp" : isAccepted ? "Đã nhận" : isOverdue ? "Quá hạn" : "Chưa nhận"}
                     </span>
                   </div>
                 </div>
@@ -315,10 +361,103 @@ export default function AssignmentsPage() {
                       <span>Đã nộp bài {item.submittedAt ? `lúc ${new Date(item.submittedAt).toLocaleString("vi-VN")}` : ""}</span>
                     </div>
                   )}
+                  {isReturned && (
+                    <Button onClick={() => openSubmitDialog(item)} className="gap-2 bg-orange-600 hover:bg-orange-700">
+                      <RotateCcw className="h-4 w-4" />
+                      Nộp lại bài đã sửa
+                    </Button>
+                  )}
                   {isSubmitted && item.submissionText && (
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Nội dung đã nộp</p>
                       <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">{item.submissionText}</p>
+                    </div>
+                  )}
+                  {isSubmitted && !!item.submissionFiles?.length && (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">File đã nộp</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {item.submissionFiles.map((file) => (
+                          <a key={file.url} href={file.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100">
+                            <FileText className="h-3.5 w-3.5" />
+                            {file.name}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {item.aiScore != null && item.status === "submitted" && (
+                    <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-600">
+                        <Bot className="h-3.5 w-3.5" /> Chấm sơ bộ AI
+                      </p>
+                      <p className="mt-2 text-sm font-bold text-violet-900">Điểm AI: {item.aiScore}/{item.assignment.maxScore}</p>
+                      {item.feedback && <p className="mt-2 whitespace-pre-line text-sm leading-6 text-violet-800">{item.feedback}</p>}
+                      {Array.isArray(item.rubricScores) && item.rubricScores.length > 0 && (
+                        <div className="mt-2 grid gap-1">
+                          {item.rubricScores.map((rs) => (
+                            <div key={rs.criterionId} className="flex justify-between text-xs text-violet-700">
+                              <span>{rs.title}</span>
+                              <span className="font-medium">{rs.score}/{rs.maxScore}{rs.comment ? ` – ${rs.comment}` : ""}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <p className="mt-2 text-xs text-violet-500">Đây là điểm sơ bộ từ AI. Giáo viên sẽ xem xét và cho điểm chính thức.</p>
+                    </div>
+                  )}
+                  {(item.status === "reviewed" || (item.status === "returned" && item.feedback)) && (
+                    <div className={cn(
+                      "rounded-lg border px-4 py-3",
+                      item.status === "reviewed" ? "border-emerald-200 bg-emerald-50" : "border-orange-200 bg-orange-50"
+                    )}>
+                      <p className={cn(
+                        "text-xs font-semibold uppercase tracking-wide",
+                        item.status === "reviewed" ? "text-emerald-600" : "text-orange-600"
+                      )}>
+                        {item.status === "reviewed" ? "Kết quả chấm" : "Phản hồi giáo viên – Cần sửa"}
+                      </p>
+                      {typeof item.score === "number" && (
+                        <p className={cn("mt-2 text-sm font-bold", item.status === "reviewed" ? "text-emerald-900" : "text-orange-900")}>
+                          Điểm: {item.score}/{item.assignment.maxScore}
+                        </p>
+                      )}
+                      {item.feedback && (
+                        <p className={cn("mt-2 whitespace-pre-line text-sm leading-6", item.status === "reviewed" ? "text-emerald-900" : "text-orange-900")}>
+                          {item.feedback}
+                        </p>
+                      )}
+                      {Array.isArray(item.rubricScores) && item.rubricScores.length > 0 && (
+                        <div className="mt-3 grid gap-1">
+                          <p className="text-xs font-semibold text-slate-500 mb-1">Chi tiết rubric:</p>
+                          {item.rubricScores.map((rs) => (
+                            <div key={rs.criterionId} className="flex justify-between text-xs text-slate-700">
+                              <span>{rs.title}</span>
+                              <span className="font-medium">{rs.score}/{rs.maxScore}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {(item.attemptCount ?? 0) > 1 && (
+                    <p className="text-xs text-slate-400">Lần nộp thứ {item.attemptCount}</p>
+                  )}
+                  {!!item.feedbackHistory?.length && (
+                    <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Lịch sử phản hồi ({item.feedbackHistory.length})</p>
+                      <div className="mt-2 space-y-2">
+                        {item.feedbackHistory.map((entry, index) => (
+                          <div key={`${entry.createdAt}-${index}`} className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+                            <div className="flex justify-between gap-3 text-xs font-semibold text-slate-500">
+                              <span>{entry.status === "returned" ? "Trả bài sửa" : "Đã chấm"}{entry.attemptCount ? ` (lần ${entry.attemptCount})` : ""}</span>
+                              <span>{new Date(entry.createdAt).toLocaleString("vi-VN")}</span>
+                            </div>
+                            {entry.score != null && <p className="mt-1 text-xs font-semibold">Điểm: {entry.score}/{item.assignment.maxScore}</p>}
+                            {entry.feedback && <p className="mt-1 whitespace-pre-line">{entry.feedback}</p>}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -410,10 +549,27 @@ export default function AssignmentsPage() {
               placeholder="Ví dụ: Em đã hoàn thành bài. Link file: https://..."
               className="min-h-40 rounded-2xl border-slate-200 bg-white text-sm leading-6"
             />
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100">
+                {uploadingSubmission ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                Tải file đính kèm (PDF, ảnh, Word, Excel...)
+                <input type="file" className="hidden" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" onChange={handleSubmissionFileUpload} disabled={uploadingSubmission} />
+              </label>
+              {!!submissionFiles.length && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {submissionFiles.map((file) => (
+                    <a key={file.url} href={file.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                      <FileText className="h-3.5 w-3.5" />
+                      {file.name}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSubmittingAssignment(null)} disabled={submitting}>Hủy</Button>
-            <Button onClick={handleSubmitAssignment} disabled={submitting || !submissionText.trim()}>
+            <Button onClick={handleSubmitAssignment} disabled={submitting || (!submissionText.trim() && submissionFiles.length === 0)}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
               Nộp bài
             </Button>

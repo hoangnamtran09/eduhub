@@ -11,6 +11,10 @@ const emptyForm: AssignmentForm = {
   lessonId: "",
   dueDate: "",
   maxScore: 10,
+  rubric: [
+    { id: "content", title: "Nội dung", maxScore: 6, description: "Độ đúng, đầy đủ và bám sát yêu cầu" },
+    { id: "presentation", title: "Trình bày", maxScore: 4, description: "Cách diễn đạt, bố cục và minh chứng" },
+  ],
   targetGradeLevel: null,
   studentIds: [],
 };
@@ -166,5 +170,6 @@ export function useAssignments() {
     setForm,
     handleCreateAssignment,
     handleAssignmentPdfUpload,
+    refreshAssignments: loadData,
   };
 }

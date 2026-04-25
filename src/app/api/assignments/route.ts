@@ -38,10 +38,12 @@ export async function GET(request: Request) {
 
     const sortedAssignments = assignments.sort((a: any, b: any) => {
       const statusPriority: Record<string, number> = {
-        assigned: 0,
-        pending: 0,
-        accepted: 1,
-        submitted: 2,
+        returned: 0,
+        assigned: 1,
+        pending: 1,
+        accepted: 2,
+        submitted: 3,
+        reviewed: 4,
       };
       const leftPriority = statusPriority[String(a.status || "pending").toLowerCase()] ?? 0;
       const rightPriority = statusPriority[String(b.status || "pending").toLowerCase()] ?? 0;

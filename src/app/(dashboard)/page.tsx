@@ -13,6 +13,7 @@ import {
   CalendarClock,
   CheckCircle,
   Clock,
+  Flame,
   Layers3,
   Loader2,
   Play,
@@ -116,6 +117,7 @@ interface ParentReportData {
   spotlightAlerts: Array<ParentAlertItem & {
     childId: string;
     childName: string;
+    childEmail: string;
     childGradeLevel: number | null;
   }>;
   assignmentWatchlist: Array<ParentAssignmentItem & {
@@ -140,6 +142,11 @@ interface StudentReportData {
   totalStudySeconds: number;
   totalSessions: number;
   sessions: StudentSessionItem[];
+  continueLesson?: {
+    id: string;
+    title: string;
+    subjectId: string;
+  } | null;
   leaderboard?: Array<{
     id: string;
     fullName: string | null;
@@ -177,6 +184,12 @@ interface ProgressData {
     streakDays: number;
     diamonds: number;
     pendingAssignments?: number;
+    overdueAssignments?: number;
+    dueSoonAssignment?: {
+      title: string;
+      dueDate: string | null;
+    } | null;
+    topWeakness?: string | null;
   };
   weeklyProgress: Array<{
     day: string;
@@ -426,6 +439,20 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
                 {report.attentionStudents.length} hồ sơ
               </div>
             </div>
+            {!!report.attentionStudents.length && (
+              <div className="mb-4 grid gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">Batch action cho học sinh rủi ro</p>
+                  <p className="mt-1 text-xs text-amber-800/80">Ưu tiên phân lớp, giao bài ôn tập hoặc kiểm tra nhóm chưa hoạt động.</p>
+                </div>
+                <Link href="/admin/students" className="inline-flex justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-amber-900 shadow-sm transition hover:bg-amber-100">
+                  Mở danh sách
+                </Link>
+                <Link href="/admin/assignments" className="inline-flex justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+                  Giao bài cho nhóm này
+                </Link>
+              </div>
+            )}
             <div className="space-y-3">
               {report.attentionStudents.map((student) => (
                 <div key={student.id} className="rounded-2xl border border-slate-100 bg-white p-4">
@@ -546,31 +573,58 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
   const currentLeaderboardEntry = leaderboard.find((student) => student.isCurrentUser);
   const todaysProgress = progress.weeklyProgress[progress.weeklyProgress.length - 1];
   const nextActions = [
+    ...(progress.stats.overdueAssignments
+      ? [{
+          href: "/assignments",
+          icon: CalendarClock,
+          title: "Xử lý bài tập quá hạn",
+          description: `${progress.stats.overdueAssignments} bài đã quá hạn. Ưu tiên nhận/nộp trước khi học nội dung mới.`,
+          tone: "bg-rose-600 text-white border-rose-600",
+          priority: "Ưu tiên 1",
+        }]
+      : []),
+    ...(progress.stats.topWeakness
+      ? [{
+          href: "/mistakes",
+          icon: BrainCircuit,
+          title: `Ôn điểm yếu: ${progress.stats.topWeakness}`,
+          description: "Hệ thống ghi nhận đây là vùng kiến thức cần củng cố trước.",
+          tone: "bg-amber-50 text-amber-900 border-amber-200",
+          priority: "Ưu tiên 2",
+        }]
+      : []),
+    ...(report.continueLesson
+      ? [{
+          href: `/courses/${report.continueLesson.subjectId}/${report.continueLesson.id}`,
+          icon: Play,
+          title: "Học tiếp bài đang dở",
+          description: report.continueLesson.title,
+          tone: "bg-slate-900 text-white border-slate-900",
+          priority: "Ưu tiên 3",
+        }]
+      : []),
     {
       href: "/courses",
-      icon: Play,
-      title: todaysProgress?.completed ? "Tiếp tục một bài học mới" : "Hoàn thành phiên học hôm nay",
+      icon: Flame,
+      title: todaysProgress?.completed ? "Duy trì đà học hôm nay" : "Bảo toàn chuỗi học",
       description: todaysProgress?.completed
         ? "Bạn đã có hoạt động hôm nay. Học thêm một bài ngắn để tăng tốc tiến độ."
         : "Bắt đầu một phiên học để giữ nhịp và cập nhật chuỗi học.",
-      tone: "bg-slate-900 text-white border-slate-900",
+      tone: todaysProgress?.completed ? "bg-emerald-50 text-emerald-900 border-emerald-200" : "bg-sky-50 text-sky-900 border-sky-200",
+      priority: "Nhịp học",
     },
-    {
-      href: "/mistakes",
-      icon: BrainCircuit,
-      title: "Ôn vùng kiến thức yếu",
-      description: "Xem các chủ đề hệ thống phát hiện cần củng cố và bắt đầu ôn lại.",
-      tone: "bg-rose-50 text-rose-800 border-rose-200",
-    },
-    {
+    ...(!progress.stats.overdueAssignments && progress.stats.pendingAssignments
+      ? [{
       href: "/assignments",
       icon: CalendarClock,
-      title: "Kiểm tra bài tập được giao",
+          title: progress.stats.dueSoonAssignment ? "Nhận bài tập sắp hạn" : "Kiểm tra bài tập được giao",
       description: progress.stats.pendingAssignments
-        ? `${progress.stats.pendingAssignments} bài đang cần xử lý hoặc nộp bài.`
+            ? `${progress.stats.pendingAssignments} bài đang cần xử lý${progress.stats.dueSoonAssignment?.dueDate ? `, gần nhất hạn ${formatDueDate(progress.stats.dueSoonAssignment.dueDate)}` : ""}.`
         : "Đảm bảo không bỏ lỡ bài sắp đến hạn hoặc bài giáo viên mới giao.",
       tone: "bg-amber-50 text-amber-800 border-amber-200",
-    },
+          priority: "Bài tập",
+        }]
+      : []),
   ];
 
   return (
@@ -645,7 +699,7 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
             {todaysProgress?.completed ? "Hôm nay đã active" : "Chưa có phiên hôm nay"}
           </span>
         </div>
-        <div className="grid gap-3 lg:grid-cols-3">
+        <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-4">
           {nextActions.map((action) => {
             const Icon = action.icon;
             return (
@@ -659,6 +713,9 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0">
+                    <span className="mb-2 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700">
+                      {action.priority}
+                    </span>
                     <p className="font-semibold">{action.title}</p>
                     <p className="mt-1 text-sm leading-5 opacity-75">{action.description}</p>
                     <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold opacity-80">
@@ -876,6 +933,12 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
                     <p className="font-semibold text-slate-900">{alert.childName}</p>
                     <p className="text-sm text-slate-600">{alert.label}</p>
                     <p className="mt-1 text-xs text-slate-500">{alert.childGradeLevel ? `Lop ${alert.childGradeLevel}` : "Chua phan lop"}</p>
+                    <a
+                      href={`mailto:${alert.childEmail}?subject=${encodeURIComponent("Nhắc học từ EduHub")}&body=${encodeURIComponent(`Con cần chú ý: ${alert.label}`)}`}
+                      className="mt-3 inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800"
+                    >
+                      Nhắn/nhắc con <ArrowRight className="h-3 w-3" />
+                    </a>
                   </div>
                 </div>
               ))}
@@ -950,6 +1013,12 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
                       <p className="font-semibold text-slate-900">{student.weaknessSummary.count}</p>
                     </div>
                   </div>
+                  <a
+                    href={`mailto:${student.email}?subject=${encodeURIComponent("Nhắc học hôm nay")}&body=${encodeURIComponent("Con vào EduHub hoàn thành bài tập và học một phiên ngắn hôm nay nhé.")}`}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    Nhắn/nhắc con <ArrowRight className="h-4 w-4" />
+                  </a>
                   {!!student.weaknessSummary.topics.length && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {student.weaknessSummary.topics.map((topic) => (

@@ -247,6 +247,58 @@ export const getGraderPrompt = (question: string, userAnswer: string) => {
     .replace("{userAnswer}", userAnswer);
 };
 
+export const ASSIGNMENT_PREGRADE_PROMPT = `Bạn là giáo viên AI tại EduHub, đang chấm sơ bộ bài tập được nộp bởi học sinh.
+
+**Tên bài tập:** {title}
+**Mô tả yêu cầu:** {description}
+**Điểm tối đa:** {maxScore}
+**Rubric chấm điểm:**
+{rubricText}
+
+**Nội dung bài nộp của học sinh:**
+{submissionContent}
+
+**Yêu cầu:**
+1. Chấm sơ bộ dựa trên rubric được cung cấp. Nếu không có rubric, tự đánh giá theo nội dung, trình bày và độ đầy đủ.
+2. Cho điểm từng tiêu chí (nếu có rubric) và tổng điểm.
+3. Nhận xét ngắn gọn, chỉ ra điểm tốt và điểm cần cải thiện.
+4. Xưng hô: xưng "mình", gọi học sinh là "bạn".
+5. Đây là chấm sơ bộ. Giáo viên sẽ xem lại và điều chỉnh.
+
+**Định dạng Output (JSON):**
+{
+  "aiScore": <số điểm tổng>,
+  "rubricScores": [
+    {"criterionId": "<id>", "title": "<tên tiêu chí>", "score": <điểm>, "maxScore": <điểm tối đa>, "comment": "<nhận xét ngắn>"}
+  ],
+  "feedback": "<nhận xét tổng thể>"
+}`;
+
+export const getAssignmentPregradePrompt = (input: {
+  title: string;
+  description: string;
+  maxScore: number;
+  rubric: Array<{ id: string; title: string; maxScore: number; description?: string }> | null;
+  submissionText: string | null;
+  submissionFileNames: string[];
+}) => {
+  const rubricText = input.rubric?.length
+    ? input.rubric.map((c, i) => `${i + 1}. ${c.title} (tối đa ${c.maxScore} điểm)${c.description ? ` – ${c.description}` : ""}`).join("\n")
+    : "Không có rubric cụ thể. Tự đánh giá theo chất lượng nội dung.";
+
+  const submissionParts: string[] = [];
+  if (input.submissionText) submissionParts.push(input.submissionText);
+  if (input.submissionFileNames.length) submissionParts.push(`[File đính kèm: ${input.submissionFileNames.join(", ")}]`);
+  const submissionContent = submissionParts.join("\n\n") || "(Trống)";
+
+  return ASSIGNMENT_PREGRADE_PROMPT
+    .replace("{title}", input.title)
+    .replace("{description}", input.description)
+    .replace("{maxScore}", String(input.maxScore))
+    .replace("{rubricText}", rubricText)
+    .replace("{submissionContent}", submissionContent);
+};
+
 export const getCompletionQuizPrompt = (input: {
   lessonTitle: string;
   subjectName: string;
