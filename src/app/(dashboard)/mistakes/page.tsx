@@ -80,13 +80,15 @@ function signalLabel(source: WeaknessSignal["source"]) {
   return "Hồ sơ cá nhân";
 }
 
-function getReviewExercises(value: unknown): Array<{ title: string; question: string; hint?: string }> {
+function getReviewExercises(value: unknown): Array<{ title: string; question: string; options: string[]; correctAnswer?: string; hint?: string }> {
   if (!Array.isArray(value)) return [];
 
   return value
     .map((item) => ({
       title: typeof item?.title === "string" ? item.title : "Bài ôn tập",
       question: typeof item?.question === "string" ? item.question : "Ôn lại một ví dụ tương tự trong bài học.",
+      options: Array.isArray(item?.options) ? item.options.filter((option: unknown) => typeof option === "string").slice(0, 4) : [],
+      correctAnswer: typeof item?.correctAnswer === "string" ? item.correctAnswer : undefined,
       hint: typeof item?.hint === "string" ? item.hint : undefined,
     }))
     .slice(0, 3);
@@ -270,6 +272,16 @@ export default function MistakesPage() {
                           <div key={`${item.id}-review-${index}`} className="rounded-xl bg-white px-3 py-3 text-sm text-slate-700">
                             <p className="font-semibold text-slate-900">{exercise.title}</p>
                             <p className="mt-1">{exercise.question}</p>
+                            {!!exercise.options.length && (
+                              <div className="mt-2 grid gap-1 sm:grid-cols-2">
+                                {exercise.options.map((option, optionIndex) => (
+                                  <div key={`${item.id}-review-${index}-${optionIndex}`} className="rounded-lg border border-slate-100 bg-slate-50 px-2 py-1 text-xs">
+                                    {String.fromCharCode(65 + optionIndex)}. {option}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {exercise.correctAnswer && <p className="mt-2 text-xs font-semibold text-emerald-700">Đáp án: {exercise.correctAnswer}</p>}
                             {exercise.hint && <p className="mt-1 text-xs text-slate-500">Gợi ý: {exercise.hint}</p>}
                           </div>
                         ))}

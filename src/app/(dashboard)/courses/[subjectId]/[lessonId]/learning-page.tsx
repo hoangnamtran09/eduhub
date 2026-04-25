@@ -22,6 +22,8 @@ import {
   Loader2,
   Gem,
   Trophy,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 
 interface LessonItem {
@@ -73,6 +75,16 @@ type CompletionQuizResult = {
     isCorrect: boolean;
     explanation: string;
   }>;
+};
+
+type WeaknessPopup = {
+  id: string;
+  title: string;
+  message: string;
+  lessonTitle?: string | null;
+  aiFeedback?: string | null;
+  reviewExerciseCount: number;
+  status?: string | null;
 };
 
 function toChatHistoryMessages(messages: ChatMessage[]) {
@@ -164,6 +176,7 @@ export default function LearningPage({
   const [completionAnswers, setCompletionAnswers] = useState<Record<string, string>>({});
   const [completionResult, setCompletionResult] = useState<CompletionQuizResult | null>(null);
   const [isSubmittingCompletionQuiz, setIsSubmittingCompletionQuiz] = useState(false);
+  const [weaknessPopup, setWeaknessPopup] = useState<WeaknessPopup | null>(null);
 
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 
@@ -223,11 +236,28 @@ export default function LearningPage({
       }
 
       const data = await response.json();
-      console.log("Weakness signal recorded:", data);
+      const lessonWeakness = data.lessonWeakness;
+      const popupId = `${Date.now()}`;
+
+      setWeaknessPopup({
+        id: popupId,
+        title: input.isResolved ? "Đã cập nhật điểm yếu" : "Đã ghi nhận lỗi sai",
+        message: input.isResolved
+          ? "Hệ thống đã ghi nhận dấu hiệu khắc phục và cập nhật roadmap."
+          : "Hệ thống đã cập nhật điểm yếu, roadmap và tạo bài trắc nghiệm ôn lại.",
+        lessonTitle: lessonWeakness?.lesson?.title || currentLesson?.title || null,
+        aiFeedback: lessonWeakness?.aiFeedback || null,
+        reviewExerciseCount: Array.isArray(lessonWeakness?.reviewExercises) ? lessonWeakness.reviewExercises.length : 0,
+        status: lessonWeakness?.status || null,
+      });
+
+      window.setTimeout(() => {
+        setWeaknessPopup((current) => (current?.id === popupId ? null : current));
+      }, 6_000);
     } catch (error) {
       console.error("Failed to record weakness signal:", error);
     }
-  }, []);
+  }, [currentLesson?.title]);
 
   const handleQuizAnswered = async (payload: QuizAnswerPayload) => {
     if (sending || !hasUnlockedChat) return;
@@ -1030,6 +1060,50 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
   return (
     <div className="h-screen bg-[linear-gradient(180deg,#fffefb_0%,#f8f4eb_58%,#f3ecde_100%)] flex flex-col overflow-hidden">
+      {weaknessPopup && (
+        <div className="fixed right-4 top-24 z-[60] w-[calc(100vw-2rem)] max-w-sm animate-in slide-in-from-right-4 duration-300">
+          <div className="overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-2xl shadow-rose-950/10">
+            <div className="flex items-start gap-3 border-b border-rose-50 bg-rose-50/80 px-4 py-3">
+              <div className={cn(
+                "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl",
+                weaknessPopup.status === "REMEDIATED" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
+              )}>
+                {weaknessPopup.status === "REMEDIATED" ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-slate-900">{weaknessPopup.title}</p>
+                <p className="mt-1 text-xs text-slate-600">{weaknessPopup.message}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setWeaknessPopup(null)}
+                className="rounded-full p-1 text-slate-400 transition hover:bg-white hover:text-slate-700"
+                aria-label="Đóng thông báo điểm yếu"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3 px-4 py-4 text-sm">
+              {weaknessPopup.lessonTitle && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Phần bài học liên quan</p>
+                  <p className="mt-1 font-medium text-slate-900">{weaknessPopup.lessonTitle}</p>
+                </div>
+              )}
+              {weaknessPopup.aiFeedback && (
+                <div className="rounded-2xl bg-cyan-50 px-3 py-2 text-cyan-900">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-cyan-700">Nhận xét AI</p>
+                  <p className="mt-1 text-xs leading-5">{weaknessPopup.aiFeedback}</p>
+                </div>
+              )}
+              <div className="rounded-2xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                Đã tạo {weaknessPopup.reviewExerciseCount} bài tập trắc nghiệm để ôn lại trong mục Điểm yếu.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {completionQuiz && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-ink-900/60 p-4 backdrop-blur-sm">
           <div className="mx-auto my-8 max-w-3xl rounded-[28px] border border-white/80 bg-white p-5 shadow-panel sm:p-6">

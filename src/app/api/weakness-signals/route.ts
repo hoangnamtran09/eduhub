@@ -48,13 +48,19 @@ async function generateWeaknessCoach(input: {
     const response = await chatWithAI([
       {
         role: "system",
-        content: `Bạn là giáo viên phân tích lỗi sai cho LMS. Trả về JSON hợp lệ, không markdown. Nếu học sinh sai, hãy nhận xét ngắn và tạo 3 bài tập ôn liên quan đúng bài. Nếu học sinh trả lời ổn, vẫn ghi nhận điểm yếu đã khắc phục và gợi ý duy trì.
+        content: `Bạn là giáo viên phân tích lỗi sai cho LMS. Trả về JSON hợp lệ, không markdown. Nếu học sinh sai, hãy nhận xét ngắn và tạo 3 bài tập trắc nghiệm ôn lại liên quan đúng bài. Nếu học sinh trả lời ổn, vẫn ghi nhận điểm yếu đã khắc phục và gợi ý duy trì.
 
 Output JSON:
 {
   "aiFeedback": "Nhận xét ngắn gọn bằng tiếng Việt",
   "reviewExercises": [
-    {"title":"Tên bài ôn", "question":"Câu hỏi ôn tập", "hint":"Gợi ý ngắn"}
+    {
+      "title":"Tên bài ôn",
+      "question":"Câu hỏi trắc nghiệm ôn tập",
+      "options":["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+      "correctAnswer":"Đáp án đúng",
+      "hint":"Gợi ý ngắn"
+    }
   ]
 }`,
       },
@@ -78,7 +84,9 @@ Trạng thái: ${input.isResolved ? "đã khắc phục" : "đang yếu"}`,
       aiFeedback: typeof parsed?.aiFeedback === "string" ? parsed.aiFeedback : response.slice(0, 1_000),
       reviewExercises: exercises.slice(0, 3).map((item: any) => ({
         title: typeof item?.title === "string" ? item.title : "Bài ôn tập",
-        question: typeof item?.question === "string" ? item.question : "Hãy làm lại một ví dụ tương tự trong bài học.",
+        question: typeof item?.question === "string" ? item.question : "Câu hỏi trắc nghiệm ôn lại kiến thức vừa sai là gì?",
+        options: Array.isArray(item?.options) ? item.options.filter((option: unknown) => typeof option === "string").slice(0, 4) : [],
+        correctAnswer: typeof item?.correctAnswer === "string" ? item.correctAnswer : "",
         hint: typeof item?.hint === "string" ? item.hint : "Xem lại phần lý thuyết trước khi trả lời.",
       })),
     };
