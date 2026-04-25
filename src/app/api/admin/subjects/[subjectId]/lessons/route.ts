@@ -169,8 +169,55 @@ export async function DELETE(
     }
 
     const prismaAny = prisma as any;
-    await prismaAny.aICo.deleteMany({ where: { lessonId: id } });
-    await prismaAny.lesson.delete({ where: { id } });
+    const lesson = await prismaAny.lesson.findFirst({
+      where: {
+        id,
+        subjectId: params.subjectId,
+      },
+      select: { id: true },
+    });
+
+    if (!lesson) {
+      return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
+    }
+
+    await prismaAny.$transaction(async (tx: any) => {
+      const quizzes = await tx.quiz.findMany({
+        where: { lessonId: id },
+        select: { id: true },
+      });
+      const quizIds = quizzes.map((quiz: { id: string }) => quiz.id);
+
+      if (quizIds.length > 0) {
+        await tx.quizAttempt.deleteMany({
+          where: { quizId: { in: quizIds } },
+        });
+      }
+
+      const conversations = await tx.aICo.findMany({
+        where: { lessonId: id },
+        select: { id: true },
+      });
+      const conversationIds = conversations.map((conversation: { id: string }) => conversation.id);
+
+      if (conversationIds.length > 0) {
+        await tx.aIMessage.deleteMany({
+          where: { conversationId: { in: conversationIds } },
+        });
+      }
+
+      await tx.aICo.deleteMany({ where: { lessonId: id } });
+
+      const hasLegacyChatHistory = await tx.$queryRawUnsafe<{ exists: boolean }[]>(
+        "SELECT to_regclass('public.\"ChatHistory\"') IS NOT NULL AS exists",
+      );
+
+      if (hasLegacyChatHistory[0]?.exists) {
+        await tx.$executeRaw`DELETE FROM "ChatHistory" WHERE "lessonId" = ${id}`;
+      }
+
+      await tx.lesson.delete({ where: { id } });
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
