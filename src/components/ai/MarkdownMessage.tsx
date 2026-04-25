@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import ChemistryText from "./ChemistryText";
 import InteractiveQuiz, { QuizAnswerPayload } from "./InteractiveQuiz";
 
 interface MarkdownMessageProps {
@@ -15,10 +16,10 @@ const markdownComponents = {
   h1: ({ node, ...props }: any) => <h1 className="mb-3 text-base font-bold tracking-tight text-current" {...props} />,
   h2: ({ node, ...props }: any) => <h2 className="mb-2 text-[15px] font-bold tracking-tight text-current" {...props} />,
   h3: ({ node, ...props }: any) => <h3 className="mb-2 text-sm font-semibold text-current" {...props} />,
-  p: ({ node, ...props }: any) => <p className="mb-2 leading-6 text-current/95 last:mb-0" {...props} />,
+  p: ({ node, children, ...props }: any) => <p className="mb-2 leading-6 text-current/95 last:mb-0" {...props}><ChemistryText>{children}</ChemistryText></p>,
   ul: ({ node, ...props }: any) => <ul className="mb-2 ml-4 list-disc space-y-1 text-current/95" {...props} />,
   ol: ({ node, ...props }: any) => <ol className="mb-2 ml-4 list-decimal space-y-1 text-current/95" {...props} />,
-  li: ({ node, ...props }: any) => <li className="pl-1" {...props} />,
+  li: ({ node, children, ...props }: any) => <li className="pl-1" {...props}><ChemistryText>{children}</ChemistryText></li>,
   strong: ({ node, ...props }: any) => <strong className="font-semibold text-current" {...props} />,
   blockquote: ({ node, ...props }: any) => (
     <blockquote className="my-3 border-l-4 border-current/20 bg-white/50 px-3 py-2 italic text-current/80" {...props} />
@@ -36,7 +37,8 @@ const markdownComponents = {
     </div>
   ),
   th: ({ node, ...props }: any) => <th className="border-b border-current/10 px-3 py-2 font-semibold text-current" {...props} />,
-  td: ({ node, ...props }: any) => <td className="border-b border-current/5 px-3 py-2 align-top text-current/90" {...props} />,
+  td: ({ node, children, ...props }: any) => <td className="border-b border-current/5 px-3 py-2 align-top text-current/90" {...props}><ChemistryText>{children}</ChemistryText></td>,
+  text: ({ children }: any) => <ChemistryText>{children}</ChemistryText>,
 };
 
 const remarkMathOptions = { singleDollarTextMath: false };
