@@ -1507,17 +1507,6 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                   )}
                   Bắt đầu học ngay
                 </Button>
-                {!hasUnlockedChat && pdfUrl && (
-                  <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm text-amber-800">
-                    <p className="font-semibold">Cần đọc tài liệu trước khi chat với AI</p>
-                    <p className="mt-1">
-                      Bạn cần đọc tổng cộng tối đa <strong>{MAX_TOTAL_READ_SECONDS} giây</strong> để mở chat. Hiện đang ở trang {currentPdfPage}
-                      {totalPdfPages > 0 ? ` / ${totalPdfPages}` : ""} và đã đọc trang này {currentPageReadSeconds}s.
-                    </p>
-                    <p className="mt-1">Thời gian còn thiếu để mở chat: <strong>{remainingReadSeconds}s</strong>.</p>
-                    <p className="mt-1 text-xs text-amber-700/80">Tổng thời gian đã đọc: <strong>{totalReadSeconds}s / {MAX_TOTAL_READ_SECONDS}s</strong>.</p>
-                  </div>
-                )}
               </div>
             ) : (
               messages.map((msg) => {
