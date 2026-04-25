@@ -208,9 +208,9 @@ export async function DELETE(
 
       await tx.aICo.deleteMany({ where: { lessonId: id } });
 
-      const hasLegacyChatHistory = await tx.$queryRawUnsafe<{ exists: boolean }[]>(
+      const hasLegacyChatHistory = await tx.$queryRawUnsafe(
         "SELECT to_regclass('public.\"ChatHistory\"') IS NOT NULL AS exists",
-      );
+      ) as Array<{ exists: boolean }>;
 
       if (hasLegacyChatHistory[0]?.exists) {
         await tx.$executeRaw`DELETE FROM "ChatHistory" WHERE "lessonId" = ${id}`;
