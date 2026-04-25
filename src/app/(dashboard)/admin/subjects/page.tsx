@@ -301,7 +301,8 @@ export default function AdminSubjectsPage() {
     setBulkUploadProgress({ current: 0, total: bulkPdfFiles.length });
 
     try {
-      for (const [index, file] of bulkPdfFiles.entries()) {
+      for (let index = 0; index < bulkPdfFiles.length; index += 1) {
+        const file = bulkPdfFiles[index];
         setBulkUploadProgress({ current: index + 1, total: bulkPdfFiles.length });
 
         const lessonResponse = await fetch(`/api/admin/subjects/${selectedSubjectId}/lessons`, {
