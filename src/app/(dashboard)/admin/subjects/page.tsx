@@ -70,6 +70,7 @@ export default function AdminSubjectsPage() {
   const [expandedSubjects, setExpandedSubjects] = useState<Set<string>>(new Set());
   const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [showLessonModal, setShowLessonModal] = useState(false);
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
@@ -92,6 +93,7 @@ export default function AdminSubjectsPage() {
     videoUrl: "",
   });
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [bulkPdfFiles, setBulkPdfFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
@@ -277,6 +279,46 @@ export default function AdminSubjectsPage() {
     }
   };
 
+  const openBulkUploadModal = (subjectId: string) => {
+    setSelectedSubjectId(subjectId);
+    setBulkPdfFiles([]);
+    setUploading(false);
+    setUploadSuccess(false);
+    setShowBulkUploadModal(true);
+  };
+
+  const handleBulkPdfUpload = async () => {
+    if (!selectedSubjectId || bulkPdfFiles.length === 0) return;
+
+    setUploading(true);
+    setUploadSuccess(false);
+
+    try {
+      const formData = new FormData();
+      bulkPdfFiles.forEach((file) => formData.append("files", file));
+
+      const response = await fetch(`/api/admin/subjects/${selectedSubjectId}/lessons/bulk-pdf`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        throw new Error(errorPayload?.error || `Upload failed (${response.status})`);
+      }
+
+      setUploadSuccess(true);
+      setShowBulkUploadModal(false);
+      setExpandedSubjects((current) => new Set(current).add(selectedSubjectId));
+      await loadSubjects();
+    } catch (error) {
+      console.error("Failed to upload lesson PDFs:", error);
+      alert(error instanceof Error ? error.message : "Không thể tải lên PDF hàng loạt");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const getGradient = (color: string) => {
     return COLORS.find(c => c.value === color)?.gradient || "from-blue-500 to-cyan-400";
   };
@@ -381,6 +423,18 @@ export default function AdminSubjectsPage() {
                         className="text-white hover:bg-white/20"
                         onClick={(e) => {
                           e.stopPropagation();
+                          openBulkUploadModal(subject.id);
+                        }}
+                      >
+                        <Upload className="w-4 h-4 mr-1" />
+                        PDF hàng loạt
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-white hover:bg-white/20"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           openSubjectModal(subject);
                         }}
                       >
@@ -421,6 +475,15 @@ export default function AdminSubjectsPage() {
                         >
                           <Plus className="w-4 h-4 mr-1" />
                           Thêm bài học đầu tiên
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="ml-2 mt-2"
+                          onClick={() => openBulkUploadModal(subject.id)}
+                        >
+                          <Upload className="w-4 h-4 mr-1" />
+                          Tải nhiều PDF
                         </Button>
                       </div>
                     ) : (
@@ -573,6 +636,101 @@ export default function AdminSubjectsPage() {
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Lưu
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk PDF Upload Modal */}
+      {showBulkUploadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="border-b border-slate-100 bg-gradient-to-br from-slate-950 via-slate-900 to-brand-900 p-6 text-white">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-white/60">Tạo bài tự động</p>
+                  <h2 className="text-2xl font-bold">Tải PDF hàng loạt</h2>
+                  <p className="mt-2 text-sm text-white/70">
+                    Mỗi file PDF sẽ tạo một bài học mới. Tên bài học được lấy từ tên file.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowBulkUploadModal(false)}
+                  className="rounded-xl p-2 text-white/70 transition hover:bg-white/10 hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-5 p-6">
+              <div className={cn(
+                "rounded-2xl border-2 border-dashed p-6 text-center transition-colors",
+                bulkPdfFiles.length > 0 ? "border-emerald-300 bg-emerald-50" : "border-slate-200 bg-slate-50 hover:border-brand-400"
+              )}>
+                <input
+                  id="bulk-pdf-upload"
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  multiple
+                  className="hidden"
+                  onChange={(event) => {
+                    setBulkPdfFiles(Array.from(event.target.files || []));
+                    setUploadSuccess(false);
+                  }}
+                />
+                <label htmlFor="bulk-pdf-upload" className="block cursor-pointer">
+                  <Upload className="mx-auto mb-3 h-10 w-10 text-brand-500" />
+                  <p className="font-semibold text-slate-900">Chọn nhiều file PDF</p>
+                  <p className="mt-1 text-sm text-slate-500">Hỗ trợ tối đa 30 file, mỗi file tối đa 25MB.</p>
+                </label>
+              </div>
+
+              {bulkPdfFiles.length > 0 && (
+                <div className="rounded-2xl border border-slate-200 bg-white">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                    <p className="text-sm font-semibold text-slate-900">{bulkPdfFiles.length} file đã chọn</p>
+                    <button
+                      type="button"
+                      onClick={() => setBulkPdfFiles([])}
+                      className="text-xs font-medium text-slate-500 hover:text-red-600"
+                    >
+                      Xóa danh sách
+                    </button>
+                  </div>
+                  <div className="max-h-56 space-y-2 overflow-y-auto p-3">
+                    {bulkPdfFiles.map((file, index) => {
+                      const lessonName = file.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+
+                      return (
+                        <div key={`${file.name}-${index}`} className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50">
+                            <File className="h-4 w-4 text-red-500" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-slate-900">{lessonName || file.name}</p>
+                            <p className="truncate text-xs text-slate-500">{file.name} · {(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t bg-slate-50 p-6">
+              <Button variant="outline" onClick={() => setShowBulkUploadModal(false)} disabled={uploading}>
+                Hủy
+              </Button>
+              <Button
+                onClick={handleBulkPdfUpload}
+                disabled={uploading || bulkPdfFiles.length === 0}
+                className="gap-2 bg-slate-950 text-white hover:bg-slate-800"
+              >
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                Tạo {bulkPdfFiles.length || ""} bài học
               </Button>
             </div>
           </div>

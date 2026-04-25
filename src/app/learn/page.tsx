@@ -79,6 +79,7 @@ export default function LearnPage({
   const [currentLesson, setCurrentLesson] = useState<LessonItem | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -89,8 +90,37 @@ export default function LearnPage({
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, sending]);
+    const scroll = (behavior: ScrollBehavior) => {
+      const container = messagesContainerRef.current;
+
+      if (container) {
+        container.scrollTo({ top: container.scrollHeight, behavior });
+        return;
+      }
+
+      messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+    };
+
+    window.requestAnimationFrame(() => {
+      scroll(messages.length > 1 ? "smooth" : "auto");
+      window.requestAnimationFrame(() => scroll("auto"));
+    });
+
+    window.setTimeout(() => scroll("auto"), 120);
+  }, [messages.length, sending]);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      container.scrollTo({ top: container.scrollHeight, behavior: "auto" });
+    });
+
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   const handleQuizCorrect = async () => {
     if (!user) return;
@@ -534,7 +564,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-3" />

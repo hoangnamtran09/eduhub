@@ -388,21 +388,41 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
   const remainingReadSeconds = Math.max(0, MAX_TOTAL_READ_SECONDS - totalReadSeconds);
 
   const scrollToLatestMessage = useCallback((behavior: ScrollBehavior = "smooth") => {
-    window.requestAnimationFrame(() => {
+    const scroll = (scrollBehavior: ScrollBehavior) => {
       const container = messagesContainerRef.current;
 
       if (container) {
-        container.scrollTo({ top: container.scrollHeight, behavior });
+        container.scrollTo({ top: container.scrollHeight, behavior: scrollBehavior });
         return;
       }
 
-      messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+      messagesEndRef.current?.scrollIntoView({ behavior: scrollBehavior, block: "end" });
+    };
+
+    window.requestAnimationFrame(() => {
+      scroll(behavior);
+      window.requestAnimationFrame(() => scroll("auto"));
     });
+
+    window.setTimeout(() => scroll("auto"), 120);
   }, []);
 
   useEffect(() => {
     scrollToLatestMessage(messages.length > 1 ? "smooth" : "auto");
   }, [messages.length, sending, isStarting, scrollToLatestMessage]);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      container.scrollTo({ top: container.scrollHeight, behavior: "auto" });
+    });
+
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   const startStudySession = useCallback(async () => {
     if (loading || !user?.id || studyStartedRef.current) return true;
