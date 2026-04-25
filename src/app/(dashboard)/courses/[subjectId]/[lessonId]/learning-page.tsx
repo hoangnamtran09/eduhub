@@ -21,7 +21,6 @@ import {
   Sparkles,
   Loader2,
   Gem,
-  Trophy,
   AlertTriangle,
   CheckCircle2,
 } from "lucide-react";
@@ -1286,10 +1285,6 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
           <div className="flex items-center gap-1.5 px-3 py-1 bg-accent-50 rounded-full border border-accent-100">
             <Gem className="w-4 h-4 text-amber-500 fill-amber-500" />
             <span className="text-xs font-bold text-amber-700">{user?.diamonds || 0}</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-brand-50 rounded-full border border-brand-100">
-            <Trophy className="w-4 h-4 text-brand-500" />
-            <span className="text-xs font-bold text-brand-700">Cấp 1</span>
           </div>
           {studySessionActive && (
             <Button
