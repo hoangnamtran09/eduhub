@@ -43,7 +43,7 @@ export async function GET() {
 
     const prismaAny = prisma as any;
 
-    const [user, studySessions, quizAttempts, exerciseAttempts] = await Promise.all([
+    const [user, studySessions, quizAttempts, exerciseAttempts, pendingAssignments] = await Promise.all([
       prismaAny.user.findUnique({
         where: { id: authUser.userId },
         include: { profile: true },
@@ -67,6 +67,12 @@ export async function GET() {
       prismaAny.exerciseAttempt.findMany({
         where: { userId: authUser.userId },
         orderBy: { createdAt: "desc" },
+      }),
+      prismaAny.assignmentRecipient.count({
+        where: {
+          studentId: authUser.userId,
+          status: { not: "submitted" },
+        },
       }),
     ]);
 
@@ -186,6 +192,7 @@ export async function GET() {
         totalAchievements: achievements.length,
         streakDays: user.profile?.streakDays || 0,
         diamonds: user.diamonds || 0,
+        pendingAssignments,
       },
       weeklyProgress,
       achievements,

@@ -33,17 +33,27 @@ export async function GET(request: Request) {
           },
         },
       },
-      orderBy: [
-        {
-          submittedAt: "asc",
-        },
-        {
-          createdAt: "desc",
-        },
-      ],
+      orderBy: [{ createdAt: "desc" }],
     });
 
-    return NextResponse.json(assignments);
+    const sortedAssignments = assignments.sort((a: any, b: any) => {
+      const statusPriority: Record<string, number> = {
+        assigned: 0,
+        pending: 0,
+        accepted: 1,
+        submitted: 2,
+      };
+      const leftPriority = statusPriority[String(a.status || "pending").toLowerCase()] ?? 0;
+      const rightPriority = statusPriority[String(b.status || "pending").toLowerCase()] ?? 0;
+
+      if (leftPriority !== rightPriority) return leftPriority - rightPriority;
+
+      const leftDue = a.assignment?.dueDate ? new Date(a.assignment.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+      const rightDue = b.assignment?.dueDate ? new Date(b.assignment.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+      return leftDue - rightDue;
+    });
+
+    return NextResponse.json(sortedAssignments);
   } catch (error) {
     console.error("Error fetching student assignments:", error);
     return NextResponse.json({ error: "Failed to fetch assignments" }, { status: 500 });

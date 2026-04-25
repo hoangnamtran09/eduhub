@@ -9,6 +9,8 @@ import {
   ArrowRight,
   Award,
   BookOpen,
+  BrainCircuit,
+  CalendarClock,
   CheckCircle,
   Clock,
   Layers3,
@@ -174,6 +176,7 @@ interface ProgressData {
     totalAchievements: number;
     streakDays: number;
     diamonds: number;
+    pendingAssignments?: number;
   };
   weeklyProgress: Array<{
     day: string;
@@ -541,6 +544,34 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
   const leaderboard = report.leaderboard || [];
   const peers = report.peers || [];
   const currentLeaderboardEntry = leaderboard.find((student) => student.isCurrentUser);
+  const todaysProgress = progress.weeklyProgress[progress.weeklyProgress.length - 1];
+  const nextActions = [
+    {
+      href: "/courses",
+      icon: Play,
+      title: todaysProgress?.completed ? "Tiếp tục một bài học mới" : "Hoàn thành phiên học hôm nay",
+      description: todaysProgress?.completed
+        ? "Bạn đã có hoạt động hôm nay. Học thêm một bài ngắn để tăng tốc tiến độ."
+        : "Bắt đầu một phiên học để giữ nhịp và cập nhật chuỗi học.",
+      tone: "bg-slate-900 text-white border-slate-900",
+    },
+    {
+      href: "/mistakes",
+      icon: BrainCircuit,
+      title: "Ôn vùng kiến thức yếu",
+      description: "Xem các chủ đề hệ thống phát hiện cần củng cố và bắt đầu ôn lại.",
+      tone: "bg-rose-50 text-rose-800 border-rose-200",
+    },
+    {
+      href: "/assignments",
+      icon: CalendarClock,
+      title: "Kiểm tra bài tập được giao",
+      description: progress.stats.pendingAssignments
+        ? `${progress.stats.pendingAssignments} bài đang cần xử lý hoặc nộp bài.`
+        : "Đảm bảo không bỏ lỡ bài sắp đến hạn hoặc bài giáo viên mới giao.",
+      tone: "bg-amber-50 text-amber-800 border-amber-200",
+    },
+  ];
 
   return (
     <div className="space-y-8">
@@ -603,6 +634,43 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
         <StatCard icon={CheckCircle} label="Bài tập AI" value={progress.stats.completedExercises || 0} color="text-brand-600" bgColor="bg-brand-100" />
         <StatCard icon={Award} label="Chuỗi học" value={progress.stats.streakDays || 0} color="text-amber-500" bgColor="bg-amber-100" />
       </div>
+
+      <section className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(248,250,252,0.9))] p-5 shadow-sm">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <SectionTitle
+            title="Việc nên làm hôm nay"
+            description="Các bước ưu tiên để biến dữ liệu tiến độ thành hành động học tập cụ thể."
+          />
+          <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+            {todaysProgress?.completed ? "Hôm nay đã active" : "Chưa có phiên hôm nay"}
+          </span>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-3">
+          {nextActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link
+                key={action.href}
+                href={action.href}
+                className={cn("group rounded-3xl border p-4 transition hover:-translate-y-0.5 hover:shadow-lg", action.tone)}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-white/70 p-2 text-slate-900 shadow-sm">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold">{action.title}</p>
+                    <p className="mt-1 text-sm leading-5 opacity-75">{action.description}</p>
+                    <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold opacity-80">
+                      Bắt đầu <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
