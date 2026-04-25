@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getAuthUser } from "@/lib/auth/get-auth-user";
+import { sortLessonsNatural } from "@/lib/lessons/sort";
 
 interface RouteParams {
   params: { subjectId: string };
@@ -29,7 +30,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Subject not found" }, { status: 404 });
     }
 
-    const lessonIds = (subject.lessons || []).map((lesson: any) => lesson.id);
+    const sortedLessons = sortLessonsNatural(subject.lessons || []);
+    const lessonIds = sortedLessons.map((lesson: any) => lesson.id);
     const progressRecords = authUser && lessonIds.length
       ? await prismaAny.lessonProgress.findMany({
           where: {
@@ -61,7 +63,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           title: "Nội dung chính",
           slug: "main-content",
           gradeLevel: 6,
-          chapters: (subject.lessons || []).map((lesson: any, idx: number) => {
+          chapters: sortedLessons.map((lesson: any, idx: number) => {
             const progress = getLessonProgress(lesson.id);
 
             return {
@@ -85,7 +87,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         }
       ],
       // Structure phẳng cho Learning Page
-      lessons: (subject.lessons || []).map((lesson: any) => {
+      lessons: sortedLessons.map((lesson: any) => {
         const progress = getLessonProgress(lesson.id);
 
         return {

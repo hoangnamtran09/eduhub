@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { generateSlug } from "@/lib/slug";
+import { sortLessonsNatural } from "@/lib/lessons/sort";
 import { z } from "zod";
 import { requireAdminOrTeacher } from "@/lib/auth/require-role";
 
@@ -34,7 +35,12 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(subjects);
+    return NextResponse.json(
+      subjects.map((subject: any) => ({
+        ...subject,
+        lessons: sortLessonsNatural(subject.lessons || []),
+      })),
+    );
   } catch (error) {
     console.error("Error fetching subjects:", error);
     return NextResponse.json(

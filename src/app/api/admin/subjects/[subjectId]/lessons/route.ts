@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { z } from "zod";
 import { requireAdminOrTeacher } from "@/lib/auth/require-role";
+import { sortLessonsNatural } from "@/lib/lessons/sort";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ export async function GET(
       where: { subjectId },
       orderBy: { order: "asc" },
     });
-    return NextResponse.json(lessons);
+    return NextResponse.json(sortLessonsNatural(lessons));
   } catch (error) {
     console.error("Error fetching lessons:", error);
     return NextResponse.json(

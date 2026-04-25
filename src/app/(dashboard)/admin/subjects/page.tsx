@@ -68,6 +68,11 @@ function getLessonTitleFromPdfName(fileName: string) {
   return fileName.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim() || "Bài học PDF";
 }
 
+const fileNameCollator = new Intl.Collator("vi", {
+  numeric: true,
+  sensitivity: "base",
+});
+
 export default function AdminSubjectsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -707,7 +712,7 @@ export default function AdminSubjectsPage() {
                   multiple
                   className="hidden"
                   onChange={(event) => {
-                    setBulkPdfFiles(Array.from(event.target.files || []));
+                    setBulkPdfFiles(Array.from(event.target.files || []).sort((left, right) => fileNameCollator.compare(left.name, right.name)));
                     setUploadSuccess(false);
                   }}
                 />
