@@ -14,7 +14,8 @@ async function updateStudySession(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { seconds = 0, ended = false } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const { seconds = 0, ended = false } = body;
     const extraSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
 
     const prismaAny = prisma as any;
@@ -35,7 +36,11 @@ async function updateStudySession(request: Request, { params }: RouteParams) {
       },
     });
 
-    await updateLessonProgressStudyTime(authUser.userId, existing.lessonId, extraSeconds);
+    try {
+      await updateLessonProgressStudyTime(authUser.userId, existing.lessonId, extraSeconds);
+    } catch (error) {
+      console.error("Update lesson progress study time error:", error);
+    }
 
     return NextResponse.json(updated);
   } catch (error) {
