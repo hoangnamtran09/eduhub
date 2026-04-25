@@ -4,6 +4,7 @@ const prismaAny = prisma as any;
 
 export interface WeaknessInsight {
   id: string;
+  weaknessDbId?: string | null;
   topic: string;
   confidence: "high" | "medium" | "low";
   severity: "high" | "medium" | "low";
@@ -18,6 +19,9 @@ export interface WeaknessInsight {
   lessonTitle?: string | null;
   subjectId?: string | null;
   subjectName?: string | null;
+  initialScore?: number | null;
+  bestScore?: number | null;
+  remediationCount?: number;
   signalBreakdown?: Array<{
     source: "QUIZ" | "EXERCISE" | "PROFILE" | "PROGRESS";
     weight: number;
@@ -50,6 +54,7 @@ export interface LearningInsightsResult {
     status?: string | null;
     aiFeedback?: string | null;
     reviewExercises?: unknown;
+    weaknessDbId?: string | null;
   }>;
   roadmap: RoadmapStep[];
   summary: {
@@ -111,6 +116,10 @@ type TopicAggregate = {
   status?: "ACTIVE" | "REMEDIATED";
   aiFeedback?: string | null;
   reviewExercises?: unknown;
+  weaknessDbId?: string | null;
+  initialScore?: number | null;
+  bestScore?: number | null;
+  remediationCount?: number;
 };
 
 function clampScore(value: number, min: number, max: number) {
@@ -171,6 +180,7 @@ function buildWeaknessInsights(topicScores: Map<string, TopicAggregate>): Weakne
 
       return {
         id: `weakness-${topic.toLowerCase().replace(/\s+/g, "-")}`,
+        weaknessDbId: item.weaknessDbId ?? null,
         topic,
         confidence: getConfidence(item.evidenceCount, signalSources),
         severity: getSeverity(normalizedScore),
@@ -185,6 +195,9 @@ function buildWeaknessInsights(topicScores: Map<string, TopicAggregate>): Weakne
         lessonTitle: item.lessonTitle,
         subjectId: item.subjectId,
         subjectName: item.subjectName || topic,
+        initialScore: item.initialScore ?? null,
+        bestScore: item.bestScore ?? null,
+        remediationCount: item.remediationCount ?? 0,
         signalBreakdown: sortedSignals.slice(0, 3).map((signal) => ({
           source: signal.source,
           weight: signal.weight,
@@ -454,6 +467,10 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
       current.status = item.status === "REMEDIATED" ? "REMEDIATED" : "ACTIVE";
       current.aiFeedback = item.aiFeedback ?? null;
       current.reviewExercises = item.reviewExercises ?? null;
+      current.weaknessDbId = item.id ?? null;
+      current.initialScore = item.initialScore ?? null;
+      current.bestScore = item.bestScore ?? null;
+      current.remediationCount = item.remediationCount ?? 0;
       topicScores.set(topic, current);
     }
   }
@@ -570,6 +587,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
       status: item.status,
       aiFeedback: item.aiFeedback ?? null,
       reviewExercises: item.reviewExercises ?? null,
+      weaknessDbId: item.id ?? null,
     })),
     ...profileWeaknesses.slice(0, 5).map((topic: string) => ({
       source: "PROFILE" as const,

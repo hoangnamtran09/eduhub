@@ -45,6 +45,7 @@ model User {
   quizAttempts    QuizAttempt[]
   exerciseAttempts ExerciseAttempt[]
   lessonWeaknesses LessonWeakness[]
+  remediationAttempts RemediationAttempt[]
   assignedTasks   AssignmentRecipient[]
   createdAssignments Assignment[]   @relation("AssignmentCreator")
   profile         StudentProfile?
@@ -293,15 +294,37 @@ model LessonWeakness {
   score           Int?
   lastResult      Boolean?
   evidenceCount   Int      @default(1)
+  initialScore    Int?
+  bestScore       Int?
+  remediationCount Int     @default(0)
   remediatedAt    DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   lesson          Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  remediationAttempts RemediationAttempt[]
 
   @@unique([userId, lessonId, topic])
   @@index([userId, status, updatedAt])
   @@index([lessonId, status])
+}
+
+model RemediationAttempt {
+  id              String   @id @default(cuid())
+  weaknessId      String
+  userId          String
+  quizData        Json
+  answers         Json?
+  score           Int?
+  totalQuestions   Int      @default(0)
+  passed          Boolean  @default(false)
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  weakness        LessonWeakness @relation(fields: [weaknessId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([weaknessId, createdAt])
+  @@index([userId, createdAt])
 }
 
 model DiagnosticQuiz {
