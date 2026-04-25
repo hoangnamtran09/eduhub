@@ -11,6 +11,11 @@ type MistakeItem = {
   note: string;
   score?: number | null;
   createdAt?: string | null;
+  lessonId?: string | null;
+  lessonTitle?: string | null;
+  status?: string | null;
+  aiFeedback?: string | null;
+  reviewExercises?: unknown;
 };
 
 type WeaknessSignal = {
@@ -28,7 +33,11 @@ type WeaknessItem = {
   evidenceCount: number;
   recommendedAction: string;
   score: number;
+  status?: "ACTIVE" | "REMEDIATED";
+  aiFeedback?: string | null;
+  reviewExercises?: unknown;
   lessonId?: string | null;
+  lessonTitle?: string | null;
   subjectName?: string | null;
   signalBreakdown?: WeaknessSignal[];
 };
@@ -69,6 +78,28 @@ function signalLabel(source: WeaknessSignal["source"]) {
   if (source === "EXERCISE") return "Bài tập AI";
   if (source === "PROGRESS") return "Tiến độ học";
   return "Hồ sơ cá nhân";
+}
+
+function getReviewExercises(value: unknown): Array<{ title: string; question: string; hint?: string }> {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => ({
+      title: typeof item?.title === "string" ? item.title : "Bài ôn tập",
+      question: typeof item?.question === "string" ? item.question : "Ôn lại một ví dụ tương tự trong bài học.",
+      hint: typeof item?.hint === "string" ? item.hint : undefined,
+    }))
+    .slice(0, 3);
+}
+
+function statusLabel(status?: string | null) {
+  return status === "REMEDIATED" ? "Đã khắc phục" : "Đang cần ôn";
+}
+
+function statusClass(status?: string | null) {
+  return status === "REMEDIATED"
+    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+    : "border-rose-200 bg-rose-50 text-rose-700";
 }
 
 export default function MistakesPage() {
@@ -199,8 +230,14 @@ export default function MistakesPage() {
                     <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${severityBadge(item.severity)}`}>
                       {item.severity}
                     </span>
+                    <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${statusClass(item.status)}`}>
+                      {statusLabel(item.status)}
+                    </span>
                   </div>
                   <p className="mt-2 text-sm text-slate-600">{item.reason}</p>
+                  {item.lessonTitle && (
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Bài liên quan: {item.lessonTitle}</p>
+                  )}
                 </div>
                 <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">
                   <p className="text-xs text-slate-500">Điểm rủi ro</p>
@@ -217,6 +254,30 @@ export default function MistakesPage() {
                   <p className="mt-1 text-sm text-slate-700">{item.recommendedAction}</p>
                 </div>
               </div>
+              {(item.aiFeedback || getReviewExercises(item.reviewExercises).length > 0) && (
+                <div className="mt-4 grid gap-3 lg:grid-cols-[1fr,1.2fr]">
+                  {item.aiFeedback && (
+                    <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-cyan-700">Nhận xét AI</p>
+                      <p className="mt-2 text-sm text-slate-700">{item.aiFeedback}</p>
+                    </div>
+                  )}
+                  {!!getReviewExercises(item.reviewExercises).length && (
+                    <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-4 py-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-700">Bài tập ôn liên quan</p>
+                      <div className="mt-3 space-y-2">
+                        {getReviewExercises(item.reviewExercises).map((exercise, index) => (
+                          <div key={`${item.id}-review-${index}`} className="rounded-xl bg-white px-3 py-3 text-sm text-slate-700">
+                            <p className="font-semibold text-slate-900">{exercise.title}</p>
+                            <p className="mt-1">{exercise.question}</p>
+                            {exercise.hint && <p className="mt-1 text-xs text-slate-500">Gợi ý: {exercise.hint}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               {!!item.signalBreakdown?.length && (
                 <div className="mt-4 rounded-2xl bg-white px-4 py-4 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -267,6 +328,8 @@ export default function MistakesPage() {
               <div>
                 <p className="font-semibold text-slate-900">{item.topic}</p>
                 <p className="mt-1 text-sm text-slate-600">{item.note}</p>
+                {item.lessonTitle && <p className="mt-1 text-xs text-slate-500">Bài liên quan: {item.lessonTitle}</p>}
+                {item.aiFeedback && <p className="mt-1 text-xs text-cyan-700">AI: {item.aiFeedback}</p>}
                 <p className="mt-1 text-xs text-slate-400">{formatDate(item.createdAt)}</p>
               </div>
               <div className="rounded-2xl bg-white px-4 py-3 text-center shadow-sm">

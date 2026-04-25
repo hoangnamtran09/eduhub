@@ -203,8 +203,13 @@ export default function LearningPage({
   const recordWeaknessSignal = useCallback(async (input: {
     topic?: string;
     question?: string;
+    userAnswer?: string;
+    correctAnswer?: string;
     reason: string;
     source: "QUIZ" | "EXERCISE";
+    isResolved?: boolean;
+    score?: number;
+    lessonId?: string;
   }) => {
     try {
       const response = await fetch("/api/weakness-signals", {
@@ -257,10 +262,26 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
     if (!payload.isCorrect) {
       void recordWeaknessSignal({
-        topic: subject?.name,
+        topic: currentLesson?.title || subject?.name,
         question: payload.question,
+        userAnswer: payload.selectedOptionText,
+        correctAnswer: payload.correctOptionText,
         reason: `Trả lời sai quiz: chọn ${payload.selectedOptionText}, đáp án đúng là ${payload.correctOptionText}`,
         source: "QUIZ",
+        isResolved: false,
+        lessonId: params.lessonId,
+      });
+    } else {
+      void recordWeaknessSignal({
+        topic: currentLesson?.title || subject?.name,
+        question: payload.question,
+        userAnswer: payload.selectedOptionText,
+        correctAnswer: payload.correctOptionText,
+        reason: "Trả lời đúng câu trắc nghiệm trong AI chat, ghi nhận khả năng đã khắc phục điểm yếu liên quan",
+        source: "QUIZ",
+        isResolved: true,
+        score: 100,
+        lessonId: params.lessonId,
       });
     }
 
@@ -922,10 +943,25 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
         if (typeof data.score === "number" && data.score < 80) {
           void recordWeaknessSignal({
-            topic: subject?.name,
+            topic: currentLesson?.title || subject?.name,
             question: currentExercise.question,
+            userAnswer,
             reason: `Bài tập tự luận có điểm ${data.score}/100, cần ôn tập thêm`,
             source: "EXERCISE",
+            isResolved: false,
+            score: data.score,
+            lessonId: params.lessonId,
+          });
+        } else if (typeof data.score === "number" && data.score >= 80) {
+          void recordWeaknessSignal({
+            topic: currentLesson?.title || subject?.name,
+            question: currentExercise.question,
+            userAnswer,
+            reason: `Bài tập tự luận đạt ${data.score}/100, ghi nhận điểm yếu liên quan đã được cải thiện`,
+            source: "EXERCISE",
+            isResolved: true,
+            score: data.score,
+            lessonId: params.lessonId,
           });
         }
 

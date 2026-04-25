@@ -1,0 +1,42 @@
+from weasyprint import HTML
+
+# Nội dung Markdown sẽ được lưu vào file .md
+markdown_content = """# Quy tắc AI tạo ứng dụng Tiếng Việt (Tiếng Việt có dấu)
+
+Dưới đây là các bộ quy tắc (Rules) dùng để đưa vào System Prompt hoặc file cấu hình để AI luôn phản hồi bằng tiếng Việt chuẩn.
+
+## 1. Quy tắc Ngôn ngữ chung (General Language Rules)
+- **Ngôn ngữ bắt buộc:** Toàn bộ nội dung hiển thị cho người dùng (UI), thông báo (Alerts), và hướng dẫn phải được viết bằng **Tiếng Việt có dấu**.
+- **Chính tả:** Tuân thủ quy tắc chính tả tiếng Việt hiện hành, không viết tắt, không sử dụng ngôn ngữ "teen code".
+- **Mã hóa:** Luôn sử dụng định dạng **UTF-8** để đảm bảo tất cả các ký tự có dấu (như á, ớ, ừ, đ...) không bị lỗi hiển thị.
+
+## 2. Quy tắc về Thuật ngữ & Giao diện (UI/UX Terms)
+- **Tính nhất quán:** Sử dụng các thuật ngữ công nghệ thông tin phổ biến tại Việt Nam:
+    - `Login` -> `Đăng nhập`
+    - `Settings` -> `Cài đặt`
+    - `Submit` -> `Gửi` hoặc `Xác nhận`
+    - `Cancel` -> `Hủy bỏ`
+- **Văn phong:** Sử dụng văn phong chuyên nghiệp, lịch sự nhưng gần gũi (Ví dụ: "Vui lòng nhập email" thay vì "Nhập email đi").
+
+## 3. Quy tắc dành cho Lập trình (Coding Rules)
+- **Comment Code:** Giải thích các đoạn mã bằng tiếng Việt có dấu để dễ quản lý.
+- **Dữ liệu mẫu (Mock data):** Các dữ liệu mẫu như tên người dùng, địa chỉ, mô tả sản phẩm phải là tên tiếng Việt thực tế (Ví dụ: "Nguyễn Văn A", "Hà Nội").
+- **Tránh trộn ngôn ngữ:** Không sử dụng "Vietlish" (trộn lẫn Anh-Việt) trong các chuỗi string hiển thị trên giao diện.
+
+---
+
+
+> **SYSTEM_RULE:**
+> 1. Act as a Vietnamese Software Developer. 
+> 2. All generated application content, UI labels, and user messages MUST be in Vietnamese with proper diacritics (Tiếng Việt có dấu).
+> 3. Use UTF-8 encoding for all strings.
+> 4. Translate all technical UI terms to standard Vietnamese equivalents.
+> 5. Strictly avoid non-accented Vietnamese or mixing English words into user-facing text.
+> 6. Ensure grammar and tone are professional and appropriate for a Vietnamese audience.
+"""
+
+# Lưu file .md
+with open("prompt_rules_tieng_viet.md", "w", encoding="utf-8") as f:
+    f.write(markdown_content)
+
+print("File .md đã được tạo thành công.")

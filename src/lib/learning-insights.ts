@@ -11,6 +11,9 @@ export interface WeaknessInsight {
   evidenceCount: number;
   recommendedAction: string;
   score: number;
+  status?: "ACTIVE" | "REMEDIATED";
+  aiFeedback?: string | null;
+  reviewExercises?: unknown;
   lessonId?: string | null;
   lessonTitle?: string | null;
   subjectId?: string | null;
@@ -42,6 +45,11 @@ export interface LearningInsightsResult {
     note: string;
     score?: number | null;
     createdAt?: string | null;
+    lessonId?: string | null;
+    lessonTitle?: string | null;
+    status?: string | null;
+    aiFeedback?: string | null;
+    reviewExercises?: unknown;
   }>;
   roadmap: RoadmapStep[];
   summary: {
@@ -100,6 +108,9 @@ type TopicAggregate = {
   lessonTitle: string | null;
   subjectId: string | null;
   subjectName: string | null;
+  status?: "ACTIVE" | "REMEDIATED";
+  aiFeedback?: string | null;
+  reviewExercises?: unknown;
 };
 
 function clampScore(value: number, min: number, max: number) {
@@ -167,6 +178,9 @@ function buildWeaknessInsights(topicScores: Map<string, TopicAggregate>): Weakne
         evidenceCount: item.evidenceCount,
         recommendedAction: buildRecommendedAction(topic, strongestSignal),
         score: normalizedScore,
+        status: item.status,
+        aiFeedback: item.aiFeedback,
+        reviewExercises: item.reviewExercises,
         lessonId: item.lessonId,
         lessonTitle: item.lessonTitle,
         subjectId: item.subjectId,
@@ -278,8 +292,42 @@ export function normalizeExerciseAttemptsToWeaknesses(
   return buildWeaknessInsights(topicScores);
 }
 
+async function getLessonWeaknesses(userId: string) {
+  if (!prismaAny.lessonWeakness?.findMany) return [];
+
+  try {
+    return await prismaAny.lessonWeakness.findMany({
+      where: { userId },
+      include: {
+        lesson: {
+          select: {
+            id: true,
+            title: true,
+            subjectId: true,
+            subject: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+      take: 50,
+    });
+  } catch (error: any) {
+    if (error?.code === "P2021" || error?.code === "P2022") {
+      console.warn("LessonWeakness table is not available yet. Run Prisma migration/db push to enable lesson-level weaknesses.");
+      return [];
+    }
+
+    throw error;
+  }
+}
+
 export async function getLearningInsights(userId: string): Promise<LearningInsightsResult> {
-  const [user, studySessions, quizAttempts, exerciseAttempts, progress] = await Promise.all([
+  const [user, studySessions, quizAttempts, exerciseAttempts, progress, lessonWeaknesses] = await Promise.all([
     prismaAny.user.findUnique({
       where: { id: userId },
       include: { profile: true },
@@ -352,6 +400,7 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
       ],
       take: 40,
     }),
+    getLessonWeaknesses(userId),
   ]);
 
   const strengths = Array.isArray(user?.profile?.strengths) ? user.profile.strengths : [];
@@ -372,6 +421,9 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
       lessonTitle: signal.lessonTitle ?? null,
       subjectId: signal.subjectId ?? null,
       subjectName: signal.subjectName ?? normalizedTopic,
+      status: undefined,
+      aiFeedback: undefined,
+      reviewExercises: undefined,
     };
 
     current.score += signal.weight;
@@ -383,6 +435,28 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
     current.subjectName = current.subjectName ?? signal.subjectName ?? normalizedTopic;
     topicScores.set(normalizedTopic, current);
   };
+
+  for (const item of lessonWeaknesses || []) {
+    const topic = normalizeTopic(item.topic);
+    const isRemediated = item.status === "REMEDIATED";
+    pushWeaknessSignal(topic, {
+      source: item.source === "EXERCISE" ? "EXERCISE" : item.source === "PROFILE" ? "PROFILE" : "QUIZ",
+      weight: isRemediated ? 0.5 : 4,
+      reason: isRemediated ? `Đã ghi nhận khắc phục: ${item.reason}` : item.reason,
+      lessonId: item.lessonId,
+      lessonTitle: item.lesson?.title ?? null,
+      subjectId: item.lesson?.subject?.id ?? item.lesson?.subjectId ?? null,
+      subjectName: normalizeTopic(item.lesson?.subject?.name),
+    });
+
+    const current = topicScores.get(topic);
+    if (current) {
+      current.status = item.status === "REMEDIATED" ? "REMEDIATED" : "ACTIVE";
+      current.aiFeedback = item.aiFeedback ?? null;
+      current.reviewExercises = item.reviewExercises ?? null;
+      topicScores.set(topic, current);
+    }
+  }
 
   for (const weakness of profileWeaknesses) {
     pushWeaknessSignal(weakness, {
@@ -485,6 +559,18 @@ export async function getLearningInsights(userId: string): Promise<LearningInsig
   const weaknesses = buildWeaknessInsights(topicScores);
 
   const mistakes = [
+    ...(lessonWeaknesses || []).slice(0, 8).map((item: any) => ({
+      source: item.source === "EXERCISE" ? "EXERCISE" as const : "QUIZ" as const,
+      topic: normalizeTopic(item.topic),
+      note: item.reason,
+      score: item.score ?? null,
+      createdAt: item.updatedAt ? new Date(item.updatedAt).toISOString() : null,
+      lessonId: item.lessonId,
+      lessonTitle: item.lesson?.title ?? null,
+      status: item.status,
+      aiFeedback: item.aiFeedback ?? null,
+      reviewExercises: item.reviewExercises ?? null,
+    })),
     ...profileWeaknesses.slice(0, 5).map((topic: string) => ({
       source: "PROFILE" as const,
       topic: normalizeTopic(topic),
