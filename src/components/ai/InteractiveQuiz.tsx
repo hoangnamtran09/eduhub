@@ -34,6 +34,9 @@ interface InteractiveQuizProps {
   onAnswered?: (payload: QuizAnswerPayload) => void;
 }
 
+const remarkMathOptions = { singleDollarTextMath: false };
+const rehypeKatexOptions = { strict: false, throwOnError: false };
+
 export default function InteractiveQuiz({ data, onCorrect, onAnswered }: InteractiveQuizProps) {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -70,7 +73,7 @@ export default function InteractiveQuiz({ data, onCorrect, onAnswered }: Interac
       
       <div className="p-4">
         <div className="text-slate-800 font-medium mb-4 prose prose-slate prose-sm max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+          <ReactMarkdown remarkPlugins={[[remarkMath, remarkMathOptions]]} rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}>
             {data.question}
           </ReactMarkdown>
         </div>
@@ -94,7 +97,7 @@ export default function InteractiveQuiz({ data, onCorrect, onAnswered }: Interac
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 prose prose-sm max-w-none text-inherit">
-                  <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  <ReactMarkdown remarkPlugins={[[remarkMath, remarkMathOptions]]} rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}>
                     {option.text}
                   </ReactMarkdown>
                 </div>
@@ -124,7 +127,7 @@ export default function InteractiveQuiz({ data, onCorrect, onAnswered }: Interac
                 {isCorrect ? "Chính xác! Bạn tuyệt vời quá." : "Chưa đúng rồi, đừng nản lòng nhé!"}
               </p>
               <div className="opacity-90 prose prose-sm max-w-none text-inherit">
-                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                <ReactMarkdown remarkPlugins={[[remarkMath, remarkMathOptions]]} rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}>
                   {data.explanation}
                 </ReactMarkdown>
               </div>

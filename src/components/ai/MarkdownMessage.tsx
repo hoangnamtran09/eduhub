@@ -39,6 +39,9 @@ const markdownComponents = {
   td: ({ node, ...props }: any) => <td className="border-b border-current/5 px-3 py-2 align-top text-current/90" {...props} />,
 };
 
+const remarkMathOptions = { singleDollarTextMath: false };
+const rehypeKatexOptions = { strict: false, throwOnError: false };
+
 export default function MarkdownMessage({ content, onQuizCorrect, onQuizAnswered }: MarkdownMessageProps) {
   // Regex to find :::quiz {json} :::
   const quizRegex = /:::quiz\s*(\{[\s\S]*?\})\s*:::/g;
@@ -86,8 +89,8 @@ export default function MarkdownMessage({ content, onQuizCorrect, onQuizAnswered
   if (parts.length === 0) {
     return (
       <ReactMarkdown
-        remarkPlugins={[remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        remarkPlugins={[[remarkMath, remarkMathOptions]]}
+        rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}
         components={markdownComponents}
       >
         {content}
@@ -111,8 +114,8 @@ export default function MarkdownMessage({ content, onQuizCorrect, onQuizAnswered
         return (
           <ReactMarkdown
             key={index}
-            remarkPlugins={[remarkMath]}
-            rehypePlugins={[rehypeKatex]}
+            remarkPlugins={[[remarkMath, remarkMathOptions]]}
+            rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}
             components={markdownComponents}
           >
             {part.content as string}
