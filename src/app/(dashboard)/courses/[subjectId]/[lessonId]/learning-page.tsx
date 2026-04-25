@@ -157,6 +157,7 @@ export default function LearningPage({
   const [totalPdfPages, setTotalPdfPages] = useState(0);
   const [initialPdfPage, setInitialPdfPage] = useState(1);
   const [pageReadSeconds, setPageReadSeconds] = useState<Record<number, number>>({});
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const studySessionIdRef = useRef<string | null>(null);
@@ -169,6 +170,7 @@ export default function LearningPage({
   const [sending, setSending] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isEndingLesson, setIsEndingLesson] = useState(false);
+  const [hasExistingChatHistory, setHasExistingChatHistory] = useState(false);
   const [studySessionActive, setStudySessionActive] = useState(false);
   const [chatMode, setChatMode] = useState<"text" | "math">("text");
   const [studyTimeSeconds, setStudyTimeSeconds] = useState(0);
@@ -382,12 +384,25 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
   const totalReadSeconds = Object.values(pageReadSeconds).reduce((sum, seconds) => sum + seconds, 0);
   const currentPageReadSeconds = pageReadSeconds[currentPdfPage] || 0;
-  const hasUnlockedChat = !pdfUrl || totalReadSeconds >= MAX_TOTAL_READ_SECONDS;
+  const hasUnlockedChat = !pdfUrl || hasExistingChatHistory || messages.length > 0 || totalReadSeconds >= MAX_TOTAL_READ_SECONDS;
   const remainingReadSeconds = Math.max(0, MAX_TOTAL_READ_SECONDS - totalReadSeconds);
 
+  const scrollToLatestMessage = useCallback((behavior: ScrollBehavior = "smooth") => {
+    window.requestAnimationFrame(() => {
+      const container = messagesContainerRef.current;
+
+      if (container) {
+        container.scrollTo({ top: container.scrollHeight, behavior });
+        return;
+      }
+
+      messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+    });
+  }, []);
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, sending, isStarting]);
+    scrollToLatestMessage(messages.length > 1 ? "smooth" : "auto");
+  }, [messages.length, sending, isStarting, scrollToLatestMessage]);
 
   const startStudySession = useCallback(async () => {
     if (loading || !user?.id || studyStartedRef.current) return true;
@@ -534,6 +549,8 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
     }
 
     try {
+      setHasExistingChatHistory(false);
+
       const response = await fetch(`/api/courses/${params.subjectId}`, {
         cache: "no-store",
       });
@@ -588,15 +605,16 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         }
 
         if (conversation?.id) {
+          const loadedMessages = (conversation.messages || []).map((m: any) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            timestamp: new Date(m.timestamp || Date.now()),
+          }));
+
           activeConversationIdRef.current = conversation.id;
-          setMessages(
-            (conversation.messages || []).map((m: any) => ({
-              id: m.id,
-              role: m.role,
-              content: m.content,
-              timestamp: new Date(m.timestamp || Date.now()),
-            })),
-          );
+          setMessages(loadedMessages);
+          setHasExistingChatHistory(loadedMessages.length > 0);
         } else {
           activeConversationIdRef.current = null;
           setMessages([]);
@@ -613,10 +631,12 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
           const latestHistory = chatData[chatData.length - 1];
           activeConversationIdRef.current = latestHistory.id;
           if (latestHistory.messages) {
-            setMessages(latestHistory.messages.map((m: any) => ({
+            const loadedMessages = latestHistory.messages.map((m: any) => ({
               ...m,
               timestamp: new Date(m.timestamp || Date.now())
-            })));
+            }));
+            setMessages(loadedMessages);
+            setHasExistingChatHistory(loadedMessages.length > 0);
           }
         }
       }
@@ -1445,7 +1465,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
           </div>
 
           {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-paper-50/50">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-paper-50/50">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-6">
                 <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4">
