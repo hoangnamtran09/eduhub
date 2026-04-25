@@ -42,7 +42,24 @@ const markdownComponents = {
 const remarkMathOptions = { singleDollarTextMath: false };
 const rehypeKatexOptions = { strict: false, throwOnError: false };
 
+const vietnameseCharRegex = /[\u00C0-\u1EF9]/;
+
+function normalizeMathText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+}
+
+function sanitizeMathContent(value: string) {
+  return value.replace(/(\$\$)([\s\S]*?)(\$\$)|(\\\[)([\s\S]*?)(\\\])|(\\\()([\s\S]*?)(\\\))/g, (match) => {
+    return vietnameseCharRegex.test(match) ? normalizeMathText(match) : match;
+  });
+}
+
 export default function MarkdownMessage({ content, onQuizCorrect, onQuizAnswered }: MarkdownMessageProps) {
+  const safeContent = sanitizeMathContent(content);
   // Regex to find :::quiz {json} :::
   const quizRegex = /:::quiz\s*(\{[\s\S]*?\})\s*:::/g;
   
@@ -50,12 +67,12 @@ export default function MarkdownMessage({ content, onQuizCorrect, onQuizAnswered
   let lastIndex = 0;
   let match;
 
-  while ((match = quizRegex.exec(content)) !== null) {
+  while ((match = quizRegex.exec(safeContent)) !== null) {
     // Add text before the quiz
     if (match.index > lastIndex) {
       parts.push({
         type: "text",
-        content: content.slice(lastIndex, match.index),
+        content: safeContent.slice(lastIndex, match.index),
       });
     }
 
@@ -78,10 +95,10 @@ export default function MarkdownMessage({ content, onQuizCorrect, onQuizAnswered
   }
 
   // Add remaining text
-  if (lastIndex < content.length) {
+  if (lastIndex < safeContent.length) {
     parts.push({
       type: "text",
-      content: content.slice(lastIndex),
+      content: safeContent.slice(lastIndex),
     });
   }
 
@@ -93,7 +110,7 @@ export default function MarkdownMessage({ content, onQuizCorrect, onQuizAnswered
         rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}
         components={markdownComponents}
       >
-        {content}
+        {safeContent}
       </ReactMarkdown>
     );
   }

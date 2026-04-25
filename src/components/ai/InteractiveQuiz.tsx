@@ -37,9 +37,27 @@ interface InteractiveQuizProps {
 const remarkMathOptions = { singleDollarTextMath: false };
 const rehypeKatexOptions = { strict: false, throwOnError: false };
 
+const vietnameseCharRegex = /[\u00C0-\u1EF9]/;
+
+function normalizeMathText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+}
+
+function sanitizeMathContent(value: string) {
+  return value.replace(/(\$\$)([\s\S]*?)(\$\$)|(\\\[)([\s\S]*?)(\\\])|(\\\()([\s\S]*?)(\\\))/g, (match) => {
+    return vietnameseCharRegex.test(match) ? normalizeMathText(match) : match;
+  });
+}
+
 export default function InteractiveQuiz({ data, onCorrect, onAnswered }: InteractiveQuizProps) {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const safeQuestion = sanitizeMathContent(data.question);
+  const safeExplanation = sanitizeMathContent(data.explanation);
 
   const handleOptionSelect = (index: number) => {
     if (isSubmitted) return;
@@ -74,7 +92,7 @@ export default function InteractiveQuiz({ data, onCorrect, onAnswered }: Interac
       <div className="p-4">
         <div className="text-slate-800 font-medium mb-4 prose prose-slate prose-sm max-w-none">
           <ReactMarkdown remarkPlugins={[[remarkMath, remarkMathOptions]]} rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}>
-            {data.question}
+            {safeQuestion}
           </ReactMarkdown>
         </div>
         
@@ -98,7 +116,7 @@ export default function InteractiveQuiz({ data, onCorrect, onAnswered }: Interac
               <div className="flex items-center justify-between">
                 <div className="flex-1 prose prose-sm max-w-none text-inherit">
                   <ReactMarkdown remarkPlugins={[[remarkMath, remarkMathOptions]]} rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}>
-                    {option.text}
+                    {sanitizeMathContent(option.text)}
                   </ReactMarkdown>
                 </div>
                 {isSubmitted && option.isCorrect && (
@@ -128,7 +146,7 @@ export default function InteractiveQuiz({ data, onCorrect, onAnswered }: Interac
               </p>
               <div className="opacity-90 prose prose-sm max-w-none text-inherit">
                 <ReactMarkdown remarkPlugins={[[remarkMath, remarkMathOptions]]} rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}>
-                  {data.explanation}
+                  {safeExplanation}
                 </ReactMarkdown>
               </div>
               {isCorrect && (
