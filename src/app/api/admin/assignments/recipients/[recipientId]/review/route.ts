@@ -81,7 +81,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     const computedScore = normalizedRubricScores.length > 0
-      ? normalizedRubricScores.reduce((sum, item) => sum + item.score, 0)
+      ? normalizedRubricScores.reduce<number>((sum, item: AssignmentRubricScoreJson) => sum + item.score, 0)
       : score;
 
     if (computedScore !== null && !Number.isFinite(computedScore)) {
