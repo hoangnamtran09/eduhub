@@ -214,11 +214,132 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Related courses and lessons will be deleted by Cascade if defined in schema,
-    // but let's be explicit if needed or just rely on onDelete: Cascade
     const prismaAny = prisma as any;
-    await prismaAny.subject.delete({
-      where: { id },
+
+    await prismaAny.$transaction(async (tx: any) => {
+      const [lessons, courses] = await Promise.all([
+        tx.lesson.findMany({
+          where: { subjectId: id },
+          select: { id: true },
+        }),
+        tx.course.findMany({
+          where: { subjectId: id },
+          select: { id: true },
+        }),
+      ]);
+
+      const lessonIds = lessons.map((lesson: { id: string }) => lesson.id);
+      const courseIds = courses.map((course: { id: string }) => course.id);
+
+      if (lessonIds.length) {
+        const recipients = await tx.assignmentRecipient.findMany({
+          where: {
+            assignment: {
+              lessonId: { in: lessonIds },
+            },
+          },
+          select: { id: true },
+        });
+        const recipientIds = recipients.map((recipient: { id: string }) => recipient.id);
+
+        if (recipientIds.length) {
+          await tx.assignmentFeedbackEvent.deleteMany({
+            where: { recipientId: { in: recipientIds } },
+          });
+          await tx.assignmentRecipient.deleteMany({
+            where: { id: { in: recipientIds } },
+          });
+        }
+
+        const quizzes = await tx.quiz.findMany({
+          where: { lessonId: { in: lessonIds } },
+          select: { id: true },
+        });
+        const quizIds = quizzes.map((quiz: { id: string }) => quiz.id);
+
+        if (quizIds.length) {
+          await tx.quizAttempt.deleteMany({
+            where: { quizId: { in: quizIds } },
+          });
+          await tx.quizQuestion.deleteMany({
+            where: { quizId: { in: quizIds } },
+          });
+          await tx.quiz.deleteMany({
+            where: { id: { in: quizIds } },
+          });
+        }
+
+        const weaknesses = await tx.lessonWeakness.findMany({
+          where: { lessonId: { in: lessonIds } },
+          select: { id: true },
+        });
+        const weaknessIds = weaknesses.map((weakness: { id: string }) => weakness.id);
+
+        if (weaknessIds.length) {
+          await tx.remediationAttempt.deleteMany({
+            where: { weaknessId: { in: weaknessIds } },
+          });
+          await tx.lessonWeakness.deleteMany({
+            where: { id: { in: weaknessIds } },
+          });
+        }
+
+        const conversations = await tx.aICo.findMany({
+          where: { lessonId: { in: lessonIds } },
+          select: { id: true },
+        });
+        const conversationIds = conversations.map((conversation: { id: string }) => conversation.id);
+
+        if (conversationIds.length) {
+          await tx.aIMessage.deleteMany({
+            where: { conversationId: { in: conversationIds } },
+          });
+          await tx.aICo.deleteMany({
+            where: { id: { in: conversationIds } },
+          });
+        }
+
+        await tx.assignment.updateMany({
+          where: { lessonId: { in: lessonIds } },
+          data: { lessonId: null },
+        });
+        await tx.exerciseAttempt.updateMany({
+          where: { lessonId: { in: lessonIds } },
+          data: { lessonId: null },
+        });
+        await tx.studySession.deleteMany({
+          where: { lessonId: { in: lessonIds } },
+        });
+        await tx.lessonProgress.deleteMany({
+          where: { lessonId: { in: lessonIds } },
+        });
+        await tx.lesson.deleteMany({
+          where: { id: { in: lessonIds } },
+        });
+      }
+
+      if (courseIds.length) {
+        await tx.enrollment.deleteMany({
+          where: { courseId: { in: courseIds } },
+        });
+        await tx.chapter.deleteMany({
+          where: { courseId: { in: courseIds } },
+        });
+        await tx.course.deleteMany({
+          where: { id: { in: courseIds } },
+        });
+      }
+
+      await tx.diagnosticQuiz.deleteMany({
+        where: { subjectId: id },
+      });
+      await tx.diagnosticAttempt.deleteMany({
+        where: { subjectId: id },
+      });
+
+      await tx.subject.delete({
+        where: { id },
+      });
     });
 
     return NextResponse.json({ success: true });
