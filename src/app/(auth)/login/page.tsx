@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { GoogleLoginErrorToast } from "@/components/auth/google-login-error-toas
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setUser = useAuthStore((state) => state.setUser);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -41,8 +42,11 @@ export default function LoginPage() {
       // Update auth store
       setUser(data.user);
 
+      const callbackUrl = searchParams.get("callbackUrl");
+      const redirectTarget = callbackUrl || (data.user?.role === "ADMIN" ? "/admin/students" : "/");
+
       toast.success("Đăng nhập thành công!");
-      router.push("/");
+      router.push(redirectTarget);
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
