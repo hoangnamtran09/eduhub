@@ -16,6 +16,9 @@ export async function GET(request: Request) {
         studentId: authUser.userId,
       },
       include: {
+        feedbackEvents: {
+          orderBy: { createdAt: "desc" },
+        },
         assignment: {
           include: {
             lesson: {
@@ -38,15 +41,14 @@ export async function GET(request: Request) {
 
     const sortedAssignments = assignments.sort((a: any, b: any) => {
       const statusPriority: Record<string, number> = {
-        returned: 0,
-        assigned: 1,
-        pending: 1,
-        accepted: 2,
-        submitted: 3,
-        reviewed: 4,
+        RETURNED: 0,
+        ASSIGNED: 1,
+        ACCEPTED: 2,
+        SUBMITTED: 3,
+        REVIEWED: 4,
       };
-      const leftPriority = statusPriority[String(a.status || "pending").toLowerCase()] ?? 0;
-      const rightPriority = statusPriority[String(b.status || "pending").toLowerCase()] ?? 0;
+      const leftPriority = statusPriority[String(a.status || "ASSIGNED")] ?? 0;
+      const rightPriority = statusPriority[String(b.status || "ASSIGNED")] ?? 0;
 
       if (leftPriority !== rightPriority) return leftPriority - rightPriority;
 

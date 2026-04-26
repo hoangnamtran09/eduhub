@@ -71,7 +71,7 @@ export async function GET() {
       prismaAny.assignmentRecipient.findMany({
         where: {
           studentId: authUser.userId,
-          status: { notIn: ["submitted", "reviewed"] },
+          status: { notIn: ["SUBMITTED", "REVIEWED"] },
         },
         include: {
           assignment: {

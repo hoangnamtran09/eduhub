@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { BookOpenCheck, Bot, CalendarClock, CheckCircle2, ClipboardList, Download, FileText, Loader2, RotateCcw, Search, Send, SlidersHorizontal, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,17 +9,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AssignmentRecipientStatus, isAssignmentOverdue, isAssignmentPending, isAssignmentSubmitted, normalizeAssignmentStatus } from "@/types/assignment";
+
+const MAX_SUBMISSION_FILES = 5;
+const MAX_SUBMISSION_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+function formatFileSize(size?: number) {
+  if (!size || size <= 0) return null;
+  if (size >= 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(size / 1024))} KB`;
+}
+
+function getSubmissionPreviewType(file: { type: string; name: string }) {
+  if (file.type.startsWith("image/")) return "image" as const;
+  if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) return "pdf" as const;
+  return "file" as const;
+}
 
 interface StudentAssignment {
   id: string;
-  status: string;
+  status: AssignmentRecipientStatus;
   submissionText: string | null;
   submissionFiles?: Array<{ name: string; url: string; type: string; size?: number }> | null;
   score?: number | null;
   aiScore?: number | null;
   feedback?: string | null;
   rubricScores?: Array<{ criterionId: string; title: string; score: number; maxScore: number; comment?: string }> | null;
-  feedbackHistory?: Array<{ status: string; score?: number | null; feedback?: string | null; createdAt: string; attemptCount?: number }> | null;
+  feedbackEvents?: Array<{ status: AssignmentRecipientStatus; score?: number | null; feedback?: string | null; createdAt: string; attemptCount?: number }> | null;
   submittedAt: string | null;
   reviewedAt?: string | null;
   returnedAt?: string | null;
@@ -53,6 +70,7 @@ export default function AssignmentsPage() {
   const [uploadingSubmission, setUploadingSubmission] = useState(false);
   const [submissionText, setSubmissionText] = useState("");
   const [submissionFiles, setSubmissionFiles] = useState<Array<{ name: string; url: string; type: string; size?: number }>>([]);
+  const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "accepted" | "submitted" | "reviewed" | "returned" | "overdue">("all");
@@ -84,12 +102,12 @@ export default function AssignmentsPage() {
   }, [loadAssignments]);
 
   const stats = useMemo(() => {
-    const accepted = items.filter((item) => item.status === "accepted").length;
-    const submitted = items.filter((item) => item.status === "submitted").length;
-    const reviewed = items.filter((item) => item.status === "reviewed").length;
-    const returned = items.filter((item) => item.status === "returned").length;
-    const pending = items.filter((item) => !["accepted", "submitted", "reviewed", "returned"].includes(item.status)).length;
-    const overdue = items.filter((item) => item.assignment.dueDate && new Date(item.assignment.dueDate).getTime() < Date.now() && !["submitted", "reviewed"].includes(item.status)).length;
+    const accepted = items.filter((item) => normalizeAssignmentStatus(item.status) === "accepted").length;
+    const submitted = items.filter((item) => normalizeAssignmentStatus(item.status) === "submitted").length;
+    const reviewed = items.filter((item) => normalizeAssignmentStatus(item.status) === "reviewed").length;
+    const returned = items.filter((item) => normalizeAssignmentStatus(item.status) === "returned").length;
+    const pending = items.filter((item) => isAssignmentPending(item.status)).length;
+    const overdue = items.filter((item) => isAssignmentOverdue(item.status, item.assignment.dueDate)).length;
 
     return { accepted, submitted, reviewed, returned, pending, overdue };
   }, [items]);
@@ -98,17 +116,18 @@ export default function AssignmentsPage() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return items.filter((item) => {
-      const isAccepted = item.status === "accepted";
-      const isSubmitted = item.status === "submitted";
-      const isOverdue = Boolean(item.assignment.dueDate && new Date(item.assignment.dueDate).getTime() < Date.now() && !isSubmitted);
-      const isReviewed = item.status === "reviewed";
-      const isReturned = item.status === "returned";
+      const normalizedStatus = normalizeAssignmentStatus(item.status);
+      const isAccepted = normalizedStatus === "accepted";
+      const isSubmitted = normalizedStatus === "submitted";
+      const isOverdue = isAssignmentOverdue(item.status, item.assignment.dueDate);
+      const isReviewed = normalizedStatus === "reviewed";
+      const isReturned = normalizedStatus === "returned";
       const statusMatch = statusFilter === "all"
         || (statusFilter === "accepted" && isAccepted)
         || (statusFilter === "submitted" && isSubmitted)
         || (statusFilter === "reviewed" && isReviewed)
         || (statusFilter === "returned" && isReturned)
-        || (statusFilter === "pending" && !isAccepted && !isSubmitted && !isOverdue)
+        || (statusFilter === "pending" && isAssignmentPending(item.status))
         || (statusFilter === "overdue" && isOverdue);
       const haystack = [
         item.assignment.title,
@@ -159,12 +178,41 @@ export default function AssignmentsPage() {
     setSubmittingAssignment(assignment);
     setSubmissionText(assignment.submissionText || "");
     setSubmissionFiles(assignment.submissionFiles || []);
+    setPreviewFileUrl((assignment.submissionFiles || [])[0]?.url || null);
+    setActionMessage(null);
+  };
+
+  const removeSubmissionFile = (fileUrl: string) => {
+    setSubmissionFiles((current) => {
+      const next = current.filter((item) => item.url !== fileUrl);
+      setPreviewFileUrl((currentPreview) => (currentPreview === fileUrl ? next[0]?.url || null : currentPreview));
+      return next;
+    });
     setActionMessage(null);
   };
 
   const handleSubmissionFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (submissionFiles.length >= MAX_SUBMISSION_FILES) {
+      setActionMessage({ type: "error", message: `Bạn chỉ có thể đính kèm tối đa ${MAX_SUBMISSION_FILES} file.` });
+      event.target.value = "";
+      return;
+    }
+
+    const duplicateFile = submissionFiles.some((item) => item.name === file.name && item.size === file.size);
+    if (duplicateFile) {
+      setActionMessage({ type: "error", message: "File này đã có trong danh sách đính kèm." });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_SUBMISSION_FILE_SIZE_BYTES) {
+      setActionMessage({ type: "error", message: "Mỗi file đính kèm chỉ được tối đa 10MB." });
+      event.target.value = "";
+      return;
+    }
 
     setUploadingSubmission(true);
     setActionMessage(null);
@@ -174,7 +222,11 @@ export default function AssignmentsPage() {
       const response = await fetch("/api/assignments/upload-submission", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Không thể tải file");
-      setSubmissionFiles((current) => [...current, { name: data.name, url: data.url, type: data.type, size: data.size }].slice(0, 5));
+      setSubmissionFiles((current) => {
+        const next = [...current, { name: data.name, url: data.url, type: data.type, size: data.size }].slice(0, MAX_SUBMISSION_FILES);
+        setPreviewFileUrl(data.url);
+        return next;
+      });
     } catch (error) {
       setActionMessage({ type: "error", message: error instanceof Error ? error.message : "Không thể tải file" });
     } finally {
@@ -205,6 +257,7 @@ export default function AssignmentsPage() {
       setSubmittingAssignment(null);
       setSubmissionText("");
       setSubmissionFiles([]);
+      setPreviewFileUrl(null);
       setActionMessage({ type: "success", message: "Đã nộp bài thành công." });
     } catch (error) {
       setActionMessage({ type: "error", message: error instanceof Error ? error.message : "Không thể nộp bài" });
@@ -295,11 +348,12 @@ export default function AssignmentsPage() {
 
         <div className="space-y-5">
           {filteredItems.map((item) => {
-            const isAccepted = item.status === "accepted";
-            const isSubmitted = ["submitted", "reviewed", "returned"].includes(item.status);
-            const isReviewed = item.status === "reviewed";
-            const isReturned = item.status === "returned";
-            const isOverdue = item.assignment.dueDate && new Date(item.assignment.dueDate).getTime() < Date.now() && !["submitted", "reviewed"].includes(item.status);
+            const normalizedStatus = normalizeAssignmentStatus(item.status);
+            const isAccepted = normalizedStatus === "accepted";
+            const isSubmitted = isAssignmentSubmitted(item.status);
+            const isReviewed = normalizedStatus === "reviewed";
+            const isReturned = normalizedStatus === "returned";
+            const isOverdue = isAssignmentOverdue(item.status, item.assignment.dueDate);
 
             return (
               <Card key={item.id} className="overflow-hidden rounded-lg border border-ink-200 bg-white shadow-soft">
@@ -355,10 +409,22 @@ export default function AssignmentsPage() {
                     </div>
                   )}
 
-                  {isSubmitted && (
+                  {normalizedStatus === "submitted" && (
                     <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                       <CheckCircle2 className="h-4 w-4" />
                       <span>Đã nộp bài {item.submittedAt ? `lúc ${new Date(item.submittedAt).toLocaleString("vi-VN")}` : ""}</span>
+                    </div>
+                  )}
+                  {isReviewed && (
+                    <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>Giáo viên đã chấm bài {item.reviewedAt ? `lúc ${new Date(item.reviewedAt).toLocaleString("vi-VN")}` : ""}</span>
+                    </div>
+                  )}
+                  {isReturned && item.returnedAt && (
+                    <div className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-700">
+                      <RotateCcw className="h-4 w-4" />
+                      <span>Bài đã được trả để chỉnh sửa lúc {new Date(item.returnedAt).toLocaleString("vi-VN")}</span>
                     </div>
                   )}
                   {isReturned && (
@@ -367,13 +433,13 @@ export default function AssignmentsPage() {
                       Nộp lại bài đã sửa
                     </Button>
                   )}
-                  {isSubmitted && item.submissionText && (
+                  {isAssignmentSubmitted(item.status) && item.submissionText && (
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Nội dung đã nộp</p>
                       <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">{item.submissionText}</p>
                     </div>
                   )}
-                  {isSubmitted && !!item.submissionFiles?.length && (
+                  {isAssignmentSubmitted(item.status) && !!item.submissionFiles?.length && (
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">File đã nộp</p>
                       <div className="mt-2 flex flex-wrap gap-2">
@@ -386,7 +452,7 @@ export default function AssignmentsPage() {
                       </div>
                     </div>
                   )}
-                  {item.aiScore != null && item.status === "submitted" && (
+                  {item.aiScore != null && normalizedStatus === "submitted" && (
                     <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3">
                       <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-600">
                         <Bot className="h-3.5 w-3.5" /> Chấm sơ bộ AI
@@ -406,24 +472,24 @@ export default function AssignmentsPage() {
                       <p className="mt-2 text-xs text-violet-500">Đây là điểm sơ bộ từ AI. Giáo viên sẽ xem xét và cho điểm chính thức.</p>
                     </div>
                   )}
-                  {(item.status === "reviewed" || (item.status === "returned" && item.feedback)) && (
+                  {(normalizedStatus === "reviewed" || (normalizedStatus === "returned" && item.feedback)) && (
                     <div className={cn(
                       "rounded-lg border px-4 py-3",
-                      item.status === "reviewed" ? "border-emerald-200 bg-emerald-50" : "border-orange-200 bg-orange-50"
+                      normalizedStatus === "reviewed" ? "border-emerald-200 bg-emerald-50" : "border-orange-200 bg-orange-50"
                     )}>
                       <p className={cn(
                         "text-xs font-semibold uppercase tracking-wide",
-                        item.status === "reviewed" ? "text-emerald-600" : "text-orange-600"
+                        normalizedStatus === "reviewed" ? "text-emerald-600" : "text-orange-600"
                       )}>
-                        {item.status === "reviewed" ? "Kết quả chấm" : "Phản hồi giáo viên – Cần sửa"}
+                        {normalizedStatus === "reviewed" ? "Kết quả chấm" : "Phản hồi giáo viên – Cần sửa"}
                       </p>
                       {typeof item.score === "number" && (
-                        <p className={cn("mt-2 text-sm font-bold", item.status === "reviewed" ? "text-emerald-900" : "text-orange-900")}>
+                        <p className={cn("mt-2 text-sm font-bold", normalizedStatus === "reviewed" ? "text-emerald-900" : "text-orange-900")}>
                           Điểm: {item.score}/{item.assignment.maxScore}
                         </p>
                       )}
                       {item.feedback && (
-                        <p className={cn("mt-2 whitespace-pre-line text-sm leading-6", item.status === "reviewed" ? "text-emerald-900" : "text-orange-900")}>
+                        <p className={cn("mt-2 whitespace-pre-line text-sm leading-6", normalizedStatus === "reviewed" ? "text-emerald-900" : "text-orange-900")}>
                           {item.feedback}
                         </p>
                       )}
@@ -443,14 +509,14 @@ export default function AssignmentsPage() {
                   {(item.attemptCount ?? 0) > 1 && (
                     <p className="text-xs text-slate-400">Lần nộp thứ {item.attemptCount}</p>
                   )}
-                  {!!item.feedbackHistory?.length && (
+                  {!!item.feedbackEvents?.length && (
                     <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Lịch sử phản hồi ({item.feedbackHistory.length})</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Lịch sử phản hồi ({item.feedbackEvents.length})</p>
                       <div className="mt-2 space-y-2">
-                        {item.feedbackHistory.map((entry, index) => (
+                        {item.feedbackEvents.map((entry, index) => (
                           <div key={`${entry.createdAt}-${index}`} className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
                             <div className="flex justify-between gap-3 text-xs font-semibold text-slate-500">
-                              <span>{entry.status === "returned" ? "Trả bài sửa" : "Đã chấm"}{entry.attemptCount ? ` (lần ${entry.attemptCount})` : ""}</span>
+                              <span>{normalizeAssignmentStatus(entry.status) === "returned" ? "Trả bài sửa" : "Đã chấm"}{entry.attemptCount ? ` (lần ${entry.attemptCount})` : ""}</span>
                               <span>{new Date(entry.createdAt).toLocaleString("vi-VN")}</span>
                             </div>
                             {entry.score != null && <p className="mt-1 text-xs font-semibold">Điểm: {entry.score}/{item.assignment.maxScore}</p>}
@@ -533,7 +599,12 @@ export default function AssignmentsPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!submittingAssignment} onOpenChange={(open) => !open && setSubmittingAssignment(null)}>
+      <Dialog open={!!submittingAssignment} onOpenChange={(open) => {
+        if (!open) {
+          setSubmittingAssignment(null);
+          setPreviewFileUrl(null);
+        }
+      }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nộp bài tập</DialogTitle>
@@ -555,14 +626,88 @@ export default function AssignmentsPage() {
                 Tải file đính kèm (PDF, ảnh, Word, Excel...)
                 <input type="file" className="hidden" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" onChange={handleSubmissionFileUpload} disabled={uploadingSubmission} />
               </label>
+              <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+                <p>Tối đa {MAX_SUBMISSION_FILES} file, mỗi file không quá 10MB. Hỗ trợ PDF, ảnh, Word, Excel, PowerPoint và TXT.</p>
+                <span>{submissionFiles.length}/{MAX_SUBMISSION_FILES} file</span>
+              </div>
               {!!submissionFiles.length && (
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-3 space-y-3">
                   {submissionFiles.map((file) => (
-                    <a key={file.url} href={file.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-                      <FileText className="h-3.5 w-3.5" />
-                      {file.name}
-                    </a>
+                    <div key={file.url} className={cn(
+                      "flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2 text-xs text-slate-700 ring-1 ring-slate-200 transition",
+                      previewFileUrl === file.url && "ring-2 ring-brand-200"
+                    )}>
+                      <button type="button" className="flex min-w-0 flex-1 items-center gap-2 text-left font-semibold hover:text-slate-900" onClick={() => setPreviewFileUrl(file.url)}>
+                        <FileText className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{file.name}</span>
+                        {formatFileSize(file.size) && <span className="shrink-0 text-slate-400">{formatFileSize(file.size)}</span>}
+                      </button>
+                      <div className="flex items-center gap-1">
+                        <a href={file.url} target="_blank" rel="noreferrer" className="rounded-full px-2 py-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900">
+                          Mở
+                        </a>
+                        <button
+                          type="button"
+                          className="rounded-full px-2 py-1 text-slate-400 hover:bg-slate-100 hover:text-rose-600"
+                          onClick={() => removeSubmissionFile(file.url)}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </div>
                   ))}
+
+                  {previewFileUrl && (() => {
+                    const previewFile = submissionFiles.find((file) => file.url === previewFileUrl);
+                    if (!previewFile) return null;
+
+                    const previewType = getSubmissionPreviewType(previewFile);
+
+                    return (
+                      <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">Xem trước file đính kèm</p>
+                            <p className="text-xs text-slate-500">{previewFile.name}</p>
+                          </div>
+                          <a href={previewFile.url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-brand-700 hover:text-brand-800">
+                            Mở tab mới
+                          </a>
+                        </div>
+
+                        {previewType === "image" && (
+                          <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                            <Image
+                              src={previewFile.url}
+                              alt={previewFile.name}
+                              width={1200}
+                              height={800}
+                              className="h-auto max-h-[420px] w-full object-contain"
+                              unoptimized
+                            />
+                          </div>
+                        )}
+
+                        {previewType === "pdf" && (
+                          <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                            <iframe
+                              src={previewFile.url}
+                              title={`Preview ${previewFile.name}`}
+                              className="h-[420px] w-full"
+                            />
+                          </div>
+                        )}
+
+                        {previewType === "file" && (
+                          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
+                            <FileText className="mx-auto mb-3 h-8 w-8 text-slate-400" />
+                            <p className="text-sm font-medium text-slate-700">Loại file này chưa có preview trực tiếp</p>
+                            <p className="mt-1 text-xs text-slate-500">Bạn vẫn có thể mở file ở tab mới để kiểm tra trước khi nộp.</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>

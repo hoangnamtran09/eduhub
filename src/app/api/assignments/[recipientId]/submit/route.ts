@@ -39,7 +39,7 @@ export async function POST(request: Request, { params }: RouteParams) {
         aiScore: null,
         feedback: null,
         rubricScores: undefined,
-        status: "submitted",
+        status: "SUBMITTED",
         submittedAt: new Date(),
         reviewedAt: null,
         returnedAt: null,

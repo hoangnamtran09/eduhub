@@ -9,6 +9,9 @@ export interface User {
   role: UserRole;
   gradeLevel?: number;
   diamonds: number;
+  dailyStudyReminder?: boolean;
+  newAssignmentNotification?: boolean;
+  weeklyEmailReport?: boolean;
   emailVerified?: Date;
   createdAt: Date;
   profile?: StudentProfile;

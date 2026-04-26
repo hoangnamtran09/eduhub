@@ -16,14 +16,14 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     const prismaAny = prisma as any;
     
-    // Cập nhật trạng thái thành "accepted"
+        // Cập nhật trạng thái thành accepted
     const updateResult = await prismaAny.assignmentRecipient.updateMany({
       where: {
         id: params.recipientId,
         studentId: authUser.userId,
       },
       data: {
-        status: "accepted",
+        status: "ACCEPTED",
       },
     });
 

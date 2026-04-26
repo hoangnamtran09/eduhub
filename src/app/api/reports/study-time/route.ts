@@ -191,8 +191,8 @@ export async function GET() {
             overdue: number;
             dueSoon: number;
           }, recipient: any) => {
-            const status = String(recipient.status || "assigned").toLowerCase();
-            const isSubmitted = status === "submitted";
+            const status = String(recipient.status || "ASSIGNED");
+            const isSubmitted = status === "SUBMITTED";
             const dueDate = recipient.assignment?.dueDate ? new Date(recipient.assignment.dueDate) : null;
             const urgency = getAssignmentUrgency(dueDate, now);
 

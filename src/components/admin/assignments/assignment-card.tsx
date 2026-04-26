@@ -1,6 +1,6 @@
 "use client";
 
-import { AssignmentRecord, AssignmentRecipient, RubricCriterion } from "@/types/assignment";
+import { AssignmentRecord, AssignmentRecipient, RubricCriterion, isAssignmentSubmitted, normalizeAssignmentStatus } from "@/types/assignment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,9 +32,10 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 };
 
 function getStatusKey(status: string, dueDate: string | null): string {
-  if (["submitted", "reviewed", "returned"].includes(status)) return status;
-  if (dueDate && new Date(dueDate).getTime() < Date.now() && !["submitted", "reviewed"].includes(status)) return "overdue";
-  return status;
+  const normalizedStatus = normalizeAssignmentStatus(status);
+  if (["submitted", "reviewed", "returned"].includes(normalizedStatus)) return normalizedStatus;
+  if (dueDate && new Date(dueDate).getTime() < Date.now() && !["submitted", "reviewed"].includes(normalizedStatus)) return "overdue";
+  return normalizedStatus;
 }
 
 interface ReviewDraft {
@@ -57,8 +58,8 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, ReviewDraft>>({});
 
   const rubric: RubricCriterion[] = Array.isArray(assignment.rubric) ? assignment.rubric : [];
-  const submittedCount = assignment.recipients.filter((r) => ["submitted", "reviewed", "returned"].includes(r.status)).length;
-  const reviewedCount = assignment.recipients.filter((r) => r.status === "reviewed").length;
+  const submittedCount = assignment.recipients.filter((r) => isAssignmentSubmitted(r.status)).length;
+  const reviewedCount = assignment.recipients.filter((r) => normalizeAssignmentStatus(r.status) === "reviewed").length;
 
   const getDraft = (recipientId: string): ReviewDraft => {
     if (reviewDrafts[recipientId]) return reviewDrafts[recipientId];
@@ -196,10 +197,11 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
 
             <div className="space-y-2">
               {assignment.recipients.map((recipient) => {
+                const normalizedRecipientStatus = normalizeAssignmentStatus(recipient.status);
                 const statusKey = getStatusKey(recipient.status, assignment.dueDate);
                 const statusCfg = STATUS_MAP[statusKey] || STATUS_MAP.assigned;
                 const isOpen = expandedRecipient === recipient.id;
-                const hasSubmission = ["submitted", "reviewed", "returned"].includes(recipient.status);
+                const hasSubmission = isAssignmentSubmitted(recipient.status);
                 const draft = getDraft(recipient.id);
 
                 return (
@@ -255,7 +257,7 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                                 <Clock className="w-3 h-3" /> Nộp lúc {new Date(recipient.submittedAt).toLocaleString("vi-VN")}
                               </p>
                             )}
-                            {["submitted", "returned"].includes(recipient.status) && (
+                            {["submitted", "returned"].includes(normalizedRecipientStatus) && (
                               <Button size="sm" variant="outline" className="text-xs" onClick={() => runAiPregrade(recipient)} disabled={aiGradingId === recipient.id}>
                                 {aiGradingId === recipient.id ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Bot className="mr-1 h-3.5 w-3.5" />}
                                 AI chấm sơ bộ
@@ -272,10 +274,10 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                             <p className="text-sm font-bold text-violet-900">
                               Điểm AI: {aiGradingId === recipient.id ? "Đang phân tích..." : `${recipient.aiScore ?? "-"}/${assignment.maxScore}`}
                             </p>
-                            {recipient.feedback && recipient.status === "submitted" && (
+                            {recipient.feedback && normalizedRecipientStatus === "submitted" && (
                               <p className="mt-1 text-sm text-violet-800 whitespace-pre-line">{recipient.feedback}</p>
                             )}
-                            {Array.isArray(recipient.rubricScores) && recipient.rubricScores.length > 0 && recipient.status === "submitted" && (
+                            {Array.isArray(recipient.rubricScores) && recipient.rubricScores.length > 0 && normalizedRecipientStatus === "submitted" && (
                               <div className="mt-2 grid gap-1">
                                 {recipient.rubricScores.map((rs) => (
                                   <div key={rs.criterionId} className="flex justify-between text-xs text-violet-700">
@@ -285,7 +287,7 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                                 ))}
                               </div>
                             )}
-                            {recipient.aiScore != null && ["submitted", "returned"].includes(recipient.status) && (
+                            {recipient.aiScore != null && ["submitted", "returned"].includes(normalizedRecipientStatus) && (
                               <div className="mt-2 flex flex-wrap gap-2">
                                 <Button size="sm" variant="outline" className="text-xs" onClick={() => prefillFromAI(recipient)}>
                                   Dùng điểm AI làm mẫu
@@ -295,7 +297,7 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                           </div>
                         )}
 
-                        {["submitted", "returned"].includes(recipient.status) && (
+                        {["submitted", "returned"].includes(normalizedRecipientStatus) && (
                           <div className="rounded-lg border border-brand-200 bg-brand-50 p-3 space-y-3">
                             <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">Chấm bài</p>
                             {rubric.length > 0 && (
@@ -355,7 +357,7 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                           </div>
                         )}
 
-                        {recipient.status === "reviewed" && (
+                        {normalizedRecipientStatus === "reviewed" && (
                           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600 mb-1">Kết quả chấm</p>
                             {recipient.score != null && <p className="text-sm font-bold text-emerald-900">Điểm: {recipient.score}/{assignment.maxScore}</p>}
@@ -373,7 +375,7 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                           </div>
                         )}
 
-                        {recipient.status === "returned" && (
+                        {normalizedRecipientStatus === "returned" && (
                           <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
                             <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-orange-600 mb-1">
                               <AlertTriangle className="w-3.5 h-3.5" /> Đã trả lại để sửa
@@ -385,14 +387,14 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                           </div>
                         )}
 
-                        {!!recipient.feedbackHistory?.length && (
+                        {!!recipient.feedbackEvents?.length && (
                           <div className="rounded-lg border border-slate-200 p-3">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Lịch sử phản hồi ({recipient.feedbackHistory.length})</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Lịch sử phản hồi ({recipient.feedbackEvents.length})</p>
                             <div className="space-y-2">
-                              {recipient.feedbackHistory.map((entry, idx) => (
+                              {recipient.feedbackEvents.map((entry, idx) => (
                                 <div key={`${entry.createdAt}-${idx}`} className="rounded bg-slate-50 p-2 text-sm">
                                   <div className="flex justify-between text-xs text-slate-500">
-                                    <span>{entry.status === "returned" ? "Trả lại sửa" : "Đã chấm"}{entry.attemptCount ? ` (lần ${entry.attemptCount})` : ""}</span>
+                                    <span>{normalizeAssignmentStatus(entry.status) === "returned" ? "Trả lại sửa" : "Đã chấm"}{entry.attemptCount ? ` (lần ${entry.attemptCount})` : ""}</span>
                                     <span>{new Date(entry.createdAt).toLocaleString("vi-VN")}</span>
                                   </div>
                                   {entry.score != null && <p className="text-xs font-semibold mt-1">Điểm: {entry.score}/{assignment.maxScore}</p>}

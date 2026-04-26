@@ -1,3 +1,28 @@
+export const ASSIGNMENT_RECIPIENT_STATUSES = ["ASSIGNED", "ACCEPTED", "SUBMITTED", "REVIEWED", "RETURNED"] as const;
+
+export type AssignmentRecipientStatus = typeof ASSIGNMENT_RECIPIENT_STATUSES[number];
+
+export type NormalizedAssignmentRecipientStatus = Lowercase<AssignmentRecipientStatus>;
+
+export const TERMINAL_ASSIGNMENT_STATUSES: NormalizedAssignmentRecipientStatus[] = ["submitted", "reviewed", "returned"];
+
+export function normalizeAssignmentStatus(status: string): NormalizedAssignmentRecipientStatus {
+  return String(status).toLowerCase() as NormalizedAssignmentRecipientStatus;
+}
+
+export function isAssignmentSubmitted(status: string): boolean {
+  return TERMINAL_ASSIGNMENT_STATUSES.includes(normalizeAssignmentStatus(status));
+}
+
+export function isAssignmentPending(status: string) {
+  return normalizeAssignmentStatus(status) === "assigned";
+}
+
+export function isAssignmentOverdue(status: string, dueDate: string | null) {
+  if (!dueDate) return false;
+  return new Date(dueDate).getTime() < Date.now() && !["submitted", "reviewed"].includes(normalizeAssignmentStatus(status));
+}
+
 export interface StudentOption {
   id: string;
   email: string;
@@ -14,14 +39,14 @@ export interface LessonOption {
 
 export interface AssignmentRecipient {
   id: string;
-  status: string;
+  status: AssignmentRecipientStatus;
   submissionText: string | null;
   submissionFiles?: AssignmentSubmissionFile[] | null;
   score: number | null;
   aiScore: number | null;
   feedback: string | null;
   rubricScores?: RubricScore[] | null;
-  feedbackHistory?: FeedbackHistoryItem[] | null;
+  feedbackEvents?: FeedbackHistoryItem[] | null;
   submittedAt: string | null;
   reviewedAt: string | null;
   returnedAt: string | null;
@@ -52,7 +77,7 @@ export interface RubricScore {
 }
 
 export interface FeedbackHistoryItem {
-  status: string;
+  status: AssignmentRecipientStatus;
   score?: number | null;
   feedback?: string | null;
   createdAt: string;

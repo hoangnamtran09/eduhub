@@ -39,6 +39,13 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Submission not found" }, { status: 404 });
     }
 
+    if (
+      authorization.authUser.role === "TEACHER"
+      && recipient.assignment?.createdById !== authorization.authUser.userId
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const rubric = Array.isArray(recipient.assignment?.rubric) ? recipient.assignment.rubric : [];
     const normalizedRubricScores = rubricScores.map((item: any) => {
       const criterion = rubric.find((rubricItem: any) => rubricItem.id === item?.criterionId);
@@ -53,40 +60,53 @@ export async function POST(request: Request, { params }: RouteParams) {
       };
     }).filter((item: any) => item.criterionId);
 
-    const computedScore = normalizedRubricScores.length
+    if (rubric.length > 0 && normalizedRubricScores.length !== rubric.length) {
+      return NextResponse.json({ error: "Rubric scores are incomplete" }, { status: 400 });
+    }
+
+    const computedScore = normalizedRubricScores.length > 0
       ? normalizedRubricScores.reduce((sum: number, item: any) => sum + item.score, 0)
       : score;
+
+    if (computedScore !== null && !Number.isFinite(computedScore)) {
+      return NextResponse.json({ error: "Invalid score" }, { status: 400 });
+    }
+
+    if (computedScore !== null && computedScore > Number(recipient.assignment?.maxScore || 0)) {
+      return NextResponse.json({ error: "Score exceeds assignment max score" }, { status: 400 });
+    }
 
     if (action === "review" && (computedScore === null || !Number.isFinite(computedScore))) {
       return NextResponse.json({ error: "Score is required" }, { status: 400 });
     }
 
-    const history = Array.isArray(recipient.feedbackHistory) ? recipient.feedbackHistory : [];
-    const historyItem = {
-      status: action === "return" ? "returned" : "reviewed",
-      score: action === "return" ? null : computedScore,
-      feedback,
-      rubricScores: normalizedRubricScores,
-      reviewerId: authorization.authUser.userId,
-      createdAt: new Date().toISOString(),
-      attemptCount: recipient.attemptCount || 0,
-    };
-
     const updated = await prismaAny.assignmentRecipient.update({
       where: { id: params.recipientId },
       data: {
-        status: action === "return" ? "returned" : "reviewed",
+        status: action === "return" ? "RETURNED" : "REVIEWED",
         score: action === "return" ? null : computedScore,
         feedback,
         rubricScores: normalizedRubricScores,
-        feedbackHistory: [...history, historyItem],
         reviewedById: authorization.authUser.userId,
         reviewedAt: action === "review" ? new Date() : null,
         returnedAt: action === "return" ? new Date() : null,
+        feedbackEvents: {
+          create: {
+            status: action === "return" ? "RETURNED" : "REVIEWED",
+            score: action === "return" ? null : computedScore,
+            feedback,
+            rubricScores: normalizedRubricScores,
+            reviewerId: authorization.authUser.userId,
+            attemptCount: recipient.attemptCount || 0,
+          },
+        },
       },
       include: {
         student: {
           select: { id: true, fullName: true, email: true, gradeLevel: true },
+        },
+        feedbackEvents: {
+          orderBy: { createdAt: "desc" },
         },
       },
     });

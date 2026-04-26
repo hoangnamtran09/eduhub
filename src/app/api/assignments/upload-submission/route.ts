@@ -6,6 +6,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const MAX_SUBMISSION_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 const allowedTypes = new Set([
   "application/pdf",
   "image/png",
@@ -40,8 +42,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Định dạng file không được hỗ trợ. Chấp nhận: PDF, ảnh, Word, Excel, PowerPoint, TXT" }, { status: 400 });
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: "File tối đa 10MB" }, { status: 400 });
+    if (file.size > MAX_SUBMISSION_FILE_SIZE_BYTES) {
+      return NextResponse.json({ error: "Mỗi file đính kèm chỉ được tối đa 10MB." }, { status: 400 });
     }
 
     if (!isR2Configured()) {
@@ -64,6 +66,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Submission upload error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tải file bài nộp lúc này." }, { status: 500 });
   }
 }

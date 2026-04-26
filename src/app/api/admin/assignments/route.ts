@@ -13,6 +13,9 @@ export async function GET() {
   try {
     const prismaAny = prisma as any;
     const assignments = await prismaAny.assignment.findMany({
+      where: authorization.authUser.role === "TEACHER"
+        ? { createdById: authorization.authUser.userId }
+        : undefined,
       include: {
         lesson: {
           select: {
@@ -28,6 +31,9 @@ export async function GET() {
         },
         recipients: {
           include: {
+            feedbackEvents: {
+              orderBy: { createdAt: "desc" },
+            },
             student: {
               select: {
                 id: true,

@@ -13,6 +13,13 @@ type NotificationItem = {
   description: string;
   href: string;
   level: "critical" | "warning" | "info" | "success";
+  kind?: "profile" | "assignment_due" | "assignment_feedback" | "study_reminder" | "parent_alert" | "admin_alert";
+};
+
+type NotificationPreferences = {
+  dailyStudyReminder: boolean;
+  newAssignmentNotification: boolean;
+  weeklyEmailReport: boolean;
 };
 
 function levelClass(level: NotificationItem["level"]) {
@@ -27,7 +34,21 @@ export function DashboardTopbar() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [preferences, setPreferences] = useState<NotificationPreferences>({
+    dailyStudyReminder: true,
+    newAssignmentNotification: true,
+    weeklyEmailReport: false,
+  });
+
+  useEffect(() => {
+    if (!user) return;
+
+    setPreferences({
+      dailyStudyReminder: user.dailyStudyReminder ?? true,
+      newAssignmentNotification: user.newAssignmentNotification ?? true,
+      weeklyEmailReport: user.weeklyEmailReport ?? false,
+    });
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -42,7 +63,6 @@ export function DashboardTopbar() {
         const data = await response.json();
         if (!cancelled) {
           setNotifications(data.notifications || []);
-          setUnreadCount(Number(data.unreadCount || 0));
         }
       } catch (error) {
         console.error("Failed to load notifications:", error);
@@ -63,6 +83,12 @@ export function DashboardTopbar() {
   if (!user) return null;
 
   const needsProfile = user.role === "STUDENT" && (!user.fullName || !user.gradeLevel);
+  const visibleNotifications = notifications.filter((item) => {
+    if (item.kind === "study_reminder") return preferences.dailyStudyReminder;
+    if (item.kind === "assignment_due" || item.kind === "assignment_feedback") return preferences.newAssignmentNotification;
+    return true;
+  });
+  const visibleUnreadCount = visibleNotifications.filter((item) => item.level === "critical" || item.level === "warning").length;
 
   return (
     <div className="mb-4 flex flex-wrap items-center justify-end gap-3 lg:mb-5">
@@ -86,9 +112,9 @@ export function DashboardTopbar() {
           aria-label="Mở thông báo"
         >
           <Bell className="h-4 w-4 text-slate-700" />
-          {unreadCount > 0 && (
+          {visibleUnreadCount > 0 && (
             <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-              {Math.min(unreadCount, 9)}
+              {Math.min(visibleUnreadCount, 9)}
             </span>
           )}
         </Button>
@@ -111,9 +137,9 @@ export function DashboardTopbar() {
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Đang tải thông báo...
                 </div>
-              ) : notifications.length ? (
+              ) : visibleNotifications.length ? (
                 <div className="space-y-2">
-                  {notifications.map((item) => (
+                  {visibleNotifications.map((item) => (
                     <Link
                       key={item.id}
                       href={item.href}
@@ -136,7 +162,7 @@ export function DashboardTopbar() {
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
                   <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-emerald-500" />
                   <p className="text-sm font-semibold text-slate-900">Không có việc cần xử lý</p>
-                  <p className="mt-1 text-xs text-slate-500">Hệ thống sẽ nhắc khi có bài sắp hạn, hồ sơ thiếu hoặc cảnh báo học tập.</p>
+                  <p className="mt-1 text-xs text-slate-500">Hệ thống sẽ nhắc khi có bài sắp hạn, feedback mới, hồ sơ thiếu hoặc cảnh báo học tập.</p>
                 </div>
               )}
             </div>

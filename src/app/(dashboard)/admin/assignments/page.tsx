@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { AssignmentList } from "@/components/admin/assignments/assignment-list";
 import { CreateAssignmentModal } from "@/components/admin/assignments/create-assignment-modal";
 import { useAssignments } from "@/components/admin/assignments/use-assignments";
+import { isAssignmentOverdue, normalizeAssignmentStatus } from "@/types/assignment";
 
 export default function AdminAssignmentsPage() {
   const {
@@ -27,31 +28,36 @@ export default function AdminAssignmentsPage() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "needs_review" | "reviewed" | "returned" | "overdue">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "assigned" | "accepted" | "needs_review" | "reviewed" | "returned" | "overdue">("all");
 
   const stats = useMemo(() => {
-    let needsReview = 0, reviewed = 0, returned = 0, overdue = 0;
+    let assigned = 0, accepted = 0, needsReview = 0, reviewed = 0, returned = 0, overdue = 0;
     for (const a of assignments) {
       for (const r of a.recipients) {
-        if (r.status === "submitted") needsReview++;
-        if (r.status === "reviewed") reviewed++;
-        if (r.status === "returned") returned++;
-        if (a.dueDate && new Date(a.dueDate).getTime() < Date.now() && !["submitted", "reviewed"].includes(r.status)) overdue++;
+        if (r.status === "ASSIGNED") assigned++;
+        if (r.status === "ACCEPTED") accepted++;
+        if (r.status === "SUBMITTED") needsReview++;
+        if (r.status === "REVIEWED") reviewed++;
+        if (r.status === "RETURNED") returned++;
+        if (isAssignmentOverdue(r.status, a.dueDate)) overdue++;
       }
     }
-    return { needsReview, reviewed, returned, overdue };
+    return { assigned, accepted, needsReview, reviewed, returned, overdue };
   }, [assignments]);
 
   const filteredAssignments = useMemo(() => {
     if (statusFilter === "all") return assignments;
     return assignments.filter((a) =>
-      a.recipients.some((r) => {
-        if (statusFilter === "needs_review") return r.status === "submitted";
-        if (statusFilter === "reviewed") return r.status === "reviewed";
-        if (statusFilter === "returned") return r.status === "returned";
-        if (statusFilter === "overdue") return a.dueDate && new Date(a.dueDate).getTime() < Date.now() && !["submitted", "reviewed"].includes(r.status);
-        return true;
-      })
+        a.recipients.some((r) => {
+          const normalizedStatus = normalizeAssignmentStatus(r.status);
+          if (statusFilter === "assigned") return normalizedStatus === "assigned";
+          if (statusFilter === "accepted") return normalizedStatus === "accepted";
+          if (statusFilter === "needs_review") return normalizedStatus === "submitted";
+          if (statusFilter === "reviewed") return normalizedStatus === "reviewed";
+          if (statusFilter === "returned") return normalizedStatus === "returned";
+          if (statusFilter === "overdue") return isAssignmentOverdue(r.status, a.dueDate);
+          return true;
+        })
     );
   }, [assignments, statusFilter]);
 
@@ -89,7 +95,9 @@ export default function AdminAssignmentsPage() {
           </header>
 
           <main>
-            <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <StatBox label="Chưa nhận" value={stats.assigned} color="text-amber-700 bg-amber-50 border-amber-200" />
+              <StatBox label="Đã nhận" value={stats.accepted} color="text-emerald-700 bg-emerald-50 border-emerald-200" />
               <StatBox label="Chờ chấm" value={stats.needsReview} color="text-sky-700 bg-sky-50 border-sky-200" />
               <StatBox label="Đã chấm" value={stats.reviewed} color="text-emerald-700 bg-emerald-50 border-emerald-200" />
               <StatBox label="Trả sửa" value={stats.returned} color="text-orange-700 bg-orange-50 border-orange-200" />
@@ -114,6 +122,8 @@ export default function AdminAssignmentsPage() {
                   className="h-10 w-full appearance-none rounded-md border border-gray-200 bg-white pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-brand-100"
                 >
                   <option value="all">Tất cả</option>
+                  <option value="assigned">Chưa nhận</option>
+                  <option value="accepted">Đã nhận</option>
                   <option value="needs_review">Chờ chấm</option>
                   <option value="reviewed">Đã chấm</option>
                   <option value="returned">Trả sửa</option>

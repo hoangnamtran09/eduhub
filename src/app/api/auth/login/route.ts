@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     const prismaAny = prisma as any;
     const user = await prismaAny.user.findUnique({
       where: { email },
+      include: { profile: true },
     });
 
     if (!user) {

@@ -103,6 +103,11 @@ export async function GET(request: NextRequest) {
           },
         });
       }
+
+      user = await prismaAny.user.findUnique({
+        where: { id: user.id },
+        include: { profile: true },
+      });
     } else {
       user = await prismaAny.user.update({
         where: { id: user.id },
@@ -111,6 +116,7 @@ export async function GET(request: NextRequest) {
           avatarUrl: profile.picture || user.avatarUrl,
           emailVerified: profile.email_verified ? (user.emailVerified || new Date()) : user.emailVerified,
         },
+        include: { profile: true },
       });
     }
 

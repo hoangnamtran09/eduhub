@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +19,15 @@ export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState("profile");
   const [profileForm, setProfileForm] = useState({ fullName: "", gradeLevel: "" });
+  const [notificationPreferences, setNotificationPreferences] = useState({
+    dailyStudyReminder: true,
+    newAssignmentNotification: true,
+    weeklyEmailReport: false,
+  });
   const [profileStatus, setProfileStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [passwordStatus, setPasswordStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [notificationStatus, setNotificationStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
@@ -31,6 +38,11 @@ export default function SettingsPage() {
       fullName: user.fullName || "",
       gradeLevel: user.gradeLevel ? String(user.gradeLevel) : "",
     });
+    setNotificationPreferences({
+      dailyStudyReminder: user.dailyStudyReminder ?? true,
+      newAssignmentNotification: user.newAssignmentNotification ?? true,
+      weeklyEmailReport: user.weeklyEmailReport ?? false,
+    });
   }, [user]);
 
   const initials = (user?.fullName || user?.email || "U")
@@ -39,6 +51,38 @@ export default function SettingsPage() {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("") || "U";
+
+  const handleToggleNotificationPreference = (key: keyof typeof notificationPreferences) => {
+    setNotificationStatus(null);
+    setNotificationPreferences((current) => ({ ...current, [key]: !current[key] }));
+  };
+
+  const handleSaveNotificationPreferences = async () => {
+    if (!user) return;
+
+    setNotificationStatus(null);
+
+    try {
+      const response = await fetch("/api/settings/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notificationPreferences),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể lưu cài đặt thông báo");
+      }
+
+      setUser(data.user);
+      setNotificationStatus({ type: "success", message: "Đã lưu cài đặt thông báo" });
+    } catch (error) {
+      setNotificationStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Không thể lưu cài đặt thông báo",
+      });
+    }
+  };
 
   const handleSaveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -154,12 +198,20 @@ export default function SettingsPage() {
               <CardContent>
                 <form className="space-y-4" onSubmit={handleSaveProfile}>
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-2xl font-bold">
-                    {initials}
-                  </div>
+                  {user?.avatarUrl ? (
+                    <Image src={user.avatarUrl} alt={user.fullName || user.email || "Avatar"} width={80} height={80} className="h-20 w-20 rounded-full object-cover ring-2 ring-slate-200" unoptimized />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-2xl font-bold">
+                      {initials}
+                    </div>
+                  )}
                   <div>
-                    <Button type="button" variant="outline" disabled>Đổi ảnh đại diện</Button>
-                    <p className="mt-1 text-xs text-slate-500">Tính năng đổi ảnh sẽ được bổ sung sau.</p>
+                    <Button type="button" variant="outline" disabled={!user?.avatarUrl}>Ảnh hiện tại</Button>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {user?.avatarUrl
+                        ? "Ảnh đại diện đang đồng bộ từ tài khoản đã đăng nhập. Chỉnh sửa trực tiếp trong nhà cung cấp đăng nhập nếu cần."
+                        : "Tài khoản này chưa có ảnh đại diện. Hệ thống đang dùng ảnh chữ cái mặc định."}
+                    </p>
                   </div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -207,21 +259,51 @@ export default function SettingsPage() {
                 <CardDescription>Quản lý cách bạn nhận thông báo</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                  Hệ thống thông báo đang được phát triển. Các tùy chọn bên dưới hiện được khóa để tránh hiểu nhầm.
+                <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+                  Các tùy chọn bên dưới được lưu trên thiết bị hiện tại. Trung tâm thông báo trong ứng dụng vẫn hoạt động ngay cả khi bạn tắt email hoặc nhắc học.
                 </div>
-                {["Nhắc nhở học tập hàng ngày", "Thông báo khi có bài mới", "Email báo cáo tuần"].map((item) => (
-                  <div key={item} className="flex items-center justify-between py-2">
+                {[
+                  {
+                    key: "dailyStudyReminder" as const,
+                    label: "Nhắc nhở học tập hàng ngày",
+                    description: "Hiển thị nhắc học khi bạn mở ứng dụng trong ngày.",
+                  },
+                  {
+                    key: "newAssignmentNotification" as const,
+                    label: "Thông báo khi có bài mới hoặc feedback mới",
+                    description: "Ưu tiên cảnh báo khi bài tập được chấm hoặc bị trả sửa.",
+                  },
+                  {
+                    key: "weeklyEmailReport" as const,
+                    label: "Email báo cáo tuần",
+                    description: "Đánh dấu sẵn nhu cầu nhận email tổng hợp khi backend email được bật.",
+                  },
+                ].map((item) => (
+                  <div key={item.key} className="flex items-center justify-between gap-4 py-2">
                     <div>
-                      <span className="text-slate-500">{item}</span>
-                      <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">Sắp ra mắt</span>
+                      <p className="text-sm font-medium text-slate-700">{item.label}</p>
+                      <p className="mt-1 text-xs text-slate-500">{item.description}</p>
                     </div>
-                    <label className="relative inline-flex cursor-not-allowed items-center opacity-60">
-                      <input type="checkbox" className="sr-only peer" disabled />
-                      <div className="w-11 h-6 rounded-full bg-slate-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-['']"></div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={notificationPreferences[item.key]}
+                        onChange={() => handleToggleNotificationPreference(item.key)}
+                      />
+                      <div className="h-6 w-11 rounded-full bg-slate-200 transition peer-checked:bg-primary after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-5"></div>
                     </label>
                   </div>
                 ))}
+                {notificationStatus && (
+                  <p className={notificationStatus.type === "success" ? "text-sm text-emerald-600" : "text-sm text-red-600"}>
+                    {notificationStatus.message}
+                  </p>
+                )}
+                <Button type="button" className="gap-2" onClick={handleSaveNotificationPreferences}>
+                  <Save className="w-4 h-4" />
+                  Lưu cài đặt thông báo
+                </Button>
               </CardContent>
             </Card>
           )}

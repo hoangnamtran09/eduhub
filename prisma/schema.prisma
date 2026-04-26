@@ -20,6 +20,14 @@ enum LessonProgressStatus {
   COMPLETED
 }
 
+enum AssignmentRecipientStatus {
+  ASSIGNED
+  ACCEPTED
+  SUBMITTED
+  REVIEWED
+  RETURNED
+}
+
 model User {
   id              String           @id @default(cuid())
   email           String           @unique
@@ -29,6 +37,9 @@ model User {
   role            UserRole         @default(STUDENT)
   gradeLevel      Int?
   diamonds        Int              @default(0)
+  dailyStudyReminder Boolean       @default(true)
+  newAssignmentNotification Boolean @default(true)
+  weeklyEmailReport Boolean        @default(false)
   emailVerified   DateTime?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
@@ -158,14 +169,13 @@ model AssignmentRecipient {
   id             String      @id @default(cuid())
   assignmentId   String
   studentId      String
-  status         String      @default("assigned")
+  status         AssignmentRecipientStatus @default(ASSIGNED)
   submissionText String?     @db.Text
   submissionFiles Json?
   score          Int?
   aiScore        Int?
   feedback       String?     @db.Text
   rubricScores   Json?
-  feedbackHistory Json?
   reviewedById   String?
   submittedAt    DateTime?
   reviewedAt     DateTime?
@@ -174,9 +184,25 @@ model AssignmentRecipient {
   createdAt      DateTime    @default(now())
   assignment     Assignment  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student        User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feedbackEvents AssignmentFeedbackEvent[]
 
   @@unique([assignmentId, studentId])
   @@index([studentId, status])
+}
+
+model AssignmentFeedbackEvent {
+  id          String               @id @default(cuid())
+  recipientId String
+  status      AssignmentRecipientStatus
+  score       Int?
+  feedback    String?              @db.Text
+  rubricScores Json?
+  reviewerId  String?
+  attemptCount Int                 @default(0)
+  createdAt   DateTime             @default(now())
+  recipient   AssignmentRecipient  @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, createdAt])
 }
 
 model Quiz {

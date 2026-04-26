@@ -12,6 +12,7 @@ type NotificationItem = {
   description: string;
   href: string;
   level: "critical" | "warning" | "info" | "success";
+  kind: "profile" | "assignment_due" | "assignment_feedback" | "study_reminder" | "parent_alert" | "admin_alert";
   createdAt: string;
 };
 
@@ -51,14 +52,18 @@ export async function GET() {
           description: "Cập nhật họ tên và lớp để hệ thống cá nhân hóa lộ trình tốt hơn.",
           href: "/settings",
           level: "warning",
+          kind: "profile",
           createdAt: now,
         });
       }
 
+      const allowStudyReminder = user.dailyStudyReminder ?? true;
+      const allowAssignmentNotifications = user.newAssignmentNotification ?? true;
+
       const assignments = await prismaAny.assignmentRecipient.findMany({
         where: {
           studentId: authUser.userId,
-          status: { in: ["assigned", "accepted", "returned", "reviewed"] },
+          status: { in: ["ASSIGNED", "ACCEPTED", "RETURNED", "REVIEWED"] },
         },
         include: { assignment: true },
         orderBy: { createdAt: "desc" },
@@ -66,25 +71,31 @@ export async function GET() {
       });
 
       assignments.forEach((recipient: any) => {
-        if (recipient.status === "reviewed") {
+        if (!allowAssignmentNotifications && ["REVIEWED", "RETURNED"].includes(recipient.status)) {
+          return;
+        }
+
+        if (recipient.status === "REVIEWED") {
           notifications.push({
             id: `reviewed-${recipient.id}`,
             title: "Bài tập đã được chấm",
             description: recipient.assignment?.title || "Bạn đã nhận được phản hồi mới từ giáo viên.",
             href: "/assignments",
             level: "success",
+            kind: "assignment_feedback",
             createdAt: recipient.reviewedAt || now,
           });
           return;
         }
 
-        if (recipient.status === "returned") {
+        if (recipient.status === "RETURNED") {
           notifications.push({
             id: `returned-${recipient.id}`,
             title: "Bài tập cần chỉnh sửa",
             description: recipient.feedback || recipient.assignment?.title || "Giáo viên đã trả bài để bạn sửa lại.",
             href: "/assignments",
             level: "warning",
+            kind: "assignment_feedback",
             createdAt: recipient.returnedAt || now,
           });
           return;
@@ -92,7 +103,7 @@ export async function GET() {
 
         const dueDate = recipient.assignment?.dueDate ? new Date(recipient.assignment.dueDate) : null;
         const level = dueLevel(dueDate);
-        if (!level) return;
+        if (!level || !allowAssignmentNotifications) return;
 
         notifications.push({
           id: `assignment-${recipient.id}`,
@@ -100,17 +111,19 @@ export async function GET() {
           description: recipient.assignment?.title || "Bạn có một bài tập cần xử lý.",
           href: "/assignments",
           level,
+          kind: "assignment_due",
           createdAt: recipient.assignment?.dueDate || now,
         });
       });
 
-      if ((user.profile?.streakDays || 0) === 0) {
+      if (allowStudyReminder && (user.profile?.streakDays || 0) === 0) {
         notifications.push({
           id: "start-streak",
           title: "Bắt đầu chuỗi học hôm nay",
           description: "Học một bài ngắn để kích hoạt chuỗi và mở khóa gợi ý tiến độ.",
           href: "/courses",
           level: "info",
+          kind: "study_reminder",
           createdAt: now,
         });
       }
@@ -137,19 +150,21 @@ export async function GET() {
             description: `${child.fullName || child.email} ${inactiveDays === null ? "chưa có hoạt động học" : `không học ${inactiveDays} ngày`}.`,
             href: "/",
             level: inactiveDays === null || inactiveDays > 14 ? "critical" : "warning",
+            kind: "parent_alert",
             createdAt: now,
           });
         }
 
         child.assignedTasks?.forEach((recipient: any) => {
           const level = dueLevel(recipient.assignment?.dueDate ? new Date(recipient.assignment.dueDate) : null);
-          if (!level || ["submitted", "reviewed"].includes(String(recipient.status).toLowerCase())) return;
+          if (!level || ["SUBMITTED", "REVIEWED"].includes(String(recipient.status))) return;
           notifications.push({
             id: `parent-assignment-${recipient.id}`,
             title: level === "critical" ? "Bài tập của con đã quá hạn" : "Bài tập của con sắp đến hạn",
             description: `${child.fullName || child.email}: ${recipient.assignment?.title || "Bài tập"}`,
             href: "/assignments",
             level,
+            kind: "parent_alert",
             createdAt: recipient.assignment?.dueDate || now,
           });
         });
@@ -176,6 +191,7 @@ export async function GET() {
           description: `${ungradedStudents} hồ sơ cần bổ sung lớp để cá nhân hóa nội dung học.`,
           href: "/admin/students",
           level: "warning",
+          kind: "admin_alert",
           createdAt: now,
         });
       }
@@ -187,6 +203,7 @@ export async function GET() {
           description: `${inactiveStudents} học sinh chưa hoạt động trong 7 ngày hoặc chưa có phiên học.`,
           href: "/",
           level: "info",
+          kind: "admin_alert",
           createdAt: now,
         });
       }

@@ -238,6 +238,10 @@ function formatDueDate(date: string | null | undefined) {
 
 function getAssignmentStatusLabel(status: string) {
   switch (status?.toLowerCase()) {
+    case "reviewed":
+      return "Đã chấm";
+    case "returned":
+      return "Cần sửa";
     case "submitted":
       return "Đã nộp";
     case "accepted":
