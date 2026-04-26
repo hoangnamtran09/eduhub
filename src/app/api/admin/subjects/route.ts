@@ -19,6 +19,15 @@ const subjectMutationSchema = z.object({
   gradeLevel: z.coerce.number().int().min(1).max(12).optional().nullable(),
 });
 
+async function tableExists(tx: any, tableName: string) {
+  const result = await tx.$queryRawUnsafe(
+    "SELECT to_regclass($1) IS NOT NULL AS exists",
+    `public."${tableName}"`,
+  ) as Array<{ exists: boolean }>;
+
+  return Boolean(result[0]?.exists);
+}
+
 export async function GET() {
   const authorization = await requireAdminOrTeacher();
   if (authorization instanceof NextResponse) return authorization;
@@ -231,7 +240,15 @@ export async function DELETE(request: Request) {
       const lessonIds = lessons.map((lesson: { id: string }) => lesson.id);
       const courseIds = courses.map((course: { id: string }) => course.id);
 
+      if (await tableExists(tx, "Semester")) {
+        await tx.$executeRawUnsafe('DELETE FROM "Semester" WHERE "subjectId" = $1', id);
+      }
+
       if (lessonIds.length) {
+        if (await tableExists(tx, "ChatHistory")) {
+          await tx.$executeRawUnsafe('DELETE FROM "ChatHistory" WHERE "lessonId" = ANY($1)', lessonIds);
+        }
+
         const recipients = await tx.assignmentRecipient.findMany({
           where: {
             assignment: {
@@ -346,7 +363,11 @@ export async function DELETE(request: Request) {
   } catch (error) {
     console.error("Error deleting subject:", error);
     return NextResponse.json(
-      { error: "Failed to delete subject" },
+      {
+        error: "Failed to delete subject",
+        code: typeof error === "object" && error && "code" in error ? (error as { code?: string }).code : undefined,
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
