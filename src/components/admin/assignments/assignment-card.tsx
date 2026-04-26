@@ -40,7 +40,7 @@ function getStatusKey(status: string, dueDate: string | null): string {
 interface ReviewDraft {
   score: string;
   feedback: string;
-  rubricScores: Record<string, string>;
+  rubricScores: Record<string, { score: string; comment: string }>;
 }
 
 interface AssignmentCardProps {
@@ -52,6 +52,8 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedRecipient, setExpandedRecipient] = useState<string | null>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [aiGradingId, setAiGradingId] = useState<string | null>(null);
+  const [inlineError, setInlineError] = useState<string | null>(null);
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, ReviewDraft>>({});
 
   const rubric: RubricCriterion[] = Array.isArray(assignment.rubric) ? assignment.rubric : [];
@@ -60,8 +62,8 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
 
   const getDraft = (recipientId: string): ReviewDraft => {
     if (reviewDrafts[recipientId]) return reviewDrafts[recipientId];
-    const defaultRubric: Record<string, string> = {};
-    rubric.forEach((c) => { defaultRubric[c.id] = ""; });
+    const defaultRubric: Record<string, { score: string; comment: string }> = {};
+    rubric.forEach((c) => { defaultRubric[c.id] = { score: "", comment: "" }; });
     return { score: "", feedback: "", rubricScores: defaultRubric };
   };
 
@@ -71,9 +73,9 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
   };
 
   const prefillFromAI = (recipient: AssignmentRecipient) => {
-    const rs: Record<string, string> = {};
+    const rs: Record<string, { score: string; comment: string }> = {};
     if (Array.isArray(recipient.rubricScores)) {
-      recipient.rubricScores.forEach((s) => { rs[s.criterionId] = String(s.score); });
+      recipient.rubricScores.forEach((s) => { rs[s.criterionId] = { score: String(s.score), comment: s.comment || "" }; });
     }
     updateDraft(recipient.id, {
       score: recipient.aiScore != null ? String(recipient.aiScore) : "",
@@ -82,15 +84,47 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
     });
   };
 
+  const runAiPregrade = async (recipient: AssignmentRecipient) => {
+    setAiGradingId(recipient.id);
+    setInlineError(null);
+    try {
+      const response = await fetch(`/api/assignments/${recipient.id}/ai-grade`, { method: "POST" });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể chấm sơ bộ bằng AI");
+      }
+
+      const rs: Record<string, { score: string; comment: string }> = {};
+      if (Array.isArray(data.rubricScores)) {
+        data.rubricScores.forEach((item: any) => {
+          rs[item.criterionId] = { score: String(item.score ?? ""), comment: item.comment || "" };
+        });
+      }
+
+      updateDraft(recipient.id, {
+        score: data.aiScore != null ? String(data.aiScore) : "",
+        feedback: data.feedback || "",
+        rubricScores: { ...getDraft(recipient.id).rubricScores, ...rs },
+      });
+      onReviewed?.();
+    } catch (error) {
+      setInlineError(error instanceof Error ? error.message : "Không thể chấm sơ bộ bằng AI");
+    } finally {
+      setAiGradingId(null);
+    }
+  };
+
   const submitReview = async (recipient: AssignmentRecipient, action: "review" | "return") => {
     const draft = getDraft(recipient.id);
     setReviewingId(recipient.id);
+    setInlineError(null);
     try {
       const rubricScoresPayload = rubric.map((c) => ({
         criterionId: c.id,
         title: c.title,
-        score: Number(draft.rubricScores[c.id]) || 0,
+        score: Number(draft.rubricScores[c.id]?.score) || 0,
         maxScore: c.maxScore,
+        comment: draft.rubricScores[c.id]?.comment || "",
       }));
 
       const response = await fetch(`/api/admin/assignments/recipients/${recipient.id}/review`, {
@@ -103,10 +137,11 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
           rubricScores: rubricScoresPayload,
         }),
       });
-      if (!response.ok) throw new Error("Failed to review submission");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to review submission");
       onReviewed?.();
     } catch (error) {
-      console.error(error);
+      setInlineError(error instanceof Error ? error.message : "Không thể chấm bài");
     } finally {
       setReviewingId(null);
     }
@@ -195,6 +230,11 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                       <div className="border-t px-4 py-3 space-y-3">
                         {hasSubmission && (
                           <>
+                            {inlineError && expandedRecipient === recipient.id && (
+                              <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                                {inlineError}
+                              </div>
+                            )}
                             {recipient.submissionText && (
                               <div className="rounded-lg bg-slate-50 p-3">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Nội dung bài nộp</p>
@@ -215,15 +255,23 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                                 <Clock className="w-3 h-3" /> Nộp lúc {new Date(recipient.submittedAt).toLocaleString("vi-VN")}
                               </p>
                             )}
+                            {["submitted", "returned"].includes(recipient.status) && (
+                              <Button size="sm" variant="outline" className="text-xs" onClick={() => runAiPregrade(recipient)} disabled={aiGradingId === recipient.id}>
+                                {aiGradingId === recipient.id ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Bot className="mr-1 h-3.5 w-3.5" />}
+                                AI chấm sơ bộ
+                              </Button>
+                            )}
                           </>
                         )}
 
-                        {recipient.aiScore != null && (
+                        {(recipient.aiScore != null || aiGradingId === recipient.id) && (
                           <div className="rounded-lg border border-violet-200 bg-violet-50 p-3">
                             <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-600 mb-2">
                               <Bot className="w-3.5 h-3.5" /> Chấm sơ bộ AI
                             </p>
-                            <p className="text-sm font-bold text-violet-900">Điểm AI: {recipient.aiScore}/{assignment.maxScore}</p>
+                            <p className="text-sm font-bold text-violet-900">
+                              Điểm AI: {aiGradingId === recipient.id ? "Đang phân tích..." : `${recipient.aiScore ?? "-"}/${assignment.maxScore}`}
+                            </p>
                             {recipient.feedback && recipient.status === "submitted" && (
                               <p className="mt-1 text-sm text-violet-800 whitespace-pre-line">{recipient.feedback}</p>
                             )}
@@ -237,28 +285,42 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                                 ))}
                               </div>
                             )}
-                            {recipient.status === "submitted" && (
-                              <Button size="sm" variant="outline" className="mt-2 text-xs" onClick={() => prefillFromAI(recipient)}>
-                                Dùng điểm AI làm mẫu
-                              </Button>
+                            {recipient.aiScore != null && ["submitted", "returned"].includes(recipient.status) && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                <Button size="sm" variant="outline" className="text-xs" onClick={() => prefillFromAI(recipient)}>
+                                  Dùng điểm AI làm mẫu
+                                </Button>
+                              </div>
                             )}
                           </div>
                         )}
 
-                        {recipient.status === "submitted" && (
+                        {["submitted", "returned"].includes(recipient.status) && (
                           <div className="rounded-lg border border-brand-200 bg-brand-50 p-3 space-y-3">
                             <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">Chấm bài</p>
                             {rubric.length > 0 && (
                               <div className="grid gap-2">
                                 {rubric.map((c) => (
-                                  <div key={c.id} className="flex items-center gap-3">
-                                    <label className="text-sm text-slate-700 flex-1">{c.title} <span className="text-slate-400">(/{c.maxScore})</span></label>
+                                  <div key={c.id} className="grid gap-2 rounded-lg bg-white p-3 md:grid-cols-[minmax(0,1fr),84px]">
+                                    <div>
+                                      <label className="text-sm text-slate-700 flex-1">{c.title} <span className="text-slate-400">(/{c.maxScore})</span></label>
+                                      <Input
+                                        className="mt-2 h-9 text-sm"
+                                        value={draft.rubricScores[c.id]?.comment || ""}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                          const updated = { ...draft.rubricScores, [c.id]: { ...(draft.rubricScores[c.id] || { score: "", comment: "" }), comment: e.target.value } };
+                                          updateDraft(recipient.id, { rubricScores: updated });
+                                        }}
+                                        placeholder="Nhận xét tiêu chí"
+                                      />
+                                    </div>
                                     <Input
-                                      type="number" min={0} max={c.maxScore} className="w-20 h-8 text-sm"
-                                      value={draft.rubricScores[c.id] || ""}
+                                      type="number" min={0} max={c.maxScore} className="h-9 text-sm"
+                                      value={draft.rubricScores[c.id]?.score || ""}
                                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                        const updated = { ...draft.rubricScores, [c.id]: e.target.value };
-                                        updateDraft(recipient.id, { rubricScores: updated });
+                                        const updated = { ...draft.rubricScores, [c.id]: { ...(draft.rubricScores[c.id] || { score: "", comment: "" }), score: e.target.value } };
+                                        const total = rubric.reduce((sum, criterion) => sum + (Number(updated[criterion.id]?.score) || 0), 0);
+                                        updateDraft(recipient.id, { rubricScores: updated, score: String(Math.min(total, assignment.maxScore)) });
                                       }}
                                       placeholder="0"
                                     />

@@ -58,7 +58,7 @@ export async function GET() {
       const assignments = await prismaAny.assignmentRecipient.findMany({
         where: {
           studentId: authUser.userId,
-          status: { notIn: ["submitted", "reviewed"] },
+          status: { in: ["assigned", "accepted", "returned", "reviewed"] },
         },
         include: { assignment: true },
         orderBy: { createdAt: "desc" },
@@ -66,6 +66,30 @@ export async function GET() {
       });
 
       assignments.forEach((recipient: any) => {
+        if (recipient.status === "reviewed") {
+          notifications.push({
+            id: `reviewed-${recipient.id}`,
+            title: "Bài tập đã được chấm",
+            description: recipient.assignment?.title || "Bạn đã nhận được phản hồi mới từ giáo viên.",
+            href: "/assignments",
+            level: "success",
+            createdAt: recipient.reviewedAt || now,
+          });
+          return;
+        }
+
+        if (recipient.status === "returned") {
+          notifications.push({
+            id: `returned-${recipient.id}`,
+            title: "Bài tập cần chỉnh sửa",
+            description: recipient.feedback || recipient.assignment?.title || "Giáo viên đã trả bài để bạn sửa lại.",
+            href: "/assignments",
+            level: "warning",
+            createdAt: recipient.returnedAt || now,
+          });
+          return;
+        }
+
         const dueDate = recipient.assignment?.dueDate ? new Date(recipient.assignment.dueDate) : null;
         const level = dueLevel(dueDate);
         if (!level) return;

@@ -99,7 +99,7 @@ export default function AssignmentsPage() {
 
     return items.filter((item) => {
       const isAccepted = item.status === "accepted";
-      const isSubmitted = ["submitted", "reviewed", "returned"].includes(item.status);
+      const isSubmitted = item.status === "submitted";
       const isOverdue = Boolean(item.assignment.dueDate && new Date(item.assignment.dueDate).getTime() < Date.now() && !isSubmitted);
       const isReviewed = item.status === "reviewed";
       const isReturned = item.status === "returned";

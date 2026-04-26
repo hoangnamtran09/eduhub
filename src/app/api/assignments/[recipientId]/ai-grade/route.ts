@@ -41,8 +41,8 @@ export async function POST(_request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    if (recipient.status !== "submitted") {
-      return NextResponse.json({ error: "Assignment is not in submitted state" }, { status: 400 });
+    if (!["submitted", "returned"].includes(recipient.status)) {
+      return NextResponse.json({ error: "Assignment is not ready for AI grading" }, { status: 400 });
     }
 
     const assignment = recipient.assignment;

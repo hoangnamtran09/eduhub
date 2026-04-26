@@ -39,12 +39,34 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Submission not found" }, { status: 404 });
     }
 
+    const rubric = Array.isArray(recipient.assignment?.rubric) ? recipient.assignment.rubric : [];
+    const normalizedRubricScores = rubricScores.map((item: any) => {
+      const criterion = rubric.find((rubricItem: any) => rubricItem.id === item?.criterionId);
+      const maxScore = Number(criterion?.maxScore || item?.maxScore || 0);
+      const rawScore = Number(item?.score || 0);
+      return {
+        criterionId: String(item?.criterionId || criterion?.id || ""),
+        title: String(item?.title || criterion?.title || "Tiêu chí"),
+        score: Math.max(0, Math.min(maxScore, rawScore)),
+        maxScore,
+        comment: typeof item?.comment === "string" ? item.comment.trim() : "",
+      };
+    }).filter((item: any) => item.criterionId);
+
+    const computedScore = normalizedRubricScores.length
+      ? normalizedRubricScores.reduce((sum: number, item: any) => sum + item.score, 0)
+      : score;
+
+    if (action === "review" && (computedScore === null || !Number.isFinite(computedScore))) {
+      return NextResponse.json({ error: "Score is required" }, { status: 400 });
+    }
+
     const history = Array.isArray(recipient.feedbackHistory) ? recipient.feedbackHistory : [];
     const historyItem = {
       status: action === "return" ? "returned" : "reviewed",
-      score,
+      score: action === "return" ? null : computedScore,
       feedback,
-      rubricScores,
+      rubricScores: normalizedRubricScores,
       reviewerId: authorization.authUser.userId,
       createdAt: new Date().toISOString(),
       attemptCount: recipient.attemptCount || 0,
@@ -54,9 +76,9 @@ export async function POST(request: Request, { params }: RouteParams) {
       where: { id: params.recipientId },
       data: {
         status: action === "return" ? "returned" : "reviewed",
-        score: action === "return" ? null : score,
+        score: action === "return" ? null : computedScore,
         feedback,
-        rubricScores,
+        rubricScores: normalizedRubricScores,
         feedbackHistory: [...history, historyItem],
         reviewedById: authorization.authUser.userId,
         reviewedAt: action === "review" ? new Date() : null,
