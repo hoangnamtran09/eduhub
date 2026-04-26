@@ -26,6 +26,10 @@ const createStudentSchema = z.object({
   fullName: z.string().trim().min(1).max(120),
   gradeLevel: z.coerce.number().int().min(1).max(12),
   parentId: z.string().trim().optional().nullable(),
+  createParent: z.boolean().optional(),
+  parentEmail: z.string().trim().email().optional().or(z.literal("")),
+  parentPassword: z.string().min(8).max(128).optional().or(z.literal("")),
+  parentFullName: z.string().trim().max(120).optional().nullable(),
   goals: z.array(z.string().trim().min(1).max(120)).optional(),
   strengths: z.array(z.string().trim().min(1).max(120)).optional(),
   weaknesses: z.array(z.string().trim().min(1).max(120)).optional(),
@@ -112,9 +116,33 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password, fullName, gradeLevel, parentId, goals, strengths, weaknesses } = parsed.data;
+    const {
+      email,
+      password,
+      fullName,
+      gradeLevel,
+      parentId,
+      createParent,
+      parentEmail,
+      parentPassword,
+      parentFullName,
+      goals,
+      strengths,
+      weaknesses,
+    } = parsed.data;
     const prismaAny = prisma as any;
-    const normalizedParentId = parentId?.trim() || null;
+    let normalizedParentId = parentId?.trim() || null;
+
+    if (createParent) {
+      if (!parentEmail?.trim() || !parentPassword) {
+        return NextResponse.json(
+          { error: "Missing parent email or password" },
+          { status: 400 },
+        );
+      }
+
+      normalizedParentId = null;
+    }
 
     if (normalizedParentId) {
       const parentAccount = await prismaAny.user.findFirst({
@@ -130,50 +158,85 @@ export async function POST(request: Request) {
       }
     }
 
-    const student = await prismaAny.user.create({
-      data: {
-        email: email.trim(),
-        fullName: fullName.trim(),
-        role: "STUDENT",
-        gradeLevel,
-        parentId: normalizedParentId,
-        passwordHash: await hashPassword(password),
-        profile: {
-          create: {
-            goals: Array.isArray(goals) ? goals : [],
-            strengths: Array.isArray(strengths) ? strengths : [],
-            weaknesses: Array.isArray(weaknesses) ? weaknesses : [],
+    const studentPasswordHash = await hashPassword(password);
+    const parentPasswordHash = createParent && parentPassword ? await hashPassword(parentPassword) : null;
+
+    const student = await prismaAny.$transaction(async (tx: any) => {
+      let createdParent: any = null;
+
+      if (createParent && parentEmail?.trim() && parentPasswordHash) {
+        createdParent = await tx.user.create({
+          data: {
+            email: parentEmail.trim(),
+            fullName: parentFullName?.trim() || null,
+            role: "PARENT",
+            passwordHash: parentPasswordHash,
           },
-        },
-      },
-      include: {
-        parent: {
           select: {
             id: true,
             email: true,
             fullName: true,
+            children: {
+              where: { role: "STUDENT" },
+              select: { id: true },
+            },
+          },
+        });
+        normalizedParentId = createdParent.id;
+      }
+
+      const createdStudent = await tx.user.create({
+        data: {
+          email: email.trim(),
+          fullName: fullName.trim(),
+          role: "STUDENT",
+          gradeLevel,
+          parentId: normalizedParentId,
+          passwordHash: studentPasswordHash,
+          profile: {
+            create: {
+              goals: Array.isArray(goals) ? goals : [],
+              strengths: Array.isArray(strengths) ? strengths : [],
+              weaknesses: Array.isArray(weaknesses) ? weaknesses : [],
+            },
           },
         },
-        profile: true,
-        studySessions: {
-          select: {
-            durationSec: true,
+        include: {
+          parent: {
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+            },
           },
-        },
-        enrollments: {
-          include: {
-            course: {
-              select: {
-                id: true,
-                title: true,
+          profile: true,
+          studySessions: {
+            select: {
+              durationSec: true,
+            },
+          },
+          enrollments: {
+            include: {
+              course: {
+                select: {
+                  id: true,
+                  title: true,
+                },
               },
             },
           },
         },
-      },
+      });
+
+      return { ...createdStudent, createdParent };
     });
 
-    return NextResponse.json(student, { status: 201 });
+    const { createdParent, ...createdStudent } = student;
+
+    return NextResponse.json(
+      createdParent ? { student: createdStudent, parent: createdParent } : createdStudent,
+      { status: 201 },
+    );
   } catch (error: any) {
     console.error("Error creating student:", error);
 

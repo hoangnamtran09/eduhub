@@ -49,6 +49,10 @@ export default function AdminStudentsPage() {
     password: "",
     gradeLevel: "6",
     parentId: "",
+    createParent: false,
+    parentFullName: "",
+    parentEmail: "",
+    parentPassword: "",
   });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -113,6 +117,10 @@ export default function AdminStudentsPage() {
       password: "",
       gradeLevel: "6",
       parentId: "",
+      createParent: false,
+      parentFullName: "",
+      parentEmail: "",
+      parentPassword: "",
     });
     setShowCreateModal(true);
   };
@@ -137,7 +145,11 @@ export default function AdminStudentsPage() {
           email: createFormState.email,
           password: createFormState.password,
           gradeLevel: Number(createFormState.gradeLevel),
-          parentId: createFormState.parentId || null,
+          parentId: createFormState.createParent ? null : createFormState.parentId || null,
+          createParent: createFormState.createParent,
+          parentFullName: createFormState.createParent ? createFormState.parentFullName : undefined,
+          parentEmail: createFormState.createParent ? createFormState.parentEmail : undefined,
+          parentPassword: createFormState.createParent ? createFormState.parentPassword : undefined,
         }),
       });
 
@@ -146,7 +158,13 @@ export default function AdminStudentsPage() {
       }
 
       const created = await response.json();
-      setStudents((current) => [created, ...current]);
+      const createdStudent = created?.student || created;
+      const createdParent = created?.parent;
+
+      setStudents((current) => [createdStudent, ...current]);
+      if (createdParent) {
+        setParents((current) => [{ ...createdParent, children: [{ id: createdStudent.id }] }, ...current]);
+      }
       setShowCreateModal(false);
     } catch (error) {
       console.error(error);
@@ -514,14 +532,14 @@ export default function AdminStudentsPage() {
               <div>
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Tạo tài khoản học sinh</div>
                 <h2 className="mt-2 text-2xl font-semibold text-slate-900">Thêm học sinh mới</h2>
-                <p className="mt-1 text-sm text-slate-500">Lớp là thông tin bắt buộc để phân tuyến nội dung học.</p>
+              <p className="mt-1 text-sm text-slate-500">Lớp là thông tin bắt buộc. Có thể gắn phụ huynh có sẵn hoặc tạo mới cùng lúc.</p>
               </div>
               <Button type="button" variant="ghost" size="icon" onClick={closeCreateModal} disabled={saving}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
-            <div className="space-y-5 px-6 py-5">
+            <div className="max-h-[calc(100vh-12rem)] space-y-5 overflow-y-auto px-6 py-5">
               <Field label="Họ và tên">
                 <Input
                   value={createFormState.fullName}
@@ -567,11 +585,12 @@ export default function AdminStudentsPage() {
                   </select>
                 </Field>
 
-                <Field label="Tài khoản phụ huynh">
+                <Field label="Tài khoản phụ huynh có sẵn">
                   <select
                     value={createFormState.parentId}
                     onChange={(event) => setCreateFormState((current) => ({ ...current, parentId: event.target.value }))}
-                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                    disabled={createFormState.createParent}
+                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                   >
                     <option value="">Chưa gắn tài khoản phụ huynh</option>
                     {parents.map((parent) => (
@@ -582,6 +601,62 @@ export default function AdminStudentsPage() {
                   </select>
                 </Field>
               </div>
+
+              <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+                <label className="flex items-start gap-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={createFormState.createParent}
+                    onChange={(event) => setCreateFormState((current) => ({
+                      ...current,
+                      createParent: event.target.checked,
+                      parentId: event.target.checked ? "" : current.parentId,
+                    }))}
+                    className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                  />
+                  <span>
+                    <span className="font-semibold text-slate-900">Tạo luôn tài khoản phụ huynh mới</span>
+                    <span className="mt-0.5 block text-xs text-slate-500">Khi bật tùy chọn này, hệ thống sẽ tạo tài khoản phụ huynh và tự liên kết với học sinh vừa tạo.</span>
+                  </span>
+                </label>
+
+                {createFormState.createParent && (
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <Field label="Tên phụ huynh">
+                      <Input
+                        value={createFormState.parentFullName}
+                        onChange={(event) => setCreateFormState((current) => ({ ...current, parentFullName: event.target.value }))}
+                        className="border-slate-200 bg-white text-slate-900"
+                        placeholder="Ví dụ: Nguyễn Văn A"
+                      />
+                    </Field>
+
+                    <Field label="Email phụ huynh bắt buộc">
+                      <Input
+                        type="email"
+                        value={createFormState.parentEmail}
+                        onChange={(event) => setCreateFormState((current) => ({ ...current, parentEmail: event.target.value }))}
+                        className="border-slate-200 bg-white text-slate-900"
+                        required
+                      />
+                    </Field>
+
+                    <Field label="Mật khẩu phụ huynh tạm thời">
+                      <Input
+                        type="password"
+                        value={createFormState.parentPassword}
+                        onChange={(event) => setCreateFormState((current) => ({ ...current, parentPassword: event.target.value }))}
+                        className="border-slate-200 bg-white text-slate-900"
+                        required
+                      />
+                    </Field>
+
+                    <div className="flex items-end rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs leading-5 text-blue-700">
+                      Phụ huynh có thể đăng nhập bằng email và mật khẩu tạm thời này để theo dõi tiến độ, bài tập và cảnh báo học tập của học sinh.
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-6 py-4">
@@ -590,7 +665,14 @@ export default function AdminStudentsPage() {
               </Button>
               <Button
                 onClick={handleCreate}
-                disabled={saving || !createFormState.fullName.trim() || !createFormState.email.trim() || !createFormState.password || !createFormState.gradeLevel}
+                disabled={
+                  saving ||
+                  !createFormState.fullName.trim() ||
+                  !createFormState.email.trim() ||
+                  !createFormState.password ||
+                  !createFormState.gradeLevel ||
+                  (createFormState.createParent && (!createFormState.parentEmail.trim() || !createFormState.parentPassword))
+                }
                 className="bg-slate-900 text-white hover:bg-slate-800"
               >
                 {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
