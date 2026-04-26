@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Bản mô tả giải pháp dự thi - EduSelf</title>
+  <style>
+    body { font-family: "Times New Roman", serif; font-size: 13pt; line-height: 1.5; color: #111; }
+    h1 { text-align: center; font-size: 18pt; text-transform: uppercase; margin-bottom: 18px; }
+    h2 { font-size: 15pt; margin-top: 18px; text-transform: uppercase; }
+    h3 { font-size: 14pt; margin-top: 14px; }
+    h4 { font-size: 13.5pt; margin-top: 12px; }
+    p { text-align: justify; margin: 8px 0; }
+    ul { margin-top: 6px; }
+    li { margin: 5px 0; text-align: justify; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0 16px 0; table-layout: fixed; page-break-inside: auto; }
+    tr { page-break-inside: avoid; page-break-after: auto; }
+    th, td { border: 1px solid #333; padding: 7px 8px; vertical-align: top; font-size: 11.5pt; line-height: 1.35; word-wrap: break-word; overflow-wrap: break-word; }
+    th { background: #e9eef7; text-align: center; font-weight: bold; color: #111; }
+    td:first-child { width: 27%; font-weight: bold; color: #1f3763; }
+    td:nth-child(2) { width: 38%; }
+    td:nth-child(3) { width: 35%; }
+    .note { color: #b00000; font-weight: bold; border: 1px dashed #b00000; padding: 8px; margin: 10px 0; }
+    .center { text-align: center; }
+    .signature { margin-top: 36px; text-align: right; }
+  </style>
+</head>
+<body>
+  <h1>Bản mô tả giải pháp dự thi</h1>
+
+  <h2>A. Tên giải pháp dự thi</h2>
+  <p><strong>EduSelf - Nền tảng học tập thông minh ứng dụng trí tuệ nhân tạo hỗ trợ cá nhân hóa lộ trình học, quản lý bài tập, phát hiện điểm yếu và theo dõi tiến độ học sinh.</strong></p>
+  <p>Tên giải pháp thể hiện đầy đủ bản chất của sản phẩm: đây không chỉ là một website học trực tuyến, mà là một hệ thống học tập số có khả năng ghi nhận dữ liệu học tập, sử dụng trí tuệ nhân tạo để hỗ trợ người học, hỗ trợ giáo viên trong quá trình giao bài và phản hồi, đồng thời cung cấp báo cáo cho phụ huynh và nhà quản lý.</p>
+
+  <h2>B. Mô tả giải pháp dự thi</h2>
+
+  <h3>I. Thuyết minh về các giải pháp kỹ thuật đã biết</h3>
+  <h4>1. Bối cảnh thực tế</h4>
+  <p>Trong quá trình chuyển đổi số giáo dục, nhu cầu sử dụng các nền tảng học tập trực tuyến ngày càng tăng. Học sinh cần một môi trường tự học linh hoạt, có thể truy cập tài liệu, làm bài tập, nhận hỗ trợ khi gặp khó khăn và biết mình đang tiến bộ đến đâu. Giáo viên cần công cụ để tổ chức học liệu, giao bài, chấm bài, phản hồi và theo dõi học sinh một cách hiệu quả. Phụ huynh cần kênh thông tin minh bạch để biết con em mình có học đều hay không, còn yếu nội dung nào, có bài tập quá hạn hay cần can thiệp kịp thời hay không.</p>
+  <p>Các phương pháp truyền thống như giao bài qua giấy, gửi tài liệu qua nhóm chat, thu bài qua email hoặc quản lý điểm bằng bảng tính rời rạc thường gây phân tán dữ liệu. Giáo viên khó có bức tranh tổng thể về quá trình học; học sinh khó lưu lại lịch sử trao đổi và phản hồi; phụ huynh chỉ nhận được thông tin muộn hoặc không đầy đủ. Đây là cơ sở thực tế để hình thành giải pháp EduSelf.</p>
+
+  <h4>2. Các giải pháp kỹ thuật tương tự đã biết</h4>
+  <p>Hiện nay có nhiều nhóm giải pháp liên quan đến học tập trực tuyến:</p>
+  <ul>
+    <li><strong>Hệ thống LMS:</strong> như Moodle, Canvas, Google Classroom, Microsoft Teams for Education. Các hệ thống này mạnh ở quản lý lớp học, học liệu, bài tập và điểm số.</li>
+    <li><strong>Nền tảng học liệu trực tuyến:</strong> như Khan Academy, Coursera, Udemy hoặc các website học trực tuyến trong nước. Các nền tảng này mạnh ở kho nội dung và video bài giảng.</li>
+    <li><strong>Công cụ kiểm tra, trắc nghiệm:</strong> như Quizizz, Kahoot, Google Forms. Các công cụ này hỗ trợ làm bài nhanh, chấm trắc nghiệm và tạo tương tác lớp học.</li>
+    <li><strong>Công cụ AI hỏi đáp:</strong> như ChatGPT hoặc các chatbot học tập. Các công cụ này có khả năng giải thích kiến thức và tạo nội dung, nhưng thường tách rời khỏi dữ liệu lớp học, tài liệu cụ thể và tiến độ từng học sinh.</li>
+  </ul>
+  <p>Các giải pháp nói trên đều có giá trị trong từng phạm vi, nhưng khi áp dụng vào một quy trình học tập hoàn chỉnh vẫn còn nhiều khoảng trống. Một học sinh có thể phải học trên một nền tảng, hỏi AI ở nền tảng khác, nộp bài ở công cụ khác, còn giáo viên tổng hợp kết quả bằng bảng tính. Điều này làm dữ liệu bị rời rạc và gây khó khăn cho cá nhân hóa học tập.</p>
+
+  <h4>3. Ưu điểm và hạn chế của các giải pháp đã biết</h4>
+  <table>
+    <tr><th>Nhóm giải pháp</th><th>Ưu điểm</th><th>Hạn chế</th></tr>
+    <tr><td>Hệ thống LMS</td><td>Quản lý lớp học, học liệu, bài tập và điểm số tương đối đầy đủ.</td><td>Ít cá nhân hóa theo điểm yếu; AI nếu có thường chưa gắn sâu với từng bài học và từng câu trả lời của học sinh.</td></tr>
+    <tr><td>Nền tảng học liệu</td><td>Có nhiều nội dung học, dễ truy cập, phù hợp tự học.</td><td>Khó tùy biến theo chương trình riêng; phụ huynh và giáo viên khó theo dõi chi tiết từng học sinh trong một đơn vị cụ thể.</td></tr>
+    <tr><td>Công cụ trắc nghiệm</td><td>Tạo bài nhanh, chấm điểm nhanh, tăng tương tác.</td><td>Thường chỉ ghi nhận kết quả bài làm, chưa theo dõi toàn bộ quá trình học và chưa tạo lộ trình khắc phục cá nhân hóa.</td></tr>
+    <tr><td>Chatbot AI độc lập</td><td>Giải thích linh hoạt, hỗ trợ nhiều dạng câu hỏi.</td><td>Không tự biết học sinh đang học bài nào, đã đọc tài liệu nào, từng sai ở đâu, giáo viên giao bài gì và phụ huynh cần xem báo cáo nào.</td></tr>
+  </table>
+  <p>Những hạn chế EduSelf tập trung khắc phục gồm: dữ liệu học tập phân tán, thiếu theo dõi tiến độ chi tiết, thiếu phát hiện điểm yếu tự động, thiếu luồng ôn tập bù đắp, thiếu báo cáo theo vai trò và thiếu sự kết nối giữa AI với học liệu thực tế.</p>
+
+  <h3>II. Thuyết minh nội dung giải pháp kỹ thuật dự thi</h3>
+  <h4>1. Mục tiêu của giải pháp</h4>
+  <p>EduSelf được xây dựng với mục tiêu tạo ra một nền tảng học tập số thống nhất, trong đó học sinh có thể học bài, hỏi AI, làm bài, nhận phản hồi và luyện tập lại ngay trong cùng một môi trường. Giáo viên có thể quản lý học liệu, giao bài, theo dõi trạng thái nộp bài, sử dụng AI hỗ trợ chấm điểm và xác định học sinh cần hỗ trợ. Phụ huynh có thể theo dõi tình hình học tập của con một cách trực quan. Quản trị viên có thể quản lý nội dung, người dùng, thành tích và các chỉ số tổng quan của hệ thống.</p>
+  <p>Giải pháp hướng đến ba mục tiêu chính: cá nhân hóa quá trình học, giảm tải công việc lặp lại cho giáo viên và nâng cao tính minh bạch trong quản lý học tập.</p>
+
+  <h4>2. Kiến trúc tổng thể của giải pháp</h4>
+  <p>EduSelf được thiết kế theo kiến trúc ứng dụng web nhiều lớp, gồm bốn thành phần chính:</p>
+  <ul>
+    <li><strong>Lớp giao diện người dùng:</strong> xây dựng bằng Next.js, React, TypeScript và Tailwind CSS, cung cấp các màn hình đăng nhập, dashboard, khóa học, bài học, PDF viewer, chat AI, bài tập, tiến độ, điểm yếu, cài đặt và quản trị.</li>
+    <li><strong>Lớp xử lý nghiệp vụ/API:</strong> sử dụng Next.js API Routes để xử lý các yêu cầu như xác thực, quản lý môn học, bài học, upload PDF, giao bài, nộp bài, chấm AI, lưu tiến độ, lưu phiên học, báo cáo và thông báo.</li>
+    <li><strong>Lớp dữ liệu:</strong> sử dụng PostgreSQL và Prisma ORM để lưu trữ người dùng, vai trò, bài học, bài tập, hội thoại AI, tiến độ, phiên học, điểm yếu, thành tích và các mối quan hệ giữa phụ huynh - học sinh.</li>
+    <li><strong>Lớp dịch vụ AI và lưu trữ tài liệu:</strong> tích hợp mô hình AI để hội thoại, tạo bài tập, chấm điểm, phản hồi và tạo bài luyện tập; đồng thời hỗ trợ lưu trữ, truy xuất tài liệu PDF phục vụ học tập.</li>
+  </ul>
+  <p>Cấu trúc này giúp hệ thống dễ bảo trì, dễ mở rộng và có thể triển khai theo từng mức độ: chạy thử nghiệm trên một máy chủ, triển khai web production, hoặc tách riêng backend AI và lưu trữ tài liệu khi quy mô tăng.</p>
+  <p class="note">[CHÈN HÌNH 1: Sơ đồ kiến trúc tổng quan gồm người dùng, giao diện web, API, cơ sở dữ liệu PostgreSQL, dịch vụ AI và lưu trữ PDF.]</p>
+
+  <h4>3. Mô hình dữ liệu chính</h4>
+  <p>Hệ thống được xây dựng trên mô hình dữ liệu có cấu trúc, phản ánh đầy đủ các đối tượng trong quá trình học tập. Một số nhóm dữ liệu quan trọng gồm:</p>
+  <ul>
+    <li><strong>Người dùng và vai trò:</strong> lưu tài khoản, email, mật khẩu, họ tên, ảnh đại diện, vai trò học sinh/phụ huynh/giáo viên/quản trị viên, khối lớp, kim cương, tùy chọn thông báo và quan hệ phụ huynh - học sinh.</li>
+    <li><strong>Hồ sơ học sinh:</strong> lưu mục tiêu học tập, điểm mạnh, điểm yếu, chuỗi ngày học và thời điểm hoạt động gần nhất.</li>
+    <li><strong>Môn học, khóa học, chương và bài học:</strong> lưu cấu trúc nội dung học, thứ tự bài, tài liệu PDF, video nếu có, thời lượng, trạng thái xuất bản và nội dung bài học.</li>
+    <li><strong>Hội thoại AI:</strong> lưu cuộc trò chuyện theo người dùng và bài học, gồm tin nhắn của học sinh và phản hồi của AI, giúp học sinh xem lại lịch sử và giúp hệ thống giữ ngữ cảnh học tập.</li>
+    <li><strong>Bài tập và nộp bài:</strong> lưu tiêu đề, mô tả, PDF đính kèm, hạn nộp, thang điểm, rubric, người nhận, trạng thái nộp bài, nội dung bài làm, tệp nộp, điểm AI, điểm cuối cùng và phản hồi.</li>
+    <li><strong>Tiến độ và phiên học:</strong> lưu trạng thái từng bài học, thời điểm bắt đầu, hoàn thành, trang PDF cuối cùng, tổng thời gian học và các phiên học cụ thể.</li>
+    <li><strong>Điểm yếu và luyện tập khắc phục:</strong> lưu chủ đề yếu, nguyên nhân, phản hồi AI, bài luyện tập đề xuất, điểm ban đầu, điểm tốt nhất, số lần khắc phục và trạng thái đã cải thiện hay chưa.</li>
+    <li><strong>Thành tích và động lực học tập:</strong> lưu thành tích, điều kiện đạt thành tích, kim cương, chuỗi ngày học và các chỉ số khuyến khích học tập.</li>
+  </ul>
+  <p>Việc thiết kế dữ liệu theo các nhóm trên giúp EduSelf không chỉ lưu kết quả cuối cùng mà còn lưu toàn bộ quá trình học, từ đó tạo nền tảng cho cá nhân hóa và báo cáo.</p>
+
+  <h4>4. Các phân hệ chức năng</h4>
+  <p><strong>4.1. Phân hệ học sinh</strong></p>
+  <p>Học sinh sau khi đăng nhập có thể xem dashboard cá nhân gồm thời lượng học, số phiên học, bài đang học tiếp, điểm trung bình, thành tích, chuỗi ngày học, bài tập sắp đến hạn và các điểm yếu cần khắc phục. Khi vào khóa học, học sinh chọn môn học, chương và bài học. Trong trang học, học sinh có thể đọc tài liệu PDF, chuyển trang, tiếp tục từ trang đã học trước, xem thời gian học, đặt câu hỏi cho AI, nhập ký hiệu toán học, làm câu hỏi kiểm tra và kết thúc bài học.</p>
+  <p>Khi học sinh trả lời sai, làm bài chưa tốt hoặc AI phát hiện nội dung chưa hiểu, hệ thống có thể ghi nhận tín hiệu điểm yếu. Điểm yếu này được lưu lại để học sinh xem ở trang riêng, sau đó bắt đầu bài luyện tập khắc phục. Khi học sinh luyện tập đạt yêu cầu, trạng thái điểm yếu được cập nhật, giúp học sinh thấy rõ quá trình cải thiện.</p>
+  <p class="note">[CHÈN HÌNH 2: Ảnh chụp dashboard học sinh, thể hiện thời lượng học, thành tích, bài học tiếp tục và cảnh báo bài tập.]</p>
+  <p class="note">[CHÈN HÌNH 3: Ảnh chụp trang học tập có PDF, khung chat AI, bộ nhập công thức toán học và thời gian học.]</p>
+
+  <p><strong>4.2. Phân hệ AI trợ giảng</strong></p>
+  <p>AI trợ giảng trong EduSelf không đơn thuần là chatbot trả lời tự do. AI được đặt trong ngữ cảnh học tập: bài học hiện tại, nội dung tài liệu, câu hỏi của học sinh, lịch sử hội thoại, kết quả bài làm và các điểm yếu đã ghi nhận. Nhờ vậy, phản hồi của AI có thể gần với nhu cầu học tập thực tế hơn. AI có thể giải thích khái niệm, gợi ý cách làm, tạo câu hỏi luyện tập, nhận xét câu trả lời, chỉ ra lỗi sai và đề xuất bước học tiếp theo.</p>
+  <p>Trong quá trình chấm bài, AI có thể phân tích nội dung nộp của học sinh theo tiêu chí/rubric, đề xuất điểm, nhận xét ưu điểm, chỉ ra lỗi cần sửa và đưa ra hướng cải thiện. Giáo viên vẫn có thể xem lại, điều chỉnh và xác nhận kết quả cuối cùng, bảo đảm AI đóng vai trò hỗ trợ thay vì thay thế hoàn toàn giáo viên.</p>
+  <p class="note">[CHÈN HÌNH 4: Ảnh chụp AI trả lời câu hỏi học tập hoặc tạo bài luyện tập theo nội dung bài học.]</p>
+  <p class="note">[CHÈN HÌNH 5: Ảnh chụp chức năng AI chấm bài, hiển thị điểm, nhận xét và rubric.]</p>
+
+  <p><strong>4.3. Phân hệ giáo viên/quản trị viên</strong></p>
+  <p>Giáo viên hoặc quản trị viên có thể tạo và chỉnh sửa môn học, chương, bài học, upload tài liệu PDF, quản lý trạng thái xuất bản và sắp xếp thứ tự nội dung. Đối với bài tập, người quản lý có thể tạo tiêu đề, mô tả, tệp PDF, hạn nộp, điểm tối đa, rubric, đối tượng nhận bài và trạng thái xuất bản.</p>
+  <p>Sau khi giao bài, hệ thống theo dõi từng học sinh theo các trạng thái như đã giao, đã nhận, đã nộp, đã chấm, bị trả lại. Giáo viên có thể xem bài nộp, dùng AI hỗ trợ chấm, chỉnh sửa phản hồi, trả bài và lưu lịch sử phản hồi. Điều này giúp quy trình bài tập có tính truy vết rõ ràng hơn so với việc gửi bài qua tin nhắn hoặc email.</p>
+  <p class="note">[CHÈN HÌNH 6: Ảnh chụp trang quản trị môn học/bài học.]</p>
+  <p class="note">[CHÈN HÌNH 7: Ảnh chụp trang quản lý bài tập và danh sách học sinh nhận bài.]</p>
+
+  <p><strong>4.4. Phân hệ phụ huynh</strong></p>
+  <p>Phụ huynh có thể xem báo cáo học tập của con, gồm thời lượng học, số phiên học, hoạt động gần đây, bài tập đang chờ, bài quá hạn, bài sắp đến hạn, các chủ đề yếu và cảnh báo cần chú ý. Báo cáo được thiết kế theo hướng dễ hiểu để phụ huynh không cần thao tác phức tạp vẫn nắm được tình hình học tập.</p>
+  <p>Phân hệ này giúp tăng sự phối hợp giữa học sinh, gia đình và giáo viên. Thay vì chỉ biết kết quả sau một kỳ kiểm tra, phụ huynh có thể theo dõi quá trình học theo thời gian gần, từ đó nhắc nhở hoặc hỗ trợ con đúng lúc.</p>
+  <p class="note">[CHÈN HÌNH 8: Ảnh chụp báo cáo phụ huynh, thể hiện tình trạng học tập, bài tập và cảnh báo của con.]</p>
+
+  <p><strong>4.5. Phân hệ báo cáo và thống kê</strong></p>
+  <p>Hệ thống cung cấp báo cáo theo từng vai trò. Với học sinh, báo cáo tập trung vào tiến độ cá nhân, thành tích và nhiệm vụ tiếp theo. Với phụ huynh, báo cáo tập trung vào tình trạng của con và các cảnh báo cần quan tâm. Với quản trị viên, báo cáo tập trung vào tổng số học sinh, tổng thời lượng học, số phiên học, học sinh hoạt động trong 7 ngày, học sinh không hoạt động, phân bố khối lớp và danh sách học sinh cần chú ý.</p>
+  <p>Cách tổ chức báo cáo này giúp cùng một hệ thống dữ liệu có thể phục vụ nhiều nhu cầu quản lý khác nhau mà không phải nhập liệu nhiều lần.</p>
+
+  <h4>5. Quy trình hoạt động kỹ thuật</h4>
+  <p><strong>5.1. Quy trình học bài</strong></p>
+  <p>Học sinh đăng nhập, hệ thống xác thực tài khoản và tải thông tin vai trò. Học sinh chọn môn học và bài học. Khi trang học được mở, hệ thống tải dữ liệu bài học, danh sách bài trong môn, đường dẫn PDF nếu có, tiến độ đã lưu và lịch sử hội thoại AI. Trong quá trình học, hệ thống ghi nhận thời gian học theo các khoảng cập nhật định kỳ, lưu trang PDF hiện tại và cập nhật trạng thái bài học. Nếu học sinh hoàn thành bài hoặc làm bài kiểm tra cuối bài, kết quả được lưu vào tiến độ.</p>
+  <p><strong>5.2. Quy trình hỏi AI</strong></p>
+  <p>Khi học sinh gửi câu hỏi, hệ thống chuẩn hóa nội dung, gắn với bài học hiện tại và lịch sử hội thoại phù hợp, sau đó gửi yêu cầu đến dịch vụ AI. Phản hồi AI được trả về cho giao diện và đồng thời lưu vào cơ sở dữ liệu. Nếu phản hồi hoặc câu trả lời của học sinh cho thấy có lỗi sai, hệ thống có thể ghi nhận điểm yếu để phục vụ luyện tập sau.</p>
+  <p><strong>5.3. Quy trình giao và chấm bài tập</strong></p>
+  <p>Giáo viên tạo bài tập, chọn học sinh hoặc khối lớp nhận bài, đặt hạn nộp và tiêu chí chấm. Học sinh nhận bài, đọc yêu cầu, nộp văn bản hoặc tệp đính kèm. Hệ thống lưu trạng thái nộp bài và thời điểm nộp. Khi chấm, AI có thể phân tích bài làm theo rubric, đề xuất điểm và phản hồi. Giáo viên xem lại, điều chỉnh nếu cần và trả bài. Mọi lần phản hồi được lưu thành lịch sử để theo dõi quá trình cải thiện.</p>
+  <p><strong>5.4. Quy trình phát hiện và khắc phục điểm yếu</strong></p>
+  <p>Điểm yếu được ghi nhận từ nhiều nguồn: câu trả lời sai, bài kiểm tra cuối bài, bài tập được chấm, phản hồi AI hoặc quá trình luyện tập. Mỗi điểm yếu gồm chủ đề, nguyên nhân, câu hỏi liên quan, phản hồi AI, điểm ban đầu và trạng thái. Khi học sinh bắt đầu khắc phục, hệ thống tạo bài luyện tập phù hợp. Sau khi học sinh làm bài, hệ thống chấm kết quả, cập nhật điểm tốt nhất và xác định điểm yếu đã được cải thiện hay cần tiếp tục luyện tập.</p>
+  <p class="note">[CHÈN HÌNH 9: Sơ đồ quy trình học sinh học bài, hỏi AI, làm bài, nhận phản hồi và luyện tập khắc phục.]</p>
+  <p class="note">[CHÈN HÌNH 10: Sơ đồ quy trình giáo viên tạo bài tập, giao bài, nhận bài, chấm AI và trả phản hồi.]</p>
+
+  <h4>6. Bảo mật, phân quyền và độ tin cậy</h4>
+  <p>Hệ thống có cơ chế tài khoản và vai trò để phân biệt quyền truy cập. Học sinh chỉ truy cập dữ liệu học tập của mình; phụ huynh chỉ xem dữ liệu của con được liên kết; giáo viên và quản trị viên có quyền quản lý nội dung và bài tập theo phạm vi được cấp. Mật khẩu được xử lý theo hướng băm bảo mật, dữ liệu nhạy cảm như khóa API và chuỗi kết nối cơ sở dữ liệu được đưa vào biến môi trường thay vì ghi trực tiếp trong mã nguồn.</p>
+  <p>Độ tin cậy của hệ thống được nâng cao thông qua việc lưu trạng thái quan trọng vào cơ sở dữ liệu: bài đã học, thời gian học, bài đã nộp, điểm, phản hồi, lịch sử hội thoại và lịch sử luyện tập. Khi người dùng quay lại, hệ thống có thể khôi phục quá trình học thay vì bắt đầu lại từ đầu.</p>
+
+  <h4>7. Các API đã sử dụng và xây dựng trong hệ thống</h4>
+  <p>Trong EduSelf, API được hiểu theo hai nhóm: API nội bộ do hệ thống tự xây dựng để phục vụ các chức năng của nền tảng và API/dịch vụ bên ngoài được tích hợp để cung cấp năng lực trí tuệ nhân tạo, xác thực, cơ sở dữ liệu hoặc lưu trữ. Các API nội bộ được xây dựng theo mô hình REST thông qua Next.js API Routes, giao tiếp với giao diện web bằng dữ liệu JSON và xử lý nghiệp vụ ở phía máy chủ.</p>
+
+  <p><strong>7.1. Nhóm API xác thực và tài khoản</strong></p>
+  <table>
+    <tr><th>API/nhóm API</th><th>Mục đích sử dụng</th><th>Dữ liệu xử lý</th></tr>
+    <tr><td>/api/auth/register</td><td>Đăng ký tài khoản người dùng mới cho học sinh hoặc các vai trò khác theo cấu hình hệ thống.</td><td>Email, mật khẩu, họ tên, vai trò, thông tin khối lớp nếu có.</td></tr>
+    <tr><td>/api/auth/login</td><td>Đăng nhập hệ thống, kiểm tra thông tin xác thực và tạo phiên đăng nhập cho người dùng.</td><td>Email, mật khẩu, thông tin người dùng sau xác thực.</td></tr>
+    <tr><td>/api/auth/logout</td><td>Đăng xuất, xóa phiên đăng nhập hiện tại để bảo đảm an toàn tài khoản.</td><td>Thông tin phiên đăng nhập/token.</td></tr>
+    <tr><td>/api/auth/me</td><td>Lấy thông tin người dùng hiện tại để giao diện xác định vai trò và quyền truy cập.</td><td>ID người dùng, email, họ tên, vai trò, ảnh đại diện, kim cương.</td></tr>
+    <tr><td>/api/auth/google và /api/auth/google/callback</td><td>Hỗ trợ đăng nhập bằng tài khoản Google nếu được cấu hình, giúp người dùng truy cập thuận tiện hơn.</td><td>Mã xác thực OAuth, thông tin email và hồ sơ Google.</td></tr>
+  </table>
+
+  <p><strong>7.2. Nhóm API quản lý hồ sơ, cài đặt và thông báo</strong></p>
+  <table>
+    <tr><th>API/nhóm API</th><th>Mục đích sử dụng</th><th>Dữ liệu xử lý</th></tr>
+    <tr><td>/api/settings/profile</td><td>Cập nhật thông tin cá nhân của người dùng như họ tên, ảnh đại diện, khối lớp hoặc thông tin hồ sơ.</td><td>Thông tin hồ sơ, lớp học, ảnh đại diện, dữ liệu cá nhân cơ bản.</td></tr>
+    <tr><td>/api/settings/password</td><td>Đổi mật khẩu tài khoản, bảo đảm người dùng có thể tự quản lý bảo mật cá nhân.</td><td>Mật khẩu hiện tại, mật khẩu mới đã được xử lý bảo mật.</td></tr>
+    <tr><td>/api/settings/notifications</td><td>Cập nhật tùy chọn nhận thông báo như nhắc học hằng ngày, bài tập mới, báo cáo email hằng tuần.</td><td>Các cờ bật/tắt thông báo theo từng người dùng.</td></tr>
+    <tr><td>/api/notifications</td><td>Cung cấp danh sách thông báo hoặc dữ liệu cảnh báo hiển thị trên giao diện.</td><td>Thông báo bài tập, nhắc học, trạng thái cần chú ý.</td></tr>
+  </table>
+
+  <p><strong>7.3. Nhóm API môn học, khóa học, bài học và PDF</strong></p>
+  <table>
+    <tr><th>API/nhóm API</th><th>Mục đích sử dụng</th><th>Dữ liệu xử lý</th></tr>
+    <tr><td>/api/subjects</td><td>Lấy danh sách môn học đang có trong hệ thống để học sinh chọn nội dung học.</td><td>Tên môn, biểu tượng, màu sắc, mô tả, slug.</td></tr>
+    <tr><td>/api/admin/subjects</td><td>Cho quản trị viên tạo, sửa, xóa hoặc quản lý môn học.</td><td>Thông tin môn học, trạng thái hiển thị và dữ liệu quản trị.</td></tr>
+    <tr><td>/api/courses/[subjectId]</td><td>Lấy thông tin khóa học/bài học thuộc một môn học cụ thể.</td><td>Khóa học, chương, bài học, trạng thái xuất bản, tài liệu liên quan.</td></tr>
+    <tr><td>/api/lessons/[lessonId]</td><td>Lấy chi tiết bài học để hiển thị trong trang học.</td><td>Nội dung bài, đường dẫn PDF, video, thứ tự, thời lượng, quiz.</td></tr>
+    <tr><td>/api/lessons/save</td><td>Lưu nội dung hoặc trạng thái chỉnh sửa bài học trong quá trình quản trị.</td><td>Nội dung bài học, tiêu đề, thứ tự, trạng thái xuất bản.</td></tr>
+    <tr><td>/api/admin/subjects/[subjectId]/lessons</td><td>Quản trị viên tạo và quản lý các bài học trong một môn học.</td><td>Tiêu đề bài, nội dung, chương, thứ tự, thời lượng, loại bài.</td></tr>
+    <tr><td>/api/admin/subjects/[subjectId]/lessons/[lessonId]/pdf</td><td>Upload hoặc cập nhật tài liệu PDF cho một bài học cụ thể.</td><td>Tệp PDF, khóa lưu trữ, đường dẫn truy cập tài liệu.</td></tr>
+    <tr><td>/api/admin/subjects/[subjectId]/lessons/bulk-pdf</td><td>Upload nhiều tài liệu PDF để tạo/cập nhật bài học nhanh hơn.</td><td>Nhiều tệp PDF, thông tin tên bài và thứ tự bài học.</td></tr>
+    <tr><td>/api/upload-pdf và /api/pdf-proxy</td><td>Upload, xử lý hoặc truy xuất tài liệu PDF để hiển thị an toàn trên giao diện học.</td><td>Tệp PDF, URL tài liệu, dữ liệu proxy phục vụ trình xem PDF.</td></tr>
+  </table>
+
+  <p><strong>7.4. Nhóm API học tập, tiến độ và phiên học</strong></p>
+  <table>
+    <tr><th>API/nhóm API</th><th>Mục đích sử dụng</th><th>Dữ liệu xử lý</th></tr>
+    <tr><td>/api/progress</td><td>Tổng hợp tiến độ học tập để hiển thị dashboard và trang tiến độ.</td><td>Bài đã hoàn thành, điểm trung bình, thời lượng học, thành tích, hoạt động gần đây.</td></tr>
+    <tr><td>/api/learning-state</td><td>Lưu và khôi phục trạng thái học hiện tại, giúp học sinh quay lại đúng bài/trang đang học.</td><td>Bài học hiện tại, trang PDF, trạng thái học, dữ liệu tiếp tục học.</td></tr>
+    <tr><td>/api/study-sessions</td><td>Tạo phiên học, ghi nhận thời điểm bắt đầu và tổng thời gian học.</td><td>ID học sinh, ID bài học, thời điểm bắt đầu, thời lượng học.</td></tr>
+    <tr><td>/api/study-sessions/[sessionId]</td><td>Cập nhật hoặc kết thúc một phiên học cụ thể.</td><td>Thời điểm kết thúc, số giây học, lần cập nhật gần nhất.</td></tr>
+    <tr><td>/api/lessons/[lessonId]/complete</td><td>Đánh dấu bài học đã hoàn thành khi học sinh học xong.</td><td>ID bài học, ID học sinh, trạng thái hoàn thành, thời điểm hoàn thành.</td></tr>
+    <tr><td>/api/lessons/[lessonId]/completion-quiz/submit</td><td>Nộp bài kiểm tra cuối bài để đánh giá mức độ hiểu bài.</td><td>Câu trả lời, điểm số, số câu đúng/sai, giải thích kết quả.</td></tr>
+    <tr><td>/api/reports/study-time</td><td>Tổng hợp dữ liệu thời gian học phục vụ báo cáo.</td><td>Tổng thời gian học, số phiên học, hoạt động theo ngày/tuần.</td></tr>
+  </table>
+
+  <p><strong>7.5. Nhóm API AI trợ giảng, tạo bài và chấm bài</strong></p>
+  <table>
+    <tr><th>API/nhóm API</th><th>Mục đích sử dụng</th><th>Dữ liệu xử lý</th></tr>
+    <tr><td>/api/ai/chat</td><td>Xử lý hội thoại giữa học sinh và AI trong ngữ cảnh bài học.</td><td>Câu hỏi, lịch sử hội thoại, bài học hiện tại, phản hồi AI.</td></tr>
+    <tr><td>/api/chat và /api/chat-history</td><td>Lưu, tải lại và quản lý lịch sử trao đổi với AI để học sinh xem lại và hệ thống giữ ngữ cảnh.</td><td>Tin nhắn người dùng, tin nhắn AI, thời gian gửi, ID cuộc trò chuyện.</td></tr>
+    <tr><td>/api/ai/generate-exercise</td><td>Tạo bài tập hoặc câu hỏi luyện tập dựa trên bài học hoặc điểm yếu của học sinh.</td><td>Chủ đề, độ khó, nội dung bài học, câu hỏi được sinh ra.</td></tr>
+    <tr><td>/api/ai/grade-exercise</td><td>Chấm câu trả lời/bài luyện tập của học sinh và đưa ra nhận xét.</td><td>Câu hỏi, câu trả lời học sinh, đáp án tham khảo, điểm số, phản hồi.</td></tr>
+    <tr><td>/api/ai/reward</td><td>Cộng phần thưởng như kim cương khi học sinh hoàn thành nhiệm vụ hoặc trả lời đúng.</td><td>Số kim cương, ID người dùng, kết quả cập nhật.</td></tr>
+    <tr><td>/api/assignments/[recipientId]/ai-grade</td><td>Chấm bài tập đã nộp bằng AI, đề xuất điểm và nhận xét để giáo viên xem lại.</td><td>Nội dung bài nộp, rubric, điểm AI, nhận xét chi tiết.</td></tr>
+  </table>
+
+  <p><strong>7.6. Nhóm API bài tập và quản lý nộp bài</strong></p>
+  <table>
+    <tr><th>API/nhóm API</th><th>Mục đích sử dụng</th><th>Dữ liệu xử lý</th></tr>
+    <tr><td>/api/admin/assignments</td><td>Giáo viên/quản trị viên tạo, xem và quản lý danh sách bài tập.</td><td>Tiêu đề, mô tả, hạn nộp, điểm tối đa, rubric, đối tượng nhận bài.</td></tr>
+    <tr><td>/api/admin/assignments/[assignmentId]</td><td>Xem chi tiết, cập nhật hoặc xóa một bài tập cụ thể.</td><td>Thông tin bài tập, danh sách người nhận, trạng thái bài.</td></tr>
+    <tr><td>/api/admin/assignments/upload-pdf</td><td>Upload tài liệu PDF đính kèm bài tập.</td><td>Tệp PDF, đường dẫn lưu trữ, khóa lưu trữ.</td></tr>
+    <tr><td>/api/admin/assignments/[assignmentId]/export</td><td>Xuất dữ liệu bài tập/kết quả phục vụ tổng hợp hoặc lưu trữ.</td><td>Danh sách học sinh, trạng thái nộp, điểm, phản hồi.</td></tr>
+    <tr><td>/api/assignments</td><td>Học sinh lấy danh sách bài tập được giao.</td><td>Bài tập, hạn nộp, trạng thái, điểm, phản hồi nếu có.</td></tr>
+    <tr><td>/api/assignments/[recipientId]/accept</td><td>Ghi nhận việc học sinh đã nhận bài tập.</td><td>ID bài giao, trạng thái đã nhận.</td></tr>
+    <tr><td>/api/assignments/[recipientId]/submit</td><td>Nộp bài tập bằng nội dung văn bản hoặc tệp đính kèm.</td><td>Bài làm, tệp nộp, thời điểm nộp, số lần nộp.</td></tr>
+    <tr><td>/api/assignments/upload-submission</td><td>Upload tệp bài làm của học sinh.</td><td>Tệp đính kèm, đường dẫn lưu trữ, metadata tệp.</td></tr>
+    <tr><td>/api/admin/assignments/recipients/[recipientId]/review</td><td>Giáo viên xem xét bài nộp, chỉnh sửa điểm/nhận xét và trả bài.</td><td>Điểm, phản hồi, rubric, trạng thái đã chấm hoặc trả lại.</td></tr>
+  </table>
+
+  <p><strong>7.7. Nhóm API điểm yếu, luyện tập khắc phục và báo cáo quản trị</strong></p>
+  <table>
+    <tr><th>API/nhóm API</th><th>Mục đích sử dụng</th><th>Dữ liệu xử lý</th></tr>
+    <tr><td>/api/weakness-analysis</td><td>Phân tích dữ liệu học tập để xác định nội dung học sinh còn yếu.</td><td>Bài làm, phản hồi, điểm số, chủ đề yếu, nguyên nhân.</td></tr>
+    <tr><td>/api/weakness-signals</td><td>Lưu và lấy danh sách tín hiệu điểm yếu của học sinh.</td><td>Chủ đề, câu hỏi, câu trả lời, phản hồi AI, trạng thái.</td></tr>
+    <tr><td>/api/weakness-signals/progress</td><td>Tổng hợp tiến độ khắc phục điểm yếu.</td><td>Số điểm yếu, trạng thái, điểm cải thiện, lịch sử luyện tập.</td></tr>
+    <tr><td>/api/weakness-signals/[weaknessId]/start-remediation</td><td>Bắt đầu phiên luyện tập khắc phục cho một điểm yếu cụ thể.</td><td>ID điểm yếu, bài luyện tập được tạo, dữ liệu quiz.</td></tr>
+    <tr><td>/api/weakness-signals/[weaknessId]/submit-remediation</td><td>Nộp kết quả luyện tập khắc phục và cập nhật trạng thái điểm yếu.</td><td>Câu trả lời, điểm, kết quả đạt/chưa đạt, thời điểm hoàn thành.</td></tr>
+    <tr><td>/api/weakness-signals/[weaknessId]/history</td><td>Xem lịch sử các lần luyện tập của một điểm yếu.</td><td>Điểm từng lần, đáp án, ngày luyện tập, kết quả.</td></tr>
+    <tr><td>/api/mistakes</td><td>Hiển thị danh sách lỗi sai/điểm yếu để học sinh ôn tập.</td><td>Lỗi sai, chủ đề, trạng thái, bài học liên quan.</td></tr>
+    <tr><td>/api/roadmap</td><td>Gợi ý lộ trình học hoặc nội dung cần ưu tiên dựa trên tiến độ và điểm yếu.</td><td>Tiến độ học, điểm yếu, bài đề xuất, thứ tự ưu tiên.</td></tr>
+    <tr><td>/api/admin/students</td><td>Quản trị viên xem và quản lý danh sách học sinh.</td><td>Họ tên, email, khối lớp, hoạt động học tập, trạng thái.</td></tr>
+    <tr><td>/api/admin/achievements</td><td>Quản lý thành tích và điều kiện đạt thành tích trong hệ thống.</td><td>Tên thành tích, mô tả, biểu tượng, quy tắc đạt thành tích.</td></tr>
+  </table>
+
+  <p><strong>7.8. API và dịch vụ bên ngoài</strong></p>
+  <table>
+    <tr><th>Dịch vụ/API</th><th>Vai trò trong hệ thống</th><th>Lợi ích mang lại</th></tr>
+    <tr><td>OpenAI API hoặc API mô hình AI tương thích</td><td>Cung cấp năng lực hội thoại, giải thích bài học, tạo bài tập, chấm điểm và phản hồi.</td><td>Giúp hệ thống có trợ giảng AI linh hoạt, hỗ trợ cá nhân hóa và giảm tải phản hồi ban đầu cho giáo viên.</td></tr>
+    <tr><td>Google Generative AI</td><td>Có thể sử dụng cho các chức năng sinh nội dung, phân tích câu trả lời hoặc hỗ trợ AI tùy cấu hình.</td><td>Tăng khả năng lựa chọn mô hình AI và tối ưu chi phí/hiệu năng.</td></tr>
+    <tr><td>Supabase Auth/SSR</td><td>Hỗ trợ xác thực, quản lý phiên đăng nhập hoặc tích hợp đăng nhập xã hội tùy cấu hình.</td><td>Tăng độ an toàn và thuận tiện cho người dùng khi đăng nhập.</td></tr>
+    <tr><td>Neon PostgreSQL</td><td>Cung cấp cơ sở dữ liệu PostgreSQL trên nền tảng đám mây.</td><td>Lưu trữ dữ liệu học tập có cấu trúc, dễ mở rộng và sao lưu.</td></tr>
+    <tr><td>AWS S3 hoặc dịch vụ lưu trữ tương thích S3</td><td>Lưu trữ tài liệu PDF, bài nộp hoặc các tệp đính kèm.</td><td>Tách dữ liệu tệp khỏi máy chủ ứng dụng, tăng khả năng mở rộng lưu trữ.</td></tr>
+    <tr><td>Beeknoee/KRouter hoặc backend AI riêng</td><td>Hỗ trợ xử lý PDF, kết nối AI hoặc các tác vụ backend chuyên biệt nếu triển khai.</td><td>Giúp tách các tác vụ nặng khỏi ứng dụng web chính và tăng tính linh hoạt khi vận hành.</td></tr>
+  </table>
+
+  <p><strong>7.9. Các phần mềm, thư viện và công nghệ sử dụng</strong></p>
+  <table>
+    <tr><th>Phần mềm/công nghệ</th><th>Mục đích sử dụng</th><th>Lý do lựa chọn</th></tr>
+    <tr><td>Next.js 14</td><td>Xây dựng ứng dụng web, routing, giao diện và API backend trong cùng một dự án.</td><td>Hiện đại, hiệu năng tốt, hỗ trợ App Router và phù hợp triển khai sản phẩm web.</td></tr>
+    <tr><td>React</td><td>Xây dựng giao diện tương tác cho dashboard, trang học, chat AI, bài tập và quản trị.</td><td>Phổ biến, dễ tái sử dụng component, phù hợp ứng dụng nhiều trạng thái.</td></tr>
+    <tr><td>TypeScript</td><td>Kiểm soát kiểu dữ liệu trong frontend và backend.</td><td>Giảm lỗi khi phát triển, giúp bảo trì dự án lớn rõ ràng hơn.</td></tr>
+    <tr><td>Tailwind CSS</td><td>Thiết kế giao diện responsive và đồng bộ phong cách hiển thị.</td><td>Tạo giao diện nhanh, dễ tùy chỉnh, phù hợp dashboard và trang học.</td></tr>
+    <tr><td>Prisma ORM</td><td>Định nghĩa mô hình dữ liệu và truy vấn PostgreSQL.</td><td>An toàn kiểu dữ liệu, dễ quản lý schema và quan hệ dữ liệu.</td></tr>
+    <tr><td>PostgreSQL</td><td>Lưu trữ dữ liệu người dùng, bài học, bài tập, tiến độ, điểm yếu và hội thoại AI.</td><td>Cơ sở dữ liệu quan hệ mạnh, ổn định, phù hợp dữ liệu giáo dục có nhiều liên kết.</td></tr>
+    <tr><td>Node.js</td><td>Môi trường chạy ứng dụng Next.js và các API server-side.</td><td>Phù hợp hệ sinh thái JavaScript/TypeScript và triển khai web hiện đại.</td></tr>
+    <tr><td>Zustand</td><td>Quản lý trạng thái phía client như thông tin người dùng, sidebar hoặc trạng thái giao diện.</td><td>Nhẹ, đơn giản, dễ tích hợp với React.</td></tr>
+    <tr><td>Zod</td><td>Kiểm tra và xác thực dữ liệu đầu vào cho form/API.</td><td>Giúp dữ liệu gửi lên hệ thống đúng định dạng và giảm lỗi runtime.</td></tr>
+    <tr><td>React Hook Form</td><td>Xử lý form đăng nhập, đăng ký, cài đặt, tạo bài học/bài tập.</td><td>Tối ưu hiệu năng form và dễ kết hợp xác thực dữ liệu.</td></tr>
+    <tr><td>bcryptjs</td><td>Băm mật khẩu người dùng trước khi lưu.</td><td>Tăng bảo mật tài khoản, tránh lưu mật khẩu dạng rõ.</td></tr>
+    <tr><td>jose</td><td>Xử lý token/JWT trong xác thực và phân quyền.</td><td>Hỗ trợ chuẩn bảo mật hiện đại cho ứng dụng web.</td></tr>
+    <tr><td>React PDF/PDF.js</td><td>Hiển thị tài liệu PDF trong trang học và bài tập.</td><td>Cho phép học sinh đọc tài liệu trực tiếp trên nền tảng.</td></tr>
+    <tr><td>KaTeX, remark-math, rehype-katex</td><td>Hiển thị công thức toán học trong nội dung AI và bài học.</td><td>Phù hợp với môn Toán, Lý, Hóa và các nội dung có ký hiệu khoa học.</td></tr>
+    <tr><td>Recharts</td><td>Vẽ biểu đồ tiến độ, thống kê học tập và báo cáo.</td><td>Giúp dữ liệu học tập trực quan, dễ hiểu với học sinh, phụ huynh và quản trị viên.</td></tr>
+    <tr><td>Lucide React</td><td>Cung cấp bộ biểu tượng cho giao diện.</td><td>Giúp giao diện rõ ràng, trực quan và nhất quán.</td></tr>
+    <tr><td>Vitest</td><td>Kiểm thử một số logic/API trong dự án.</td><td>Hỗ trợ kiểm tra tính đúng đắn và giảm lỗi khi nâng cấp.</td></tr>
+    <tr><td>ESLint</td><td>Kiểm tra quy tắc mã nguồn.</td><td>Giúp mã nguồn thống nhất, dễ đọc và hạn chế lỗi lập trình.</td></tr>
+    <tr><td>FastAPI backend phụ trợ</td><td>Có thể xử lý các tác vụ AI/PDF riêng khi triển khai backend tách biệt.</td><td>Phù hợp xử lý tác vụ backend chuyên biệt, dễ deploy độc lập.</td></tr>
+    <tr><td>Railway/Vercel hoặc máy chủ Node.js</td><td>Môi trường triển khai ứng dụng và backend.</td><td>Hỗ trợ triển khai nhanh, dễ cấu hình biến môi trường và mở rộng.</td></tr>
+  </table>
+  <p class="note">[CHÈN HÌNH 11: Sơ đồ luồng API giữa giao diện người dùng, Next.js API Routes, cơ sở dữ liệu PostgreSQL, dịch vụ AI và lưu trữ PDF.]</p>
+
+  <h4>8. Bản chất kỹ thuật cốt lõi</h4>
+  <p>Bản chất cốt lõi của EduSelf là tạo một vòng lặp học tập thông minh dựa trên dữ liệu. Vòng lặp này gồm: cung cấp học liệu, ghi nhận hành vi học, hỗ trợ bằng AI, đánh giá kết quả, phát hiện điểm yếu, tạo luyện tập bù đắp, cập nhật tiến độ và báo cáo cho các bên liên quan. Chính vòng lặp khép kín này tạo ra sự khác biệt so với những hệ thống chỉ lưu tài liệu hoặc chỉ có chatbot độc lập.</p>
+  <p>Nói cách khác, EduSelf không chỉ trả lời câu hỏi “học sinh đã đạt bao nhiêu điểm”, mà còn giúp trả lời các câu hỏi quan trọng hơn: học sinh đã học trong bao lâu, đang dừng ở bài nào, thường sai chủ đề nào, đã được phản hồi gì, có luyện lại chưa, mức độ cải thiện ra sao và ai cần được hỗ trợ trước.</p>
+
+  <h3>III. Tính mới và tính sáng tạo của giải pháp dự thi</h3>
+  <p>EduSelf có tính mới ở cách kết hợp nhiều thành phần vốn thường tách rời thành một hệ thống học tập thống nhất. Các điểm sáng tạo nổi bật gồm:</p>
+  <ul>
+    <li><strong>AI gắn với ngữ cảnh bài học:</strong> AI không hoạt động chung chung mà được đặt trong bối cảnh bài học, tài liệu, tiến độ và lịch sử trao đổi của học sinh.</li>
+    <li><strong>Quản lý điểm yếu như một đối tượng dữ liệu riêng:</strong> điểm yếu không chỉ là nhận xét văn bản mà có trạng thái, nguồn phát hiện, bằng chứng, điểm ban đầu, điểm tốt nhất và số lần luyện tập.</li>
+    <li><strong>Học tập theo vòng lặp cải thiện:</strong> học sinh học bài, làm bài, nhận phản hồi, xác định điểm yếu và luyện tập lại cho đến khi cải thiện.</li>
+    <li><strong>Kết hợp tài liệu PDF với AI:</strong> học sinh có thể học trực tiếp trên tài liệu PDF và trao đổi với AI trong cùng một giao diện, giảm việc chuyển đổi qua nhiều công cụ.</li>
+    <li><strong>Chấm bài có hỗ trợ AI nhưng vẫn giữ vai trò giáo viên:</strong> AI đề xuất điểm và nhận xét, giáo viên có thể xem lại, chỉnh sửa và xác nhận, bảo đảm tính kiểm soát sư phạm.</li>
+    <li><strong>Báo cáo đa vai trò từ cùng một nguồn dữ liệu:</strong> học sinh, phụ huynh, giáo viên và quản trị viên nhận các góc nhìn khác nhau mà không cần nhập lại dữ liệu.</li>
+    <li><strong>Cơ chế động viên học tập:</strong> thành tích, chuỗi ngày học, kim cương và bảng xếp hạng giúp tạo động lực cho học sinh duy trì thói quen tự học.</li>
+  </ul>
+  <p>Về mức độ mới, giải pháp trước hết mới trong phạm vi đơn vị triển khai vì thay thế các công cụ rời rạc bằng một nền tảng thống nhất. Trong phạm vi lĩnh vực giáo dục số, giải pháp mới ở việc xem “điểm yếu học tập” là trung tâm của quá trình cá nhân hóa. Trong phạm vi trong nước, giải pháp có tính mới ở việc kết hợp học liệu PDF, trợ giảng AI, quản lý bài tập, chấm AI, luyện tập khắc phục và báo cáo phụ huynh/quản trị trong cùng một sản phẩm tiếng Việt, có khả năng tùy biến theo chương trình học thực tế.</p>
+  <p class="note">[CHÈN HÌNH 11: Ảnh chụp trang điểm yếu, thể hiện danh sách chủ đề yếu, trạng thái và nút bắt đầu luyện tập.]</p>
+
+  <h3>IV. Khả năng áp dụng</h3>
+  <p>EduSelf đã được xây dựng dưới dạng sản phẩm phần mềm web có thể chạy thử nghiệm và có khả năng triển khai trên môi trường máy chủ. Do hoạt động trên trình duyệt, người dùng chỉ cần máy tính, máy tính bảng hoặc điện thoại có kết nối Internet. Sản phẩm phù hợp triển khai cho các nhóm sau:</p>
+  <ul>
+    <li>Lớp học hoặc nhóm học sinh cần công cụ tự học và theo dõi tiến độ.</li>
+    <li>Trung tâm giáo dục muốn quản lý học liệu, bài tập, tiến độ và báo cáo phụ huynh.</li>
+    <li>Giáo viên cá nhân cần nền tảng giao bài, chấm bài và lưu lịch sử học tập.</li>
+    <li>Trường học muốn thử nghiệm mô hình trợ giảng AI trong học tập số.</li>
+    <li>Học sinh tự học muốn có công cụ đọc tài liệu, hỏi AI và luyện tập theo điểm yếu.</li>
+  </ul>
+  <p>Ở giai đoạn thử nghiệm, hệ thống có thể triển khai với một số môn học và một nhóm học sinh. Khi ổn định, có thể mở rộng theo khối lớp, theo môn học hoặc theo đơn vị đào tạo. Các bước triển khai thực tế gồm: chuẩn bị máy chủ và cơ sở dữ liệu, cấu hình dịch vụ AI, nhập danh sách người dùng, tạo môn học và bài học, upload tài liệu, hướng dẫn giáo viên tạo bài tập, hướng dẫn học sinh sử dụng, theo dõi báo cáo và điều chỉnh nội dung.</p>
+  <p>So với các sản phẩm ngoại nhập, EduSelf có lợi thế về tiếng Việt, khả năng tùy biến theo chương trình học, chủ động dữ liệu và chi phí linh hoạt. Sản phẩm cũng có thể cạnh tranh với các công cụ rời rạc bằng cách hợp nhất nhiều chức năng trong một nền tảng.</p>
+  <p class="note">[CHÈN HÌNH 12: Ảnh chụp giao diện trên máy tính và điện thoại để thể hiện khả năng sử dụng đa thiết bị.]</p>
+
+  <h3>V. Hiệu quả</h3>
+  <h4>1. Hiệu quả kỹ thuật</h4>
+  <p>Giải pháp mang lại hiệu quả kỹ thuật thông qua việc số hóa và tự động hóa nhiều khâu trong quá trình học tập. Hệ thống giúp dữ liệu được lưu trữ tập trung, giảm thất lạc thông tin, tăng khả năng truy vết và giúp các bên liên quan có cùng một nguồn dữ liệu đáng tin cậy.</p>
+  <ul>
+    <li>Nâng cao chất lượng học tập nhờ AI giải thích tức thời và tạo bài luyện tập theo điểm yếu.</li>
+    <li>Nâng cao hiệu quả quản lý nhờ lưu trữ tập trung học liệu, bài tập, điểm số, phản hồi và tiến độ.</li>
+    <li>Giảm thao tác thủ công trong giao bài, thu bài, tổng hợp trạng thái và phản hồi ban đầu.</li>
+    <li>Tăng khả năng phát hiện sớm học sinh cần hỗ trợ dựa trên bài quá hạn, ít hoạt động, điểm yếu lặp lại và thời lượng học thấp.</li>
+    <li>Cải thiện trải nghiệm học nhờ tích hợp PDF viewer, chat AI, công cụ nhập công thức toán học và lưu trạng thái học.</li>
+    <li>Tăng khả năng mở rộng vì hệ thống dùng kiến trúc web, API, cơ sở dữ liệu quan hệ và mô hình dữ liệu rõ ràng.</li>
+  </ul>
+
+  <h4>2. Hiệu quả kinh tế</h4>
+  <p>EduSelf có thể tạo hiệu quả kinh tế thông qua việc giảm chi phí vận hành và tăng giá trị dịch vụ giáo dục. Khi giáo viên tiết kiệm thời gian chấm bài và tổng hợp báo cáo, cùng một đội ngũ có thể phục vụ nhiều học sinh hơn hoặc dành nhiều thời gian hơn cho hỗ trợ chuyên sâu. Việc sử dụng tài liệu số cũng giúp giảm chi phí in ấn, lưu trữ và phân phối tài liệu.</p>
+  <p>Có thể ước tính hiệu quả theo các chỉ số sau khi triển khai:</p>
+  <ul>
+    <li>Số giờ giáo viên tiết kiệm mỗi tuần nhờ AI hỗ trợ chấm bài và tạo phản hồi.</li>
+    <li>Số bài tập được giao, nộp và phản hồi hoàn toàn trên nền tảng thay cho giấy hoặc email.</li>
+    <li>Chi phí in ấn tài liệu và bài tập giảm theo số lượng học sinh sử dụng tài liệu PDF.</li>
+    <li>Số học sinh một giáo viên có thể theo dõi hiệu quả nhờ dashboard và cảnh báo.</li>
+    <li>Doanh thu hoặc giá trị dịch vụ tăng thêm khi trung tâm/trường học cung cấp học tập cá nhân hóa bằng AI.</li>
+  </ul>
+  <p>Ví dụ, nếu một giáo viên có 100 bài làm mỗi tuần và AI giúp giảm trung bình 2-3 phút xử lý ban đầu cho mỗi bài, giáo viên có thể tiết kiệm khoảng 200-300 phút mỗi tuần. Con số thực tế cần được đo lường sau triển khai, nhưng đây là cơ sở để đánh giá tiềm năng làm lợi của giải pháp.</p>
+
+  <h4>3. Hiệu quả xã hội</h4>
+  <p>EduSelf góp phần thúc đẩy chuyển đổi số trong giáo dục và hỗ trợ bình đẳng hơn trong tiếp cận tri thức. Học sinh có thể nhận hỗ trợ tức thời từ AI khi tự học ở nhà, kể cả khi giáo viên chưa thể phản hồi ngay. Những học sinh còn yếu hoặc ngại hỏi trực tiếp có thêm kênh hỗ trợ riêng tư để được giải thích lại kiến thức.</p>
+  <ul>
+    <li>Đối với học sinh: tăng khả năng tự học, biết điểm yếu của mình, có động lực duy trì thói quen học tập.</li>
+    <li>Đối với giáo viên: giảm áp lực công việc lặp lại, có thêm dữ liệu để hỗ trợ đúng học sinh.</li>
+    <li>Đối với phụ huynh: tăng khả năng đồng hành cùng con dựa trên dữ liệu cụ thể.</li>
+    <li>Đối với nhà trường/trung tâm: nâng cao năng lực quản lý giáo dục và chất lượng dịch vụ.</li>
+    <li>Đối với môi trường: giảm sử dụng giấy trong tài liệu, bài tập và báo cáo.</li>
+  </ul>
+
+  <h2>C. Toàn văn giải pháp dự thi</h2>
+  <h4>1. Quá trình thực hiện giải pháp</h4>
+  <p><strong>Giai đoạn 1: Khảo sát nhu cầu.</strong> Tác giả phân tích các khó khăn trong học tập trực tuyến: học sinh thiếu hỗ trợ khi tự học, giáo viên tốn thời gian chấm bài và phụ huynh thiếu thông tin theo dõi. Từ đó xác định yêu cầu xây dựng một nền tảng tích hợp học liệu, AI, bài tập và báo cáo.</p>
+  <p><strong>Giai đoạn 2: Thiết kế kiến trúc và dữ liệu.</strong> Hệ thống được thiết kế theo kiến trúc web gồm giao diện, API, cơ sở dữ liệu và dịch vụ AI. Mô hình dữ liệu được xây dựng cho người dùng, vai trò, bài học, bài tập, tiến độ, hội thoại, điểm yếu và thành tích.</p>
+  <p><strong>Giai đoạn 3: Phát triển giao diện.</strong> Các màn hình chính được xây dựng gồm đăng nhập, đăng ký, dashboard, khóa học, trang học PDF và AI, bài tập, tiến độ, điểm yếu, cài đặt và quản trị.</p>
+  <p><strong>Giai đoạn 4: Phát triển API và xử lý nghiệp vụ.</strong> Các API xử lý xác thực, môn học, bài học, upload PDF, giao bài, nộp bài, chấm AI, tiến độ học, phiên học, báo cáo, thông báo và quản lý người dùng.</p>
+  <p><strong>Giai đoạn 5: Tích hợp AI.</strong> AI được đưa vào các luồng hỏi đáp, tạo bài tập, chấm bài, phản hồi, phát hiện điểm yếu và tạo bài luyện tập khắc phục.</p>
+  <p><strong>Giai đoạn 6: Hoàn thiện báo cáo và phân quyền.</strong> Hệ thống bổ sung báo cáo riêng cho học sinh, phụ huynh và quản trị viên, đồng thời bảo đảm người dùng chỉ truy cập dữ liệu phù hợp vai trò.</p>
+  <p><strong>Giai đoạn 7: Kiểm thử và cải tiến.</strong> Các luồng học bài, hỏi AI, nộp bài, chấm bài, ghi nhận tiến độ, phát hiện điểm yếu và xem báo cáo được kiểm tra, điều chỉnh để ổn định hơn.</p>
+
+  <h4>2. Sơ đồ quy trình hoạt động chính</h4>
+  <p>Quy trình học tập: đăng nhập -> chọn môn học -> chọn bài học -> đọc PDF/nội dung -> hỏi AI -> làm bài kiểm tra hoặc bài tập -> nhận phản hồi -> hệ thống ghi nhận tiến độ và điểm yếu -> luyện tập khắc phục -> cập nhật báo cáo.</p>
+  <p>Quy trình quản lý bài tập: giáo viên tạo bài -> chọn học sinh nhận bài -> học sinh nộp bài -> AI hỗ trợ chấm -> giáo viên kiểm tra và trả phản hồi -> lưu lịch sử -> cập nhật dashboard và cảnh báo.</p>
+  <p>Quy trình báo cáo phụ huynh: hệ thống tổng hợp thời lượng học, bài tập, hoạt động gần đây và điểm yếu -> phân loại cảnh báo -> hiển thị cho phụ huynh theo từng học sinh.</p>
+  <p class="note">[CHÈN HÌNH 13: Sơ đồ quy trình tổng hợp toàn hệ thống từ học sinh, giáo viên, phụ huynh đến quản trị viên.]</p>
+
+  <h4>3. Tài liệu, sản phẩm mẫu kèm theo</h4>
+  <ul>
+    <li>Ảnh chụp dashboard học sinh, phụ huynh và quản trị viên.</li>
+    <li>Ảnh chụp trang học tập có PDF và AI trợ giảng.</li>
+    <li>Ảnh chụp trang quản lý môn học, bài học và bài tập.</li>
+    <li>Ảnh chụp chức năng nộp bài, chấm AI và phản hồi.</li>
+    <li>Ảnh chụp trang phát hiện điểm yếu và luyện tập khắc phục.</li>
+    <li>Sơ đồ kiến trúc hệ thống và sơ đồ quy trình hoạt động.</li>
+    <li>Mã nguồn, cơ sở dữ liệu mẫu hoặc đường dẫn bản chạy thử nếu hội đồng yêu cầu.</li>
+  </ul>
+
+  <h4>4. Hướng phát triển</h4>
+  <p>Trong các giai đoạn tiếp theo, EduSelf có thể tiếp tục phát triển thêm các chức năng: đề xuất lộ trình học tự động theo năng lực, phân tích dữ liệu học tập nâng cao, ngân hàng câu hỏi theo chuẩn chương trình, học nhóm, video bài giảng, thông báo qua email hoặc ứng dụng di động, bảng điều khiển dành cho giáo viên bộ môn và tích hợp thanh toán nếu triển khai theo mô hình dịch vụ.</p>
+
+  <h4>5. Kết luận</h4>
+  <p>EduSelf là giải pháp học tập thông minh ứng dụng trí tuệ nhân tạo nhằm nâng cao hiệu quả tự học, giảm tải cho giáo viên, tăng sự đồng hành của phụ huynh và hỗ trợ quản lý giáo dục bằng dữ liệu. Giải pháp có tính mới ở việc kết hợp học liệu, AI, bài tập, chấm điểm, phát hiện điểm yếu, luyện tập khắc phục và báo cáo đa vai trò trong một nền tảng thống nhất. Với khả năng triển khai trên nền web, dễ mở rộng và phù hợp nhu cầu chuyển đổi số giáo dục, EduSelf có tiềm năng áp dụng thực tế trong trường học, trung tâm giáo dục và các mô hình học tập cá nhân hóa.</p>
+
+  <p class="signature">..........., ngày ...... tháng ...... năm 2026<br><strong>Tác giả/Đại diện nhóm tác giả</strong><br><br><br>....................................</p>
+</body>
+</html>

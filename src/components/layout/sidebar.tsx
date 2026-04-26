@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -170,6 +171,22 @@ export function Sidebar() {
     }));
   };
 
+  const navigateTo = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    router.push(href);
+  };
+
   return (
     <aside
       className={cn(
@@ -218,6 +235,7 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={navigateTo(item.href)}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "group relative flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 transition-all duration-200",
@@ -278,6 +296,7 @@ export function Sidebar() {
                           <Link
                             key={item.href}
                             href={item.href}
+                            onClick={navigateTo(item.href)}
                             className={cn(
                               "group flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 transition-all duration-200",
                               isActive
@@ -368,6 +387,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={navigateTo(item.href)}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-medium",
                 isActive ? "bg-white/12 text-white" : "text-white/65",
