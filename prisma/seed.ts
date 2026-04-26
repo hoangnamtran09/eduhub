@@ -1,9 +1,35 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+const BCRYPT_ROUNDS = 12;
+
+async function hashPassword(password: string) {
+  return bcrypt.hash(password, BCRYPT_ROUNDS);
+}
 
 async function main() {
   console.log("Seeding database...");
+
+  const adminEmail = "admin@eduself.local";
+  const adminPassword = "Admin@123456";
+
+  const admin = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      fullName: "EduSelf Admin",
+      role: "ADMIN",
+      passwordHash: await hashPassword(adminPassword),
+    },
+    create: {
+      email: adminEmail,
+      fullName: "EduSelf Admin",
+      role: "ADMIN",
+      passwordHash: await hashPassword(adminPassword),
+    },
+  });
+
+  console.log(`Seeded admin account: ${admin.email} / ${adminPassword}`);
 
   const seedId = Date.now();
   const defaultGradeLevel = 6;
