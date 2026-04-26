@@ -25,8 +25,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const prismaAny = prisma as any;
-    const recipient = await prismaAny.assignmentRecipient.findUnique({
+    const recipient = await prisma.assignmentRecipient.findUnique({
       where: { id: params.recipientId },
       include: {
         assignment: true,
@@ -85,7 +84,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
     gradeData.rubricScores = Array.isArray(gradeData.rubricScores) ? gradeData.rubricScores : [];
     gradeData.feedback = typeof gradeData.feedback === "string" ? gradeData.feedback : "";
 
-    await prismaAny.assignmentRecipient.update({
+    await prisma.assignmentRecipient.update({
       where: { id: params.recipientId },
       data: {
         aiScore: Math.round(gradeData.aiScore),

@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { getAuthUser } from "@/lib/auth/get-auth-user";
 import { chatWithAI } from "@/lib/beeknoee/client";
 import { getAssignmentPregradePrompt } from "@/lib/ai/prompts";
+
+interface SubmissionFilePayload {
+  url?: string;
+  name?: string;
+  type?: string;
+  size?: number;
+}
+
+interface SubmitAssignmentBody {
+  submissionText?: string;
+  submissionFiles?: SubmissionFilePayload[];
+}
 
 interface RouteParams {
   params: { recipientId: string };
@@ -16,18 +29,17 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await request.json() as SubmitAssignmentBody;
     const submissionText = body?.submissionText?.trim();
     const submissionFiles = Array.isArray(body?.submissionFiles)
-      ? body.submissionFiles.filter((file: any) => typeof file?.url === "string" && typeof file?.name === "string").slice(0, 5)
+      ? body.submissionFiles.filter((file): file is Required<Pick<SubmissionFilePayload, "url" | "name">> & SubmissionFilePayload => typeof file?.url === "string" && typeof file?.name === "string").slice(0, 5)
       : [];
 
     if (!submissionText && submissionFiles.length === 0) {
       return NextResponse.json({ error: "Missing submission text or file" }, { status: 400 });
     }
 
-    const prismaAny = prisma as any;
-    const updateResult = await prismaAny.assignmentRecipient.updateMany({
+    const updateResult = await prisma.assignmentRecipient.updateMany({
       where: {
         id: params.recipientId,
         studentId: authUser.userId,
@@ -51,7 +63,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const updated = await prismaAny.assignmentRecipient.findUnique({
+    const updated = await prisma.assignmentRecipient.findUnique({
       where: {
         id: params.recipientId,
       },
@@ -63,8 +75,8 @@ export async function POST(request: Request, { params }: RouteParams) {
     // Fire-and-forget AI pre-grade
     if (updated?.assignment) {
       const assignment = updated.assignment;
-      const rubric = Array.isArray(assignment.rubric) ? assignment.rubric : null;
-      const files = Array.isArray(updated.submissionFiles) ? updated.submissionFiles : [];
+        const rubric = Array.isArray(assignment.rubric) ? assignment.rubric : null;
+        const files = Array.isArray(updated.submissionFiles) ? updated.submissionFiles as Prisma.JsonArray : [];
 
       const systemPrompt = getAssignmentPregradePrompt({
         title: assignment.title,
@@ -72,17 +84,20 @@ export async function POST(request: Request, { params }: RouteParams) {
         maxScore: assignment.maxScore,
         rubric,
         submissionText: submissionText || null,
-        submissionFileNames: files.map((f: any) => f.name || "file"),
-      });
+          submissionFileNames: files.map((file) => {
+            const fileName = typeof file === "object" && file && "name" in file ? (file as { name?: unknown }).name : undefined;
+            return typeof fileName === "string" ? fileName : "file";
+          }),
+        });
 
-      const messages = [
+        const messages = [
         { role: "system", content: systemPrompt },
         { role: "user", content: "Hãy chấm sơ bộ bài nộp này." },
       ];
 
       chatWithAI(messages).then(async (aiResponse) => {
         try {
-          let gradeData: { aiScore: number; rubricScores: any[]; feedback: string };
+          let gradeData: { aiScore: number; rubricScores: Prisma.InputJsonValue[]; feedback: string };
           const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             gradeData = JSON.parse(jsonMatch[0]);
@@ -95,7 +110,7 @@ export async function POST(request: Request, { params }: RouteParams) {
             return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fb;
           };
 
-          await prismaAny.assignmentRecipient.update({
+          await prisma.assignmentRecipient.update({
             where: { id: params.recipientId },
             data: {
               aiScore: Math.round(clamp(gradeData.aiScore, 0, assignment.maxScore, 0)),

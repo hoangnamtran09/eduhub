@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminOrTeacher } from "@/lib/auth/require-role";
+
+interface RubricScoreInput {
+  criterionId?: string;
+  title?: string;
+  score?: number;
+  maxScore?: number;
+  comment?: string;
+}
+
+interface ReviewRequestBody {
+  action?: "review" | "return";
+  score?: number;
+  feedback?: string;
+  rubricScores?: RubricScoreInput[];
+}
 
 interface RouteParams {
   params: { recipientId: string };
@@ -15,7 +31,7 @@ export async function POST(request: Request, { params }: RouteParams) {
   if (authorization instanceof NextResponse) return authorization;
 
   try {
-    const body = await request.json();
+    const body = await request.json() as ReviewRequestBody;
     const action = body?.action === "return" ? "return" : "review";
     const score = Number.isFinite(Number(body?.score)) ? Number(body.score) : null;
     const feedback = typeof body?.feedback === "string" ? body.feedback.trim() : "";
@@ -29,8 +45,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Feedback is required" }, { status: 400 });
     }
 
-    const prismaAny = prisma as any;
-    const recipient = await prismaAny.assignmentRecipient.findUnique({
+    const recipient = await prisma.assignmentRecipient.findUnique({
       where: { id: params.recipientId },
       include: { assignment: true },
     });
@@ -47,8 +62,11 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     const rubric = Array.isArray(recipient.assignment?.rubric) ? recipient.assignment.rubric : [];
-    const normalizedRubricScores = rubricScores.map((item: any) => {
-      const criterion = rubric.find((rubricItem: any) => rubricItem.id === item?.criterionId);
+    const normalizedRubricScores = rubricScores.map((item) => {
+      const criterion = rubric.find((rubricItem) => {
+        if (!rubricItem || typeof rubricItem !== "object" || !("id" in rubricItem)) return false;
+        return String((rubricItem as { id?: unknown }).id || "") === item?.criterionId;
+      }) as { id?: unknown; title?: unknown; maxScore?: unknown } | undefined;
       const maxScore = Number(criterion?.maxScore || item?.maxScore || 0);
       const rawScore = Number(item?.score || 0);
       return {
@@ -58,14 +76,14 @@ export async function POST(request: Request, { params }: RouteParams) {
         maxScore,
         comment: typeof item?.comment === "string" ? item.comment.trim() : "",
       };
-    }).filter((item: any) => item.criterionId);
+    }).filter((item) => item.criterionId) as Prisma.InputJsonValue[];
 
     if (rubric.length > 0 && normalizedRubricScores.length !== rubric.length) {
       return NextResponse.json({ error: "Rubric scores are incomplete" }, { status: 400 });
     }
 
     const computedScore = normalizedRubricScores.length > 0
-      ? normalizedRubricScores.reduce((sum: number, item: any) => sum + item.score, 0)
+      ? normalizedRubricScores.reduce((sum, item) => sum + Number(typeof item === "object" && item && "score" in item ? (item as { score?: unknown }).score : 0), 0)
       : score;
 
     if (computedScore !== null && !Number.isFinite(computedScore)) {
@@ -80,7 +98,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Score is required" }, { status: 400 });
     }
 
-    const updated = await prismaAny.assignmentRecipient.update({
+    const updated = await prisma.assignmentRecipient.update({
       where: { id: params.recipientId },
       data: {
         status: action === "return" ? "RETURNED" : "REVIEWED",

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AssignmentRecord, AssignmentRecipient, RubricCriterion, isAssignmentSubmitted, normalizeAssignmentStatus } from "@/types/assignment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; className?: string }> = {
   assigned: { label: "Chưa nhận", variant: "outline" },
@@ -108,8 +110,10 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
         rubricScores: { ...getDraft(recipient.id).rubricScores, ...rs },
       });
       onReviewed?.();
+      toast.success("AI đã chấm sơ bộ xong");
     } catch (error) {
       setInlineError(error instanceof Error ? error.message : "Không thể chấm sơ bộ bằng AI");
+      toast.error(error instanceof Error ? error.message : "Không thể chấm sơ bộ bằng AI");
     } finally {
       setAiGradingId(null);
     }
@@ -141,8 +145,11 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to review submission");
       onReviewed?.();
+      toast.success(action === "review" ? "Đã chấm bài thành công" : "Đã trả bài để học sinh sửa");
+      window.dispatchEvent(new CustomEvent("assignment-notifications-updated"));
     } catch (error) {
       setInlineError(error instanceof Error ? error.message : "Không thể chấm bài");
+      toast.error(error instanceof Error ? error.message : "Không thể chấm bài");
     } finally {
       setReviewingId(null);
     }
@@ -151,12 +158,15 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader className="cursor-pointer p-4" onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-semibold flex items-center gap-3">
-            {assignment.title}
-            {assignment.lesson && <Badge variant="outline">{assignment.lesson.subjectName}</Badge>}
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg font-semibold flex items-center gap-3">
+              {assignment.title}
+              {assignment.lesson && <Badge variant="outline">{assignment.lesson.subjectName}</Badge>}
+            </CardTitle>
           <div className="flex items-center gap-4 text-xs">
+            <Link href={`/admin/assignments/${assignment.id}`} className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-200">
+              Mở chi tiết
+            </Link>
             <span className="text-slate-500">{submittedCount} nộp</span>
             <span className="text-emerald-600 font-semibold">{reviewedCount} chấm</span>
             <Badge variant={submittedCount === assignment.recipients.length ? "default" : "secondary"}>

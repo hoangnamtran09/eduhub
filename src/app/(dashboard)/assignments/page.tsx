@@ -10,6 +10,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AssignmentRecipientStatus, isAssignmentOverdue, isAssignmentPending, isAssignmentSubmitted, normalizeAssignmentStatus } from "@/types/assignment";
+import { toast } from "sonner";
 
 const MAX_SUBMISSION_FILES = 5;
 const MAX_SUBMISSION_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -166,9 +167,12 @@ export default function AssignmentsPage() {
       await loadAssignments();
       setSelectedAssignment(null);
       setActionMessage({ type: "success", message: "Đã nhận bài tập. Bạn có thể nộp bài khi hoàn thành." });
+      toast.success("Đã nhận bài tập");
+      window.dispatchEvent(new CustomEvent("assignment-notifications-updated"));
     } catch (error) {
       console.error(error);
       setActionMessage({ type: "error", message: "Không thể nhận bài tập. Vui lòng thử lại." });
+      toast.error("Không thể nhận bài tập");
     } finally {
       setAccepting(false);
     }
@@ -227,8 +231,10 @@ export default function AssignmentsPage() {
         setPreviewFileUrl(data.url);
         return next;
       });
+      toast.success("Đã tải file lên");
     } catch (error) {
       setActionMessage({ type: "error", message: error instanceof Error ? error.message : "Không thể tải file" });
+      toast.error(error instanceof Error ? error.message : "Không thể tải file");
     } finally {
       setUploadingSubmission(false);
       event.target.value = "";
@@ -259,8 +265,11 @@ export default function AssignmentsPage() {
       setSubmissionFiles([]);
       setPreviewFileUrl(null);
       setActionMessage({ type: "success", message: "Đã nộp bài thành công." });
+      toast.success("Đã nộp bài thành công");
+      window.dispatchEvent(new CustomEvent("assignment-notifications-updated"));
     } catch (error) {
       setActionMessage({ type: "error", message: error instanceof Error ? error.message : "Không thể nộp bài" });
+      toast.error(error instanceof Error ? error.message : "Không thể nộp bài");
     } finally {
       setSubmitting(false);
     }

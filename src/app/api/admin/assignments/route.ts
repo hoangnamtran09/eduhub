@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminOrTeacher } from "@/lib/auth/require-role";
+
+interface CreateAssignmentBody {
+  title?: string;
+  description?: string;
+  pdfUrl?: string;
+  pdfStorageKey?: string;
+  lessonId?: string | null;
+  dueDate?: string | null;
+  maxScore?: number;
+  rubric?: Prisma.InputJsonValue;
+  targetGradeLevel?: number | null;
+  studentIds?: string[];
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,8 +25,7 @@ export async function GET() {
   if (authorization instanceof NextResponse) return authorization;
 
   try {
-    const prismaAny = prisma as any;
-    const assignments = await prismaAny.assignment.findMany({
+    const assignments = await prisma.assignment.findMany({
       where: authorization.authUser.role === "TEACHER"
         ? { createdById: authorization.authUser.userId }
         : undefined,
@@ -65,7 +78,7 @@ export async function POST(request: Request) {
   if (authorization instanceof NextResponse) return authorization;
 
   try {
-    const body = await request.json();
+    const body = await request.json() as CreateAssignmentBody;
     const {
       title,
       description,
@@ -83,8 +96,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing title or description" }, { status: 400 });
     }
 
-    const prismaAny = prisma as any;
-
     const normalizedStudentIds = Array.isArray(studentIds)
       ? studentIds.filter((value: unknown) => typeof value === "string" && value)
       : [];
@@ -92,7 +103,7 @@ export async function POST(request: Request) {
     let recipients: string[] = normalizedStudentIds;
 
     if (!recipients.length && targetGradeLevel) {
-      const gradeStudents = await prismaAny.user.findMany({
+      const gradeStudents = await prisma.user.findMany({
         where: {
           role: "STUDENT",
           gradeLevel: Number(targetGradeLevel),
@@ -101,14 +112,14 @@ export async function POST(request: Request) {
           id: true,
         },
       });
-      recipients = gradeStudents.map((student: { id: string }) => student.id);
+      recipients = gradeStudents.map((student) => student.id);
     }
 
     if (!recipients.length) {
       return NextResponse.json({ error: "No recipients selected" }, { status: 400 });
     }
 
-    const assignment = await prismaAny.assignment.create({
+    const assignment = await prisma.assignment.create({
       data: {
         title: title.trim(),
         description: description.trim(),

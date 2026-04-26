@@ -10,8 +10,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const prismaAny = prisma as any;
-    const assignments = await prismaAny.assignmentRecipient.findMany({
+    const assignments = await prisma.assignmentRecipient.findMany({
       where: {
         studentId: authUser.userId,
       },

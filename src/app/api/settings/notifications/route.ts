@@ -28,8 +28,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const prismaAny = prisma as any;
-    const updatedUser = await prismaAny.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: authUser.userId },
       data: parsed.data,
       include: { profile: true },

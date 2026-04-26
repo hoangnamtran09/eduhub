@@ -73,10 +73,12 @@ export function DashboardTopbar() {
 
     loadNotifications();
     window.addEventListener("study-progress-updated", loadNotifications);
+    window.addEventListener("assignment-notifications-updated", loadNotifications);
 
     return () => {
       cancelled = true;
       window.removeEventListener("study-progress-updated", loadNotifications);
+      window.removeEventListener("assignment-notifications-updated", loadNotifications);
     };
   }, [user]);
 

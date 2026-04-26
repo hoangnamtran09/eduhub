@@ -14,10 +14,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const prismaAny = prisma as any;
-    
-        // Cập nhật trạng thái thành accepted
-    const updateResult = await prismaAny.assignmentRecipient.updateMany({
+    const updateResult = await prisma.assignmentRecipient.updateMany({
       where: {
         id: params.recipientId,
         studentId: authUser.userId,
@@ -31,7 +28,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const updated = await prismaAny.assignmentRecipient.findUnique({
+    const updated = await prisma.assignmentRecipient.findUnique({
       where: {
         id: params.recipientId,
       },
