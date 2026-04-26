@@ -80,15 +80,15 @@ export async function GET(request: NextRequest) {
       return redirectToLogin("google_profile_failed");
     }
 
-    const prismaAny = prisma as any;
-    let user = await prismaAny.user.findUnique({
-      where: { email: profile.email },
+    const normalizedEmail = profile.email.trim().toLowerCase();
+    let user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
     });
 
     if (!user) {
-      user = await prismaAny.user.create({
+      user = await prisma.user.create({
         data: {
-          email: profile.email,
+          email: normalizedEmail,
           fullName: profile.name || profile.email.split("@")[0],
           avatarUrl: profile.picture || null,
           role: "STUDENT",
@@ -97,19 +97,19 @@ export async function GET(request: NextRequest) {
       });
 
       if (user.role === "STUDENT") {
-        await prismaAny.studentProfile.create({
+        await prisma.studentProfile.create({
           data: {
             userId: user.id,
           },
         });
       }
 
-      user = await prismaAny.user.findUnique({
+      user = await prisma.user.findUnique({
         where: { id: user.id },
         include: { profile: true },
       });
     } else {
-      user = await prismaAny.user.update({
+      user = await prisma.user.update({
         where: { id: user.id },
         data: {
           fullName: profile.name || user.fullName,
@@ -118,6 +118,10 @@ export async function GET(request: NextRequest) {
         },
         include: { profile: true },
       });
+    }
+
+    if (!user) {
+      return redirectToLogin("google_account_missing");
     }
 
     const token = await createAuthToken({

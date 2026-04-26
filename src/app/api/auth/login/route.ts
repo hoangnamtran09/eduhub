@@ -11,18 +11,18 @@ export const revalidate = 0;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password } = body;
+    const normalizedEmail = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const password = body?.password;
 
-    if (!email || !password) {
+    if (!normalizedEmail || !password) {
       return NextResponse.json(
         { error: "Email và mật khẩu là bắt buộc" },
         { status: 400 }
       );
     }
 
-    const prismaAny = prisma as any;
-    const user = await prismaAny.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
       include: { profile: true },
     });
 
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       }
 
       if (needsPasswordRehash(user.passwordHash)) {
-        await prismaAny.user.update({
+        await prisma.user.update({
           where: { id: user.id },
           data: { passwordHash: await hashPassword(password) },
         });

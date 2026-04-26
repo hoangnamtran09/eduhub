@@ -11,21 +11,21 @@ export const revalidate = 0;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, fullName } = body;
+    const normalizedEmail = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const password = body?.password;
+    const fullName = typeof body?.fullName === "string" ? body.fullName.trim() : "";
     const gradeLevel = Number(body.gradeLevel);
 
-    if (!email || !password || !fullName || !Number.isInteger(gradeLevel) || gradeLevel < 1 || gradeLevel > 12) {
+    if (!normalizedEmail || !password || !fullName || !Number.isInteger(gradeLevel) || gradeLevel < 1 || gradeLevel > 12) {
       return NextResponse.json(
         { error: "Vui lòng điền đầy đủ thông tin và chọn lớp" },
         { status: 400 }
       );
     }
 
-    const prismaAny = prisma as any;
-    
     // Check if user exists
-    const existingUser = await prismaAny.user.findUnique({
-      where: { email },
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -36,9 +36,9 @@ export async function POST(request: Request) {
     }
 
     // Create user
-    const user = await prismaAny.user.create({
+    const user = await prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         fullName,
         role: "STUDENT",
         gradeLevel,
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
     // Create student profile if role is student
     if (user.role === "STUDENT") {
-      await prismaAny.studentProfile.create({
+      await prisma.studentProfile.create({
         data: {
           userId: user.id,
         },
