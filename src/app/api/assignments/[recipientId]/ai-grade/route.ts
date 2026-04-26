@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma/client";
 import { getAuthUser } from "@/lib/auth/get-auth-user";
 import { chatWithAI } from "@/lib/beeknoee/client";
 import { getAssignmentPregradePrompt } from "@/lib/ai/prompts";
+import { parseAssignmentRubric, parseSubmissionFiles } from "@/lib/assignments/json";
 
 interface RouteParams {
   params: { recipientId: string };
@@ -45,16 +46,16 @@ export async function POST(_request: Request, { params }: RouteParams) {
     }
 
     const assignment = recipient.assignment;
-    const rubric = Array.isArray(assignment.rubric) ? assignment.rubric : null;
-    const submissionFiles = Array.isArray(recipient.submissionFiles) ? recipient.submissionFiles : [];
+    const rubric = parseAssignmentRubric(assignment.rubric);
+    const submissionFiles = parseSubmissionFiles(recipient.submissionFiles);
 
     const systemPrompt = getAssignmentPregradePrompt({
       title: assignment.title,
       description: assignment.description,
       maxScore: assignment.maxScore,
-      rubric,
+      rubric: rubric.length ? rubric : null,
       submissionText: recipient.submissionText,
-      submissionFileNames: submissionFiles.map((f: any) => f.name || "file"),
+      submissionFileNames: submissionFiles.map((file) => file.name || "file"),
     });
 
     const messages = [

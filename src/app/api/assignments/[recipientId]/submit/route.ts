@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma/client";
 import { getAuthUser } from "@/lib/auth/get-auth-user";
 import { chatWithAI } from "@/lib/beeknoee/client";
 import { getAssignmentPregradePrompt } from "@/lib/ai/prompts";
+import { parseAssignmentRubric, parseSubmissionFiles } from "@/lib/assignments/json";
 
 interface SubmissionFilePayload {
   url?: string;
@@ -46,7 +47,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       },
       data: {
         submissionText,
-        submissionFiles,
+        submissionFiles: submissionFiles as unknown as Prisma.InputJsonValue,
         score: null,
         aiScore: null,
         feedback: null,
@@ -75,19 +76,16 @@ export async function POST(request: Request, { params }: RouteParams) {
     // Fire-and-forget AI pre-grade
     if (updated?.assignment) {
       const assignment = updated.assignment;
-        const rubric = Array.isArray(assignment.rubric) ? assignment.rubric : null;
-        const files = Array.isArray(updated.submissionFiles) ? updated.submissionFiles as Prisma.JsonArray : [];
+        const rubric = parseAssignmentRubric(assignment.rubric);
+        const files = parseSubmissionFiles(updated.submissionFiles);
 
       const systemPrompt = getAssignmentPregradePrompt({
         title: assignment.title,
         description: assignment.description,
         maxScore: assignment.maxScore,
-        rubric,
-        submissionText: submissionText || null,
-          submissionFileNames: files.map((file) => {
-            const fileName = typeof file === "object" && file && "name" in file ? (file as { name?: unknown }).name : undefined;
-            return typeof fileName === "string" ? fileName : "file";
-          }),
+          rubric: rubric.length ? rubric : null,
+          submissionText: submissionText || null,
+          submissionFileNames: files.map((file) => file.name || "file"),
         });
 
         const messages = [

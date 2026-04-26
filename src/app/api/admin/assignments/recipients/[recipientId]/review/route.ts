@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminOrTeacher } from "@/lib/auth/require-role";
+import { parseAssignmentRubric, type AssignmentRubricScoreJson } from "@/lib/assignments/json";
 
 interface RubricScoreInput {
   criterionId?: string;
@@ -61,12 +62,9 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const rubric = Array.isArray(recipient.assignment?.rubric) ? recipient.assignment.rubric : [];
+    const rubric = parseAssignmentRubric(recipient.assignment?.rubric);
     const normalizedRubricScores = rubricScores.map((item) => {
-      const criterion = rubric.find((rubricItem) => {
-        if (!rubricItem || typeof rubricItem !== "object" || !("id" in rubricItem)) return false;
-        return String((rubricItem as { id?: unknown }).id || "") === item?.criterionId;
-      }) as { id?: unknown; title?: unknown; maxScore?: unknown } | undefined;
+      const criterion = rubric.find((rubricItem) => rubricItem.id === item?.criterionId);
       const maxScore = Number(criterion?.maxScore || item?.maxScore || 0);
       const rawScore = Number(item?.score || 0);
       return {
@@ -76,14 +74,14 @@ export async function POST(request: Request, { params }: RouteParams) {
         maxScore,
         comment: typeof item?.comment === "string" ? item.comment.trim() : "",
       };
-    }).filter((item) => item.criterionId) as Prisma.InputJsonValue[];
+    }).filter((item) => item.criterionId) as AssignmentRubricScoreJson[];
 
     if (rubric.length > 0 && normalizedRubricScores.length !== rubric.length) {
       return NextResponse.json({ error: "Rubric scores are incomplete" }, { status: 400 });
     }
 
     const computedScore = normalizedRubricScores.length > 0
-      ? normalizedRubricScores.reduce((sum, item) => sum + Number(typeof item === "object" && item && "score" in item ? (item as { score?: unknown }).score : 0), 0)
+      ? normalizedRubricScores.reduce((sum, item) => sum + item.score, 0)
       : score;
 
     if (computedScore !== null && !Number.isFinite(computedScore)) {
@@ -104,7 +102,7 @@ export async function POST(request: Request, { params }: RouteParams) {
         status: action === "return" ? "RETURNED" : "REVIEWED",
         score: action === "return" ? null : computedScore,
         feedback,
-        rubricScores: normalizedRubricScores,
+        rubricScores: normalizedRubricScores as unknown as Prisma.InputJsonValue,
         reviewedById: authorization.authUser.userId,
         reviewedAt: action === "review" ? new Date() : null,
         returnedAt: action === "return" ? new Date() : null,
@@ -113,7 +111,7 @@ export async function POST(request: Request, { params }: RouteParams) {
             status: action === "return" ? "RETURNED" : "REVIEWED",
             score: action === "return" ? null : computedScore,
             feedback,
-            rubricScores: normalizedRubricScores,
+            rubricScores: normalizedRubricScores as unknown as Prisma.InputJsonValue,
             reviewerId: authorization.authUser.userId,
             attemptCount: recipient.attemptCount || 0,
           },
