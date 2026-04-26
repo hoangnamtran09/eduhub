@@ -150,6 +150,9 @@ export function Sidebar() {
     if (isLoggingOut) return;
 
     setIsLoggingOut(true);
+    logout();
+    router.replace("/login");
+
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
@@ -157,8 +160,6 @@ export function Sidebar() {
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
-      logout();
-      router.push("/login");
       router.refresh();
       setIsLoggingOut(false);
     }

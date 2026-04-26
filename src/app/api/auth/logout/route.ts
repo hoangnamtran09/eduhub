@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -7,11 +6,19 @@ export const revalidate = 0;
 
 export async function POST() {
   try {
-    cookies().delete("token");
-    
-    return NextResponse.json({
+    const response = NextResponse.json({
       message: "Đăng xuất thành công"
     });
+
+    response.cookies.set("token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 0,
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
     console.error("Logout error:", error);
     return NextResponse.json(

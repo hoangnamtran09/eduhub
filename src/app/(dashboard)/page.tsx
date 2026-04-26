@@ -1064,6 +1064,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadData = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
       try {
         const reportResponse = await fetch("/api/reports/study-time");
         if (!reportResponse.ok) {
@@ -1073,7 +1079,7 @@ export default function DashboardPage() {
         const reportData = await reportResponse.json();
         setReport(reportData);
 
-        if (user?.role === "STUDENT") {
+        if (reportData?.role === "STUDENT") {
           const progressResponse = await fetch("/api/progress");
           if (progressResponse.ok) {
             const progressData = await progressResponse.json();
@@ -1094,7 +1100,7 @@ export default function DashboardPage() {
     };
 
     loadData();
-  }, [user?.role]);
+  }, [user]);
 
   const pageTitle = useMemo(() => {
     switch (user?.role) {
@@ -1147,6 +1153,9 @@ export default function DashboardPage() {
       {user?.role === "ADMIN" && report.role === "ADMIN" && <AdminDashboard report={report} />}
       {user?.role === "PARENT" && report.role === "PARENT" && <ParentDashboard report={report} />}
       {user?.role === "STUDENT" && report.role === "STUDENT" && progress && <StudentDashboard report={report} progress={progress} hasAchievements={hasAchievements} />}
+      {user?.role === "STUDENT" && report.role === "STUDENT" && !progress && (
+        <LoadingState message="Đang tải tiến độ, thành tựu và dữ liệu học tập demo..." />
+      )}
     </div>
   );
 }
