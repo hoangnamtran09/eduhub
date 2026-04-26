@@ -94,14 +94,14 @@ export function DashboardTopbar() {
         </Button>
 
         {open && (
-          <div className="absolute right-0 top-12 z-50 w-[min(92vw,380px)] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl shadow-slate-900/12">
+          <div role="dialog" aria-label="Thông báo" className="absolute right-0 top-12 z-50 w-[min(92vw,380px)] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl shadow-slate-900/12">
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
               <div>
                 <p className="text-sm font-semibold text-slate-900">Trung tâm thông báo</p>
                 <p className="text-xs text-slate-500">Những việc cần chú ý hôm nay</p>
               </div>
-              <button type="button" onClick={() => setOpen(false)} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
-                <X className="h-4 w-4" />
+              <button type="button" onClick={() => setOpen(false)} aria-label="Đóng thông báo" className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 

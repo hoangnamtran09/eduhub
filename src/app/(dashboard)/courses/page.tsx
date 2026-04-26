@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { 
   BookOpen, 
   Search, 
@@ -53,14 +55,7 @@ export default function CoursesPage() {
   );
 
   if (loading) {
-    return (
-      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-8 bg-[#F8FAFC]">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-500 mx-auto mb-4" />
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-[9px]">Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Đang tải khóa học..." />;
   }
 
   return (
@@ -71,7 +66,7 @@ export default function CoursesPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-2 mb-1">
               <span className="px-2 py-0.5 rounded-lg bg-brand-50 text-brand-700 text-[9px] font-black uppercase tracking-[0.15em] border border-brand-100">
-                Scholar Atlas
+                Kho kiến thức
               </span>
               <span className="w-1 h-1 rounded-full bg-slate-200" />
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">
@@ -147,14 +142,17 @@ export default function CoursesPage() {
 
         {/* Empty State */}
         {filteredSubjects.length === 0 && (
-          <div className="text-center py-20 bg-white rounded-[32px] border border-slate-200 border-dashed">
-             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-               <Search className="w-8 h-8 text-slate-200" />
-             </div>
-             <h3 className="text-lg font-bold text-slate-900 mb-1">Không tìm thấy môn học</h3>
-             <p className="text-slate-400 text-sm max-w-sm mx-auto px-6">Thử tìm kiếm với từ khóa khác để tiếp tục.</p>
-           </div>
-         )}
+          <EmptyState
+            icon={Search}
+            title="Không tìm thấy môn học"
+            description="Thử tìm kiếm với từ khóa khác để tiếp tục."
+            action={
+              <Button size="sm" variant="ghost" onClick={() => setSearchQuery("")}>
+                Xóa bộ lọc
+              </Button>
+            }
+          />
+        )}
        </div>
     </div>
   );

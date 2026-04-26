@@ -63,7 +63,7 @@ export default function DashboardLayout({
           mounted ? (collapsed ? "lg:pl-20" : "lg:pl-72") : "lg:pl-72"
         )}
       >
-        <main className="p-3 pt-20 sm:p-4 lg:p-6 lg:pt-6">
+        <main className="p-3 pb-20 pt-20 sm:p-4 sm:pb-20 lg:p-6 lg:pb-6 lg:pt-6">
           <div className="relative min-h-[calc(100vh-5.75rem)] overflow-hidden rounded-[24px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,247,240,0.88)_100%)] p-3 shadow-panel backdrop-blur-xl sm:rounded-[36px] sm:p-4 lg:min-h-[calc(100vh-2rem)] lg:p-6">
             <div className="pointer-events-none absolute inset-0 opacity-60 [background:radial-gradient(circle_at_top_right,rgba(35,143,134,0.1),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(199,147,43,0.1),transparent_26%)]" />
             <DashboardTopbar />

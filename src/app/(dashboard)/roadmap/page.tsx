@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, BrainCircuit, CheckCircle2, Clock3, Loader2, Sparkles, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 
 type RoadmapSignal = {
   source: "QUIZ" | "EXERCISE" | "PROFILE" | "PROGRESS";
@@ -114,19 +117,17 @@ export default function RoadmapPage() {
   }, [data]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center gap-3 text-slate-500">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span>Đang tạo roadmap cá nhân hóa...</span>
-      </div>
-    );
+    return <LoadingState message="Đang tạo lộ trình cá nhân hóa..." />;
   }
 
   if (!data) {
     return (
-      <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/90 p-8 text-sm text-slate-500">
-        Không tải được roadmap học tập.
-      </div>
+      <EmptyState
+        icon={Target}
+        title="Không tải được lộ trình"
+        description="Không tải được lộ trình học tập. Vui lòng thử lại sau."
+        action={<Link href="/courses"><Button>Bắt đầu học</Button></Link>}
+      />
     );
   }
 
@@ -134,15 +135,12 @@ export default function RoadmapPage() {
     <div className="space-y-8 pb-8">
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr),360px]">
         <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-700">
-            Adaptive Roadmap
-          </div>
-          <div className="space-y-3">
-            <h1 className="font-serif text-4xl font-semibold tracking-tight text-slate-900">Lộ trình học tập cá nhân hóa</h1>
-            <p className="max-w-3xl text-sm leading-6 text-slate-600">
-              Roadmap này được xếp tự động từ những chủ đề yếu, các bài làm chưa vững và tiến độ học tập hiện tại để giúp bạn biết nên học gì tiếp theo.
-            </p>
-          </div>
+          <PageHeader
+            label="Lộ trình cá nhân"
+            labelVariant="cyan"
+            title="Lộ trình học tập cá nhân hóa"
+            description="Lộ trình được xếp tự động từ những chủ đề yếu, các bài làm chưa vững và tiến độ học tập hiện tại để giúp bạn biết nên học gì tiếp theo."
+          />
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/mistakes">
               <Button variant="outline" className="h-11 rounded-2xl border-slate-200 bg-white px-5 text-slate-700 hover:bg-slate-50">
@@ -205,7 +203,7 @@ export default function RoadmapPage() {
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
             <Sparkles className="h-4 w-4 text-cyan-600" />
-            Auto-generated
+            Tự động tạo
           </div>
         </div>
         <div className="space-y-3">
@@ -234,9 +232,12 @@ export default function RoadmapPage() {
               </div>
             </div>
           )) : (
-            <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
-              Chưa có dữ liệu để tạo roadmap cá nhân hóa.
-            </div>
+            <EmptyState
+              icon={Target}
+              title="Chưa có lộ trình"
+              description="Học thêm và làm bài tập để hệ thống xây dựng lộ trình cá nhân hóa cho bạn."
+              action={<Link href="/courses"><Button size="sm">Khám phá khóa học</Button></Link>}
+            />
           )}
         </div>
       </section>
@@ -244,7 +245,7 @@ export default function RoadmapPage() {
       <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
         <div className="mb-5">
           <h2 className="text-lg font-semibold text-slate-900">Các vùng cần tập trung</h2>
-          <p className="text-sm text-slate-500">Danh sách này giúp bạn hiểu vì sao roadmap được ưu tiên theo thứ tự hiện tại.</p>
+          <p className="text-sm text-slate-500">Danh sách này giúp bạn hiểu vì sao lộ trình được ưu tiên theo thứ tự hiện tại.</p>
         </div>
         <div className="space-y-3">
           {data.focusAreas.length ? data.focusAreas.map((item) => (
@@ -299,9 +300,12 @@ export default function RoadmapPage() {
               )}
             </div>
           )) : (
-            <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
-              Chưa có vùng tập trung nào được xác định.
-            </div>
+            <EmptyState
+              icon={BrainCircuit}
+              title="Chưa xác định vùng yếu"
+              description="Làm thêm quiz và bài tập để hệ thống xác định điểm cần tập trung."
+              action={<Link href="/courses"><Button size="sm">Khám phá khóa học</Button></Link>}
+            />
           )}
         </div>
       </section>
@@ -309,8 +313,8 @@ export default function RoadmapPage() {
       <section className="rounded-[28px] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(15,23,42,0.96)_0%,rgba(6,78,99,0.96)_100%)] p-6 text-white shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Start Now</p>
-            <h3 className="mt-2 text-2xl font-semibold">Biến roadmap thành một phiên học thực tế</h3>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Bắt đầu ngay</p>
+            <h3 className="mt-2 text-2xl font-semibold">Biến lộ trình thành một phiên học thực tế</h3>
             <p className="mt-2 max-w-2xl text-sm text-white/70">Bắt đầu với bước đầu tiên, sau đó quay lại để kiểm tra xem điểm yếu đã giảm chưa.</p>
           </div>
           <div className="flex flex-wrap gap-3">

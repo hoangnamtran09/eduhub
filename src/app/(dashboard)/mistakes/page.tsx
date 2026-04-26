@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, BookOpenCheck, BrainCircuit, CheckCircle2, ChevronDown, ChevronUp, Clock, Loader2, Play, RefreshCcw, TrendingUp, Trophy, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
 
 type MistakeItem = {
@@ -218,19 +221,17 @@ export default function MistakesPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center gap-3 text-slate-500">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span>Đang phân tích điểm yếu học tập...</span>
-      </div>
-    );
+    return <LoadingState message="Đang phân tích điểm yếu học tập..." />;
   }
 
   if (!data) {
     return (
-      <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/90 p-8 text-sm text-slate-500">
-        Không tải được dữ liệu phân tích điểm yếu.
-      </div>
+      <EmptyState
+        icon={BrainCircuit}
+        title="Không tải được dữ liệu"
+        description="Không tải được dữ liệu phân tích điểm yếu. Vui lòng thử lại sau."
+        action={<Link href="/courses"><Button>Bắt đầu học</Button></Link>}
+      />
     );
   }
 
@@ -356,20 +357,17 @@ export default function MistakesPage() {
     <div className="space-y-8 pb-8">
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr),360px]">
         <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-700">
-            Weakness Analysis
-          </div>
-          <div className="space-y-3">
-            <h1 className="font-serif text-4xl font-semibold tracking-tight text-slate-900">Bản đồ lỗi sai và vùng cần củng cố</h1>
-            <p className="max-w-3xl text-sm leading-6 text-slate-600">
-              Hệ thống tổng hợp điểm quiz, bài tập AI, tiến độ học dở và hồ sơ cá nhân để xác định các chủ đề bạn đang cần ưu tiên ôn lại.
-            </p>
-          </div>
+          <PageHeader
+            label="Phân tích điểm yếu"
+            labelVariant="rose"
+            title="Bản đồ lỗi sai và vùng cần củng cố"
+            description="Hệ thống tổng hợp điểm quiz, bài tập AI, tiến độ học dở và hồ sơ cá nhân để xác định các chủ đề bạn đang cần ưu tiên ôn lại."
+          />
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/roadmap">
               <Button className="h-11 rounded-2xl bg-slate-900 px-5 text-white hover:bg-slate-800">
                 <BrainCircuit className="mr-2 h-4 w-4" />
-                Xem roadmap cá nhân
+                Xem lộ trình cá nhân
               </Button>
             </Link>
             <Link href="/courses">
@@ -577,9 +575,12 @@ export default function MistakesPage() {
               </div>
             );
           }) : (
-            <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
-              Chưa có đủ dữ liệu để xác định chủ đề yếu nổi bật.
-            </div>
+            <EmptyState
+              icon={BrainCircuit}
+              title="Chưa phát hiện chủ đề yếu"
+              description="Hệ thống sẽ phân tích khi bạn làm quiz hoặc bài tập. Hãy bắt đầu học nhé!"
+              action={<Link href="/courses"><Button size="sm">Khám phá khóa học</Button></Link>}
+            />
           )}
         </div>
       </section>
@@ -591,7 +592,7 @@ export default function MistakesPage() {
             <p className="text-sm text-slate-500">Những lần làm chưa tốt hoặc chủ đề đã được đánh dấu trong hồ sơ học tập.</p>
           </div>
           <Link href="/roadmap" className="inline-flex items-center gap-2 text-sm font-medium text-brand-700 hover:text-brand-800">
-            Mở roadmap <ArrowRight className="h-4 w-4" />
+            Mở lộ trình học <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         <div className="space-y-3">
@@ -614,9 +615,12 @@ export default function MistakesPage() {
               </div>
             </div>
           )) : (
-            <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
-              Chưa có lỗi sai nổi bật nào được ghi nhận.
-            </div>
+            <EmptyState
+              icon={AlertTriangle}
+              title="Chưa có lỗi sai"
+              description="Chưa có lỗi sai nổi bật nào được ghi nhận. Tiếp tục làm quiz để hệ thống theo dõi."
+              action={<Link href="/courses"><Button size="sm">Làm bài tập</Button></Link>}
+            />
           )}
         </div>
       </section>
@@ -626,9 +630,9 @@ export default function MistakesPage() {
       <section className="rounded-[28px] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(15,23,42,0.96)_0%,rgba(16,58,74,0.94)_100%)] p-6 text-white shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Next Move</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Bước tiếp theo</p>
             <h3 className="mt-2 text-2xl font-semibold">Chuyển các phát hiện này thành hành động học tập cụ thể</h3>
-            <p className="mt-2 max-w-2xl text-sm text-white/70">Roadmap cá nhân hóa sẽ sắp xếp thứ tự ôn tập, luyện tập và tự kiểm tra theo đúng các vùng bạn đang yếu nhất.</p>
+            <p className="mt-2 max-w-2xl text-sm text-white/70">Lộ trình cá nhân hóa sẽ sắp xếp thứ tự ôn tập, luyện tập và tự kiểm tra theo đúng các vùng bạn đang yếu nhất.</p>
           </div>
           <Link href="/roadmap">
             <Button className="h-11 rounded-2xl bg-white px-5 text-slate-900 hover:bg-slate-100">

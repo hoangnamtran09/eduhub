@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, TrendingUp, Target, Calendar, Award, ChevronRight, Loader2, Flame, Gem } from "lucide-react";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatCard } from "@/components/ui/stat-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { Trophy, TrendingUp, Target, Calendar, Award, ChevronRight, Flame, Gem, BookOpen } from "lucide-react";
+import Link from "next/link";
 
 interface WeeklyItem {
   day: string;
@@ -76,30 +81,28 @@ export default function ProgressPage() {
   const hasAchievements = (data?.achievements?.length || 0) > 0;
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
-      </div>
-    );
+    return <LoadingState message="Đang tải tiến độ học tập..." />;
   }
 
   if (!data) {
     return (
-      <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
-        Không tải được dữ liệu tiến độ học tập.
-      </div>
+      <EmptyState
+        icon={Trophy}
+        title="Không tải được dữ liệu"
+        description="Không tải được dữ liệu tiến độ học tập. Vui lòng thử lại sau."
+        action={<Link href="/courses"><Button>Bắt đầu học</Button></Link>}
+      />
     );
   }
 
   return (
     <div className="space-y-8">
-      <div>
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">
-          Progress Ledger
-        </div>
-        <h1 className="font-serif text-3xl font-semibold text-slate-900">Tiến độ học tập</h1>
-        <p className="mt-1 text-slate-500">Theo dõi dữ liệu học tập thật được ghi nhận từ hệ thống</p>
-      </div>
+      <PageHeader
+        label="Tiến độ học tập"
+        labelVariant="brand"
+        title="Tiến độ học tập"
+        description="Theo dõi dữ liệu học tập thật được ghi nhận từ hệ thống."
+      />
 
       <div className={`grid grid-cols-2 gap-4 ${hasAchievements ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
         <StatCard icon={Trophy} value={String(data.stats.averageScore)} label="Điểm quiz TB" />
@@ -109,8 +112,8 @@ export default function ProgressPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <StatCard icon={Flame} value={String(data.stats.streakDays)} label="Chuỗi học" />
-        <StatCard icon={Gem} value={String(data.stats.diamonds)} label="Kim cương" />
+        <StatCard icon={Flame} value={String(data.stats.streakDays)} label="Chuỗi học" variant="amber" />
+        <StatCard icon={Gem} value={String(data.stats.diamonds)} label="Kim cương" variant="violet" />
       </div>
 
       <Card className="border-white/80 bg-white/94 shadow-soft">
@@ -185,7 +188,12 @@ export default function ProgressPage() {
               </div>
             ))
           ) : (
-            <div className="text-sm text-slate-500">Chưa có hoạt động học tập nào được ghi nhận.</div>
+            <EmptyState
+              icon={BookOpen}
+              title="Chưa có hoạt động"
+              description="Bắt đầu học để ghi nhận hoạt động đầu tiên."
+              action={<Link href="/courses"><Button size="sm">Khám phá khóa học</Button></Link>}
+            />
           )}
         </CardContent>
       </Card>
@@ -193,18 +201,3 @@ export default function ProgressPage() {
   );
 }
 
-function StatCard({ icon: Icon, value, label }: { icon: any; value: string; label: string }) {
-  return (
-    <Card className="border-white/80 bg-white/94 shadow-soft">
-      <CardContent className="flex items-center gap-4 p-4">
-        <div className="rounded-2xl bg-brand-50 p-3">
-          <Icon className="h-6 w-6 text-brand-600" />
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-slate-900">{value}</p>
-          <p className="text-sm text-slate-500">{label}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}

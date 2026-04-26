@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Activity,
   AlertTriangle,
@@ -237,11 +239,11 @@ function formatDueDate(date: string | null | undefined) {
 function getAssignmentStatusLabel(status: string) {
   switch (status?.toLowerCase()) {
     case "submitted":
-      return "Da nop";
+      return "Đã nộp";
     case "accepted":
-      return "Da nhan";
+      return "Đã nhận";
     default:
-      return "Cho xu ly";
+      return "Chờ xử lý";
   }
 }
 
@@ -302,7 +304,7 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr),360px]">
         <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-            Admin Workspace
+            Quản trị
           </div>
           <div className="space-y-3">
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-slate-900">Trung tâm điều hành học tập</h1>
@@ -327,7 +329,7 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
         </div>
 
         <div className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Snapshot hệ thống</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Tổng quan hệ thống</p>
           <div className="mt-4 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-sm text-white/65">Khối lớp đông nhất</p>
@@ -541,7 +543,7 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
           <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
             <SectionTitle
               title="Tác vụ nhanh"
-              description="Đi tới các khu vực vận hành thường dùng mà không phải rời dashboard."
+              description="Đi tới các khu vực vận hành thường dùng mà không phải rời trang chủ."
             />
             <div className="mt-5 space-y-2">
               {[
@@ -632,7 +634,7 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr),360px]">
         <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-            Student Workspace
+            Học sinh
           </div>
           <div className="space-y-3">
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-slate-900">Không gian học tập cá nhân</h1>
@@ -657,7 +659,7 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
         </div>
 
         <div className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Snapshot cá nhân</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Tổng quan cá nhân</p>
           <div className="mt-4 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-sm text-white/65">Vị trí bảng xếp hạng</p>
@@ -877,31 +879,31 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr),360px]">
         <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-            Parent Workspace
+            Phụ huynh
           </div>
           <div className="space-y-3">
-            <h2 className="font-serif text-4xl font-semibold tracking-tight text-slate-900">Bang dieu hanh phu huynh</h2>
+            <h2 className="font-serif text-4xl font-semibold tracking-tight text-slate-900">Bảng điều hành phụ huynh</h2>
             <p className="max-w-3xl text-sm leading-6 text-slate-600">
-              Uu tien theo doi bai tap, canh bao hoc tap va muc do hoat dong gan day cua tung con trong cung mot man hinh.
+              Ưu tiên theo dõi bài tập, cảnh báo học tập và mức độ hoạt động gần đây của từng con trong cùng một màn hình.
             </p>
           </div>
         </div>
 
         <div className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Canh bao tong hop</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Cảnh báo tổng hợp</p>
           <div className="mt-4 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-sm text-white/65">Con can uu tien</p>
+              <p className="text-sm text-white/65">Con cần ưu tiên</p>
               <p className="mt-1 text-2xl font-semibold text-white">{report.summary.childrenNeedingAttention}</p>
-              <p className="mt-1 text-xs text-white/50">{report.summary.totalOverdueAssignments} bai qua han va {report.summary.totalDueSoonAssignments} bai sap den han</p>
+              <p className="mt-1 text-xs text-white/50">{report.summary.totalOverdueAssignments} bài quá hạn và {report.summary.totalDueSoonAssignments} bài sắp đến hạn</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs text-white/55">Hoat dong 7 ngay</p>
+                <p className="text-xs text-white/55">Hoạt động 7 ngày</p>
                 <p className="mt-1 text-xl font-semibold">{report.summary.activeChildren7d}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs text-white/55">Bai dang mo</p>
+                <p className="text-xs text-white/55">Bài đang mở</p>
                 <p className="mt-1 text-xl font-semibold">{report.summary.totalPendingAssignments}</p>
               </div>
             </div>
@@ -910,18 +912,18 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard icon={Users} label="So con dang theo doi" value={report.summary.totalChildren} color="text-sky-600" bgColor="bg-sky-100" />
-        <StatCard icon={Activity} label="Hoat dong 7 ngay" value={report.summary.activeChildren7d} detail={`${Math.max(report.summary.totalChildren - report.summary.activeChildren7d, 0)} con can nhac nho`} color="text-emerald-600" bgColor="bg-emerald-100" />
-        <StatCard icon={BookOpen} label="Bai tap cho xu ly" value={report.summary.totalPendingAssignments} detail={`${report.summary.totalDueSoonAssignments} bai sap den han`} color="text-violet-600" bgColor="bg-violet-100" />
-        <StatCard icon={ShieldAlert} label="Qua han" value={report.summary.totalOverdueAssignments} detail={`${report.summary.childrenNeedingAttention} ho so can uu tien`} color="text-rose-600" bgColor="bg-rose-100" />
+        <StatCard icon={Users} label="Số con đang theo dõi" value={report.summary.totalChildren} color="text-sky-600" bgColor="bg-sky-100" />
+        <StatCard icon={Activity} label="Hoạt động 7 ngày" value={report.summary.activeChildren7d} detail={`${Math.max(report.summary.totalChildren - report.summary.activeChildren7d, 0)} con cần nhắc nhở`} color="text-emerald-600" bgColor="bg-emerald-100" />
+        <StatCard icon={BookOpen} label="Bài tập chờ xử lý" value={report.summary.totalPendingAssignments} detail={`${report.summary.totalDueSoonAssignments} bài sắp đến hạn`} color="text-violet-600" bgColor="bg-violet-100" />
+        <StatCard icon={ShieldAlert} label="Quá hạn" value={report.summary.totalOverdueAssignments} detail={`${report.summary.childrenNeedingAttention} hồ sơ cần ưu tiên`} color="text-rose-600" bgColor="bg-rose-100" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr),minmax(0,1fr)]">
         <div className="space-y-6">
           <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
-              <SectionTitle title="Canh bao uu tien" description="Tong hop cac tin hieu can phu huynh xu ly som nhat." />
-              <div className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">{report.spotlightAlerts.length} canh bao</div>
+              <SectionTitle title="Cảnh báo ưu tiên" description="Tổng hợp các tín hiệu cần phụ huynh xử lý sớm nhất." />
+              <div className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">{report.spotlightAlerts.length} cảnh báo</div>
             </div>
             <div className="space-y-3">
               {report.spotlightAlerts.map((alert, index) => (
@@ -932,7 +934,7 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-slate-900">{alert.childName}</p>
                     <p className="text-sm text-slate-600">{alert.label}</p>
-                    <p className="mt-1 text-xs text-slate-500">{alert.childGradeLevel ? `Lop ${alert.childGradeLevel}` : "Chua phan lop"}</p>
+                    <p className="mt-1 text-xs text-slate-500">{alert.childGradeLevel ? `Lớp ${alert.childGradeLevel}` : "Chưa phân lớp"}</p>
                     <a
                       href={`mailto:${alert.childEmail}?subject=${encodeURIComponent("Nhắc học từ EduHub")}&body=${encodeURIComponent(`Con cần chú ý: ${alert.label}`)}`}
                       className="mt-3 inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800"
@@ -943,17 +945,19 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
                 </div>
               ))}
               {!report.spotlightAlerts.length && (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
-                  Chua co canh bao nao can xu ly ngay.
-                </div>
+                <EmptyState
+                  icon={ShieldAlert}
+                  title="Không có cảnh báo"
+                  description="Chưa có cảnh báo nào cần xử lý ngay."
+                />
               )}
             </div>
           </section>
 
           <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
-              <SectionTitle title="Theo doi bai tap" description="Danh sach bai tap sap den han hoac can phu huynh nhac con xu ly." />
-              <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{report.assignmentWatchlist.length} muc</div>
+              <SectionTitle title="Theo dõi bài tập" description="Danh sách bài tập sắp đến hạn hoặc cần phụ huynh nhắc con xử lý." />
+              <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{report.assignmentWatchlist.length} mục</div>
             </div>
             <div className="space-y-3">
               {report.assignmentWatchlist.map((assignment) => (
@@ -961,20 +965,22 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-slate-900">{assignment.title}</p>
-                      <p className="truncate text-sm text-slate-500">{assignment.childName} • {assignment.lessonTitle || "Chua gan bai hoc"}</p>
+                      <p className="truncate text-sm text-slate-500">{assignment.childName} • {assignment.lessonTitle || "Chưa gán bài học"}</p>
                     </div>
                     <div className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">{getAssignmentStatusLabel(assignment.status)}</div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    <span className="rounded-full bg-slate-200/70 px-2.5 py-1 font-medium text-slate-700">Han nop: {formatDueDate(assignment.dueDate)}</span>
-                    {assignment.childGradeLevel && <span className="rounded-full bg-brand-50 px-2.5 py-1 font-medium text-brand-700">Lop {assignment.childGradeLevel}</span>}
+                    <span className="rounded-full bg-slate-200/70 px-2.5 py-1 font-medium text-slate-700">Hạn nộp: {formatDueDate(assignment.dueDate)}</span>
+                    {assignment.childGradeLevel && <span className="rounded-full bg-brand-50 px-2.5 py-1 font-medium text-brand-700">Lớp {assignment.childGradeLevel}</span>}
                   </div>
                 </div>
               ))}
               {!report.assignmentWatchlist.length && (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-500">
-                  Chua co bai tap nao can theo doi.
-                </div>
+                <EmptyState
+                  icon={BookOpen}
+                  title="Không có bài tập"
+                  description="Chưa có bài tập nào cần theo dõi."
+                />
               )}
             </div>
           </section>
@@ -982,34 +988,34 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
 
         <div className="space-y-6">
           <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
-            <SectionTitle title="Tong quan tung con" description="Tap trung vao nhip hoc, bai tap ton dong va cac chu de can cung co." />
+            <SectionTitle title="Tổng quan từng con" description="Tập trung vào nhịp học, bài tập tồn đọng và các chủ đề cần củng cố." />
             <div className="mt-5 space-y-3">
               {report.children.map((student) => (
                 <div key={student.id} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-slate-900">{student.fullName || student.email}</p>
-                      <p className="mt-1 text-sm text-slate-500">{student.gradeLevel ? `Lop ${student.gradeLevel}` : "Chua phan lop"}</p>
+                      <p className="mt-1 text-sm text-slate-500">{student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}</p>
                     </div>
                     <div className={cn("rounded-full px-2.5 py-1 text-[11px] font-medium", student.alertSummary.level === "critical" ? "bg-rose-100 text-rose-700" : student.alertSummary.level === "warning" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700")}>
-                      {student.alertSummary.level === "critical" ? "Can uu tien" : student.alertSummary.level === "warning" ? "Can theo doi" : "On dinh"}
+                      {student.alertSummary.level === "critical" ? "Cần ưu tiên" : student.alertSummary.level === "warning" ? "Cần theo dõi" : "Ổn định"}
                     </div>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-xs text-slate-500">Thoi luong hoc</p>
+                      <p className="text-xs text-slate-500">Thời lượng học</p>
                       <p className="font-semibold text-slate-900">{formatStudyTime(student.totalStudySeconds, true)}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">Hoat dong gan nhat</p>
+                      <p className="text-xs text-slate-500">Hoạt động gần nhất</p>
                       <p className="font-semibold text-slate-900">{formatLastActive(student.lastActive)}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">Bai cho xu ly</p>
+                      <p className="text-xs text-slate-500">Bài chờ xử lý</p>
                       <p className="font-semibold text-slate-900">{student.assignmentSummary.pending}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">Chu de yeu</p>
+                      <p className="text-xs text-slate-500">Chủ đề yếu</p>
                       <p className="font-semibold text-slate-900">{student.weaknessSummary.count}</p>
                     </div>
                   </div>
@@ -1030,7 +1036,7 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
                     <div className="mt-4 space-y-2 border-t border-slate-200 pt-3">
                       {student.recentActivity.map((activity) => (
                         <div key={activity.id} className="flex items-center justify-between gap-3 text-xs text-slate-500">
-                          <span className="truncate">{activity.lessonTitle || "Phien hoc gan day"}</span>
+                          <span className="truncate">{activity.lessonTitle || "Phiên học gần đây"}</span>
                           <span>{formatStudyTime(activity.durationSec, true)}</span>
                         </div>
                       ))}
@@ -1100,19 +1106,17 @@ export default function DashboardPage() {
   const hasAchievements = (progress?.achievements?.length || 0) > 0;
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-        <span className="ml-3 text-slate-500">Đang tải không gian học tập của bạn...</span>
-      </div>
-    );
+    return <LoadingState message="Đang tải không gian học tập của bạn..." />;
   }
 
   if (!report) {
     return (
-      <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/80 p-8 text-sm text-slate-500">
-        Không tải được dữ liệu dashboard.
-      </div>
+      <EmptyState
+        icon={BookOpen}
+        title="Không tải được dữ liệu"
+        description="Không tải được dữ liệu trang chủ. Vui lòng thử lại sau."
+        action={<Link href="/courses"><Button>Khám phá khóa học</Button></Link>}
+      />
     );
   }
 

@@ -43,7 +43,7 @@ const defaultNavItems = [
   { href: "/courses", label: "Khóa học", icon: BookOpen },
   { href: "/assignments", label: "Bài tập", icon: NotebookPen },
   { href: "/mistakes", label: "Điểm yếu", icon: BrainCircuit },
-  { href: "/roadmap", label: "Roadmap", icon: Route },
+  { href: "/roadmap", label: "Lộ trình", icon: Route },
   { href: "/progress", label: "Tiến độ", icon: Trophy },
   { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
@@ -177,6 +177,8 @@ export function Sidebar() {
         "h-16 w-full border-b lg:w-auto",
         collapsed ? "lg:w-20" : "lg:w-72"
       )}
+      role="navigation"
+      aria-label="Thanh điều hướng"
     >
       <div className="flex h-16 items-center border-white/10 px-4 lg:h-20 lg:border-b lg:px-6">
         <Link href="/" className="flex items-center gap-3">
@@ -196,7 +198,7 @@ export function Sidebar() {
         </Link>
       </div>
 
-      <nav className="hidden space-y-2 px-3 py-5 lg:block">
+      <nav className="hidden space-y-2 px-3 py-5 lg:block" aria-label="Menu chính">
         {!mounted || isAuthLoading
           ? Array.from({ length: collapsed ? 5 : 6 }).map((_, index) => (
               <div
@@ -216,6 +218,7 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "group relative flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 transition-all duration-200",
                     isActive
@@ -230,7 +233,7 @@ export function Sidebar() {
                   <Icon className={cn(
                     "h-5 w-5 flex-shrink-0 transition-colors duration-200",
                     isActive ? "text-accent-300" : "group-hover:text-white"
-                  )} />
+                  )} aria-hidden="true" />
                   {!collapsed && (
                     <span className={cn(
                       "text-sm font-medium transition-colors",
@@ -346,12 +349,17 @@ export function Sidebar() {
         variant="ghost"
         size="icon"
         onClick={toggleCollapsed}
+        aria-label={collapsed ? "Mở rộng thanh điều hướng" : "Thu gọn thanh điều hướng"}
         className="absolute right-4 top-3 z-50 h-10 w-10 border border-white/10 bg-ink-900 text-white shadow-soft transition-all hover:bg-ink-800 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0 lg:bottom-10 lg:right-0 lg:top-auto lg:translate-x-1/2"
       >
         <ChevronLeft className={cn("h-4 w-4 text-white", collapsed && "rotate-180")} />
       </Button>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-5 gap-1 border-t border-white/10 bg-ink-900/95 px-2 py-2 text-white backdrop-blur-xl lg:hidden">
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-5 gap-1 border-t border-white/10 bg-ink-900/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 text-white backdrop-blur-xl lg:hidden"
+        role="navigation"
+        aria-label="Điều hướng chính"
+      >
         {navItems.slice(0, 5).map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
@@ -364,8 +372,9 @@ export function Sidebar() {
                 "flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-medium",
                 isActive ? "bg-white/12 text-white" : "text-white/65",
               )}
+              aria-current={isActive ? "page" : undefined}
             >
-              <Icon className={cn("h-4 w-4", isActive && "text-accent-300")} />
+              <Icon className={cn("h-4 w-4", isActive && "text-accent-300")} aria-hidden="true" />
               <span className="max-w-full truncate">{item.label}</span>
             </Link>
           );
