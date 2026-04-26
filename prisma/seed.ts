@@ -449,7 +449,10 @@ async function main() {
   ];
   const now = new Date();
 
-  for (const [index, lesson] of allDemoLessons.slice(0, 7).entries()) {
+  const demoLessonsForProgress = allDemoLessons.slice(0, 7);
+
+  for (let index = 0; index < demoLessonsForProgress.length; index += 1) {
+    const lesson = demoLessonsForProgress[index];
     const startedAt = new Date(now);
     startedAt.setDate(now.getDate() - (6 - index));
     startedAt.setHours(19, 30, 0, 0);
