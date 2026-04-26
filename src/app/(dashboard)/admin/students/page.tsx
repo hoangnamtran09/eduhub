@@ -228,33 +228,33 @@ export default function AdminStudentsPage() {
 
   return (
     <>
-      <div className="min-h-[calc(100vh-48px)] rounded-[36px] border border-white/80 bg-paper-100/70 text-slate-900 shadow-panel backdrop-blur-sm">
-        <header className="border-b border-white/80 bg-white/88 px-6 py-5">
+      <div className="min-h-[calc(100vh-48px)] rounded-[30px] border border-white/80 bg-paper-100/70 text-slate-900 shadow-panel backdrop-blur-sm">
+        <header className="border-b border-white/80 bg-white/88 px-5 py-4">
           <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
+            <div className="mb-1.5 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-700">
               LMS Registry
             </div>
-            <h1 className="font-serif text-[30px] font-semibold tracking-tight text-slate-900">Quản lý học sinh</h1>
+            <h1 className="font-serif text-[26px] font-semibold tracking-tight text-slate-900">Quản lý học sinh</h1>
           </div>
         </header>
 
-        <section className="border-b border-white/80 bg-white/88 px-6 py-4">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex w-full flex-col gap-3 xl:max-w-2xl xl:flex-row xl:items-center">
+        <section className="border-b border-white/80 bg-white/88 px-5 py-3.5">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex w-full flex-col gap-2.5 xl:max-w-2xl xl:flex-row xl:items-center">
               <div className="relative w-full xl:max-w-md">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Tìm theo tên hoặc email"
-                  className="h-11 rounded-2xl border-white bg-white pl-11 text-slate-900 placeholder:text-slate-400 shadow-soft"
+                  className="h-10 rounded-xl border-white bg-white pl-11 text-sm text-slate-900 placeholder:text-slate-400 shadow-soft"
                 />
               </div>
-              <div className="w-full xl:w-56">
+              <div className="w-full xl:w-48">
                 <select
                   value={selectedGrade}
                   onChange={(event) => setSelectedGrade(event.target.value)}
-                  className="h-11 w-full rounded-2xl border border-white bg-white px-4 text-sm text-slate-900 shadow-soft outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                  className="h-10 w-full rounded-xl border border-white bg-white px-3.5 text-sm text-slate-900 shadow-soft outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                 >
                   {gradeTabs.map((grade) => (
                     <option key={grade} value={grade}>
@@ -264,70 +264,70 @@ export default function AdminStudentsPage() {
                 </select>
               </div>
             </div>
-            <div className="text-xs text-slate-500">
+            <div className="text-[11px] text-slate-500">
               Bộ lọc hiện tại: <span className="font-medium text-slate-700">{selectedGrade === "all" ? "Tất cả khối lớp" : selectedGrade === "none" ? "Chưa phân lớp" : `Lớp ${selectedGrade}`}</span>
             </div>
           </div>
         </section>
 
-        <section className="p-6">
-          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <section className="p-5">
+          <div className="mb-3 flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-sm font-semibold text-slate-900">Danh sách học sinh</h2>
               <p className="text-xs text-slate-500">{filteredStudents.length} bản ghi phù hợp</p>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500 shadow-soft">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-500 shadow-soft">
               <Users className="h-4 w-4 text-slate-400" />
               <span>{parents.length} tài khoản phụ huynh có thể gắn</span>
             </div>
-            <Button type="button" onClick={openCreateModal} className="bg-slate-900 text-white hover:bg-slate-800">
+            <Button type="button" onClick={openCreateModal} className="h-9 bg-slate-900 px-3.5 text-sm text-white hover:bg-slate-800">
               <Plus className="mr-2 h-4 w-4" />
               Thêm học sinh
             </Button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {filteredStudents.map((student) => {
               const totalStudySeconds = student.studySessions.reduce((sum, session) => sum + (session.durationSec || 0), 0);
 
               return (
                 <Card key={student.id} className="border-white/90 bg-white shadow-soft">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                  <CardContent className="p-3.5">
+                    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-base font-semibold text-slate-900">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <h3 className="text-sm font-semibold text-slate-900">
                             {student.fullName || "Chưa cập nhật tên"}
                           </h3>
-                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
                             {student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}
                           </span>
                         </div>
-                        <p className="mt-1 truncate text-sm text-slate-500">{student.email}</p>
-                        <div className="mt-3 flex flex-wrap gap-2">
+                        <p className="mt-0.5 truncate text-xs text-slate-500">{student.email}</p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
                           <MiniBadge label="Kim cương" value={student.diamonds} />
                           <MiniBadge label="Chuỗi học" value={student.profile?.streakDays || 0} />
                         </div>
-                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-700">
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 font-semibold text-slate-700">
                             Phụ huynh: {student.parent?.fullName || student.parent?.email || "Chưa gắn tài khoản"}
                           </span>
                           {student.parent ? (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700">
-                              <Link2 className="h-3.5 w-3.5" />
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                              <Link2 className="h-3 w-3" />
                               Đã liên kết
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-medium text-amber-700">
-                              <Unlink2 className="h-3.5 w-3.5" />
+                            <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 font-medium text-amber-700">
+                              <Unlink2 className="h-3 w-3" />
                               Chưa liên kết
                             </span>
                           )}
                         </div>
-                        <p className="mt-3 text-sm text-slate-600">
+                        <p className="mt-2 text-xs text-slate-600">
                           Thời gian học đã ghi nhận: <span className="font-semibold text-slate-900">{formatStudyTime(totalStudySeconds)}</span>
                         </p>
-                        <p className="mt-3 text-xs text-slate-400">
+                        <p className="mt-1.5 text-[11px] text-slate-400">
                           Tạo ngày {new Date(student.createdAt).toLocaleDateString("vi-VN")}
                           {student.profile?.lastActive
                             ? ` • Hoạt động gần nhất ${new Date(student.profile.lastActive).toLocaleDateString("vi-VN")}`
@@ -335,26 +335,26 @@ export default function AdminStudentsPage() {
                         </p>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-1.5">
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => openEditModal(student)}
-                          className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                          className="h-8 border-slate-200 bg-white px-3 text-xs text-slate-700 hover:bg-slate-50"
                         >
-                          <PencilLine className="mr-2 h-4 w-4" />
+                          <PencilLine className="mr-1.5 h-3.5 w-3.5" />
                           Chỉnh sửa
                         </Button>
                         <Button
                           type="button"
                           onClick={() => handleDelete(student.id)}
                           disabled={deletingId === student.id}
-                          className="bg-slate-900 text-white hover:bg-slate-800"
+                          className="h-8 bg-slate-900 px-3 text-xs text-white hover:bg-slate-800"
                         >
                           {deletingId === student.id ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                           ) : (
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                           )}
                           Xóa
                         </Button>
@@ -366,7 +366,7 @@ export default function AdminStudentsPage() {
             })}
 
             {!filteredStudents.length && (
-              <div className="rounded-[28px] border border-dashed border-slate-300 bg-white px-4 py-12 text-center text-sm text-slate-500 shadow-soft">
+              <div className="rounded-[24px] border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-slate-500 shadow-soft">
                 Không có học sinh nào phù hợp với bộ lọc hiện tại.
               </div>
             )}
@@ -606,7 +606,7 @@ export default function AdminStudentsPage() {
 
 function MiniBadge({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600">
+    <div className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600">
       <span className="font-semibold text-slate-900">{value}</span> {label}
     </div>
   );
