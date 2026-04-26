@@ -12,6 +12,14 @@ import { useAuthStore } from "@/stores/auth-store";
 import { GoogleLoginErrorToast } from "@/components/auth/google-login-error-toast";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginFormContent />
+    </Suspense>
+  );
+}
+
+function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setUser = useAuthStore((state) => state.setUser);
