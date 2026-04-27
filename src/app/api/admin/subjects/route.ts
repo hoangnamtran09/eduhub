@@ -240,10 +240,6 @@ export async function DELETE(request: Request) {
       const lessonIds = lessons.map((lesson: { id: string }) => lesson.id);
       const courseIds = courses.map((course: { id: string }) => course.id);
 
-      if (await tableExists(tx, "Semester")) {
-        await tx.$executeRawUnsafe('DELETE FROM "Semester" WHERE "subjectId" = $1', id);
-      }
-
       if (lessonIds.length) {
         if (await tableExists(tx, "ChatHistory")) {
           await tx.$executeRawUnsafe('DELETE FROM "ChatHistory" WHERE "lessonId" = ANY($1)', lessonIds);
@@ -345,6 +341,10 @@ export async function DELETE(request: Request) {
         await tx.course.deleteMany({
           where: { id: { in: courseIds } },
         });
+      }
+
+      if (await tableExists(tx, "Semester")) {
+        await tx.$executeRawUnsafe('DELETE FROM "Semester" WHERE "subjectId" = $1', id);
       }
 
       await tx.diagnosticQuiz.deleteMany({
