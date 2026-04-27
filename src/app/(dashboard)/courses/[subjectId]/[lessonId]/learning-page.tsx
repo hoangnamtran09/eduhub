@@ -1144,7 +1144,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
   const isLastGuideStep = guideStepIndex === learningGuideSteps.length - 1;
 
   const getGuideHighlightClass = (index: number) => cn(
-    isGuideOpen && guideStepIndex === index && "relative z-[70] rounded-[28px] ring-4 ring-amber-300 ring-offset-4 ring-offset-white shadow-2xl shadow-amber-950/30"
+    isGuideOpen && guideStepIndex === index && "relative z-[90] rounded-[28px] bg-white text-ink-900 ring-4 ring-amber-300 ring-offset-4 ring-offset-white shadow-2xl shadow-amber-950/30"
   );
 
   const handleNextGuideStep = () => {
@@ -1333,24 +1333,24 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
       )}
 
       {isGuideOpen && currentGuideStep && (
-        <div className="fixed inset-0 z-[55] pointer-events-none">
-          <div className="absolute inset-0 bg-ink-900/55 backdrop-blur-[2px]" />
-          <div className="absolute left-1/2 top-20 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 rounded-[28px] border border-amber-200 bg-white p-5 shadow-2xl shadow-ink-900/25 pointer-events-auto lg:left-auto lg:right-8 lg:top-20 lg:translate-x-0">
+        <>
+          <div className="fixed inset-0 z-[80] bg-ink-900/70 backdrop-blur-[2px]" />
+          <div className="fixed left-1/2 top-16 z-[120] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 rounded-[28px] border-2 border-amber-300 bg-white p-5 text-ink-900 shadow-2xl shadow-ink-900/40 lg:left-auto lg:right-8 lg:top-20 lg:translate-x-0">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-600">Hướng dẫn sử dụng</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-700">Hướng dẫn sử dụng</p>
                 <h2 className="mt-1 text-xl font-semibold text-ink-900">{currentGuideStep.title}</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setIsGuideOpen(false)}
-                className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                className="rounded-full bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200 hover:text-slate-900"
                 aria-label="Bỏ qua hướng dẫn"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{currentGuideStep.description}</p>
+            <p className="mt-3 text-sm font-medium leading-6 text-slate-700">{currentGuideStep.description}</p>
             <div className="mt-4 flex items-center gap-2">
               {learningGuideSteps.map((step, index) => (
                 <button
@@ -1359,14 +1359,14 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                   onClick={() => setGuideStepIndex(index)}
                   className={cn(
                     "h-2 rounded-full transition-all",
-                    index === guideStepIndex ? "w-8 bg-amber-500" : "w-2 bg-slate-200 hover:bg-slate-300"
+                    index === guideStepIndex ? "w-8 bg-amber-600" : "w-2 bg-slate-300 hover:bg-slate-400"
                   )}
                   aria-label={`Chuyển đến bước ${index + 1}`}
                 />
               ))}
             </div>
             <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-medium text-slate-500">
+              <p className="text-xs font-semibold text-slate-600">
                 Bước {guideStepIndex + 1}/{learningGuideSteps.length}
               </p>
               <div className="flex gap-2">
@@ -1376,7 +1376,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                   size="sm"
                   onClick={handlePreviousGuideStep}
                   disabled={guideStepIndex === 0}
-                  className="border-slate-200 bg-white text-slate-700"
+                  className="border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
                 >
                   Quay lại
                 </Button>
@@ -1391,7 +1391,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Inline navigation - no header */}
