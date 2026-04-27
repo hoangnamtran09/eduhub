@@ -21,6 +21,9 @@
     td:nth-child(3) { width: 35%; }
     .note { color: #b00000; font-weight: bold; border: 1px dashed #b00000; padding: 8px; margin: 10px 0; }
     .center { text-align: center; }
+    .figure { margin: 14px 0 18px 0; text-align: center; page-break-inside: avoid; }
+    .figure img { max-width: 100%; height: auto; border: 1px solid #cbd5e1; }
+    .caption { text-align: center; font-style: italic; font-size: 11.5pt; color: #334155; }
     .signature { margin-top: 36px; text-align: right; }
   </style>
 </head>
@@ -72,7 +75,10 @@
     <li><strong>Lớp dịch vụ AI và lưu trữ tài liệu:</strong> tích hợp mô hình AI để hội thoại, tạo bài tập, chấm điểm, phản hồi và tạo bài luyện tập; đồng thời hỗ trợ lưu trữ, truy xuất tài liệu PDF phục vụ học tập.</li>
   </ul>
   <p>Cấu trúc này giúp hệ thống dễ bảo trì, dễ mở rộng và có thể triển khai theo từng mức độ: chạy thử nghiệm trên một máy chủ, triển khai web production, hoặc tách riêng backend AI và lưu trữ tài liệu khi quy mô tăng.</p>
-  <p class="note">[CHÈN HÌNH 1: Sơ đồ kiến trúc tổng quan gồm người dùng, giao diện web, API, cơ sở dữ liệu PostgreSQL, dịch vụ AI và lưu trữ PDF.]</p>
+  <figure class="figure">
+    <img src="so_do_kien_truc_EduSelf.svg" alt="Sơ đồ kiến trúc tổng quan gồm người dùng, giao diện web, API, cơ sở dữ liệu PostgreSQL, dịch vụ AI và lưu trữ PDF">
+    <figcaption class="caption">Hình 1. Sơ đồ kiến trúc tổng quan gồm người dùng, giao diện web, API, cơ sở dữ liệu PostgreSQL, dịch vụ AI và lưu trữ PDF.</figcaption>
+  </figure>
 
   <h4>3. Mô hình dữ liệu chính</h4>
   <p>Hệ thống được xây dựng trên mô hình dữ liệu có cấu trúc, phản ánh đầy đủ các đối tượng trong quá trình học tập. Một số nhóm dữ liệu quan trọng gồm:</p>
@@ -125,8 +131,14 @@
   <p>Giáo viên tạo bài tập, chọn học sinh hoặc khối lớp nhận bài, đặt hạn nộp và tiêu chí chấm. Học sinh nhận bài, đọc yêu cầu, nộp văn bản hoặc tệp đính kèm. Hệ thống lưu trạng thái nộp bài và thời điểm nộp. Khi chấm, AI có thể phân tích bài làm theo rubric, đề xuất điểm và phản hồi. Giáo viên xem lại, điều chỉnh nếu cần và trả bài. Mọi lần phản hồi được lưu thành lịch sử để theo dõi quá trình cải thiện.</p>
   <p><strong>5.4. Quy trình phát hiện và khắc phục điểm yếu</strong></p>
   <p>Điểm yếu được ghi nhận từ nhiều nguồn: câu trả lời sai, bài kiểm tra cuối bài, bài tập được chấm, phản hồi AI hoặc quá trình luyện tập. Mỗi điểm yếu gồm chủ đề, nguyên nhân, câu hỏi liên quan, phản hồi AI, điểm ban đầu và trạng thái. Khi học sinh bắt đầu khắc phục, hệ thống tạo bài luyện tập phù hợp. Sau khi học sinh làm bài, hệ thống chấm kết quả, cập nhật điểm tốt nhất và xác định điểm yếu đã được cải thiện hay cần tiếp tục luyện tập.</p>
-  <p class="note">[CHÈN HÌNH 9: Sơ đồ quy trình học sinh học bài, hỏi AI, làm bài, nhận phản hồi và luyện tập khắc phục.]</p>
-  <p class="note">[CHÈN HÌNH 10: Sơ đồ quy trình giáo viên tạo bài tập, giao bài, nhận bài, chấm AI và trả phản hồi.]</p>
+  <figure class="figure">
+    <img src="so_do_quy_trinh_hoc_sinh_EduSelf.svg" alt="Sơ đồ quy trình học sinh học bài, hỏi AI, làm bài, nhận phản hồi và luyện tập khắc phục">
+    <figcaption class="caption">Hình 9. Sơ đồ quy trình học sinh học bài, hỏi AI, làm bài, nhận phản hồi và luyện tập khắc phục.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="so_do_quy_trinh_giao_vien_EduSelf.svg" alt="Sơ đồ quy trình giáo viên tạo bài tập, giao bài, nhận bài, chấm AI và trả phản hồi">
+    <figcaption class="caption">Hình 10. Sơ đồ quy trình giáo viên tạo bài tập, giao bài, nhận bài, chấm AI và trả phản hồi.</figcaption>
+  </figure>
 
   <h4>6. Bảo mật, phân quyền và độ tin cậy</h4>
   <p>Hệ thống có cơ chế tài khoản và vai trò để phân biệt quyền truy cập. Học sinh chỉ truy cập dữ liệu học tập của mình; phụ huynh chỉ xem dữ liệu của con được liên kết; giáo viên và quản trị viên có quyền quản lý nội dung và bài tập theo phạm vi được cấp. Mật khẩu được xử lý theo hướng băm bảo mật, dữ liệu nhạy cảm như khóa API và chuỗi kết nối cơ sở dữ liệu được đưa vào biến môi trường thay vì ghi trực tiếp trong mã nguồn.</p>
@@ -255,7 +267,10 @@
     <tr><td>FastAPI backend phụ trợ</td><td>Có thể xử lý các tác vụ AI/PDF riêng khi triển khai backend tách biệt.</td><td>Phù hợp xử lý tác vụ backend chuyên biệt, dễ deploy độc lập.</td></tr>
     <tr><td>Railway/Vercel hoặc máy chủ Node.js</td><td>Môi trường triển khai ứng dụng và backend.</td><td>Hỗ trợ triển khai nhanh, dễ cấu hình biến môi trường và mở rộng.</td></tr>
   </table>
-  <p class="note">[CHÈN HÌNH 11: Sơ đồ luồng API giữa giao diện người dùng, Next.js API Routes, cơ sở dữ liệu PostgreSQL, dịch vụ AI và lưu trữ PDF.]</p>
+  <figure class="figure">
+    <img src="so_do_luong_api_EduSelf.svg" alt="Sơ đồ luồng API giữa giao diện người dùng, Next.js API Routes, cơ sở dữ liệu PostgreSQL, dịch vụ AI và lưu trữ PDF">
+    <figcaption class="caption">Hình 11. Sơ đồ luồng API giữa giao diện người dùng, Next.js API Routes, cơ sở dữ liệu PostgreSQL, dịch vụ AI và lưu trữ PDF.</figcaption>
+  </figure>
 
   <h4>8. Bản chất kỹ thuật cốt lõi</h4>
   <p>Bản chất cốt lõi của EduSelf là tạo một vòng lặp học tập thông minh dựa trên dữ liệu. Vòng lặp này gồm: cung cấp học liệu, ghi nhận hành vi học, hỗ trợ bằng AI, đánh giá kết quả, phát hiện điểm yếu, tạo luyện tập bù đắp, cập nhật tiến độ và báo cáo cho các bên liên quan. Chính vòng lặp khép kín này tạo ra sự khác biệt so với những hệ thống chỉ lưu tài liệu hoặc chỉ có chatbot độc lập.</p>
@@ -336,7 +351,10 @@
   <p>Quy trình học tập: đăng nhập -> chọn môn học -> chọn bài học -> đọc PDF/nội dung -> hỏi AI -> làm bài kiểm tra hoặc bài tập -> nhận phản hồi -> hệ thống ghi nhận tiến độ và điểm yếu -> luyện tập khắc phục -> cập nhật báo cáo.</p>
   <p>Quy trình quản lý bài tập: giáo viên tạo bài -> chọn học sinh nhận bài -> học sinh nộp bài -> AI hỗ trợ chấm -> giáo viên kiểm tra và trả phản hồi -> lưu lịch sử -> cập nhật dashboard và cảnh báo.</p>
   <p>Quy trình báo cáo phụ huynh: hệ thống tổng hợp thời lượng học, bài tập, hoạt động gần đây và điểm yếu -> phân loại cảnh báo -> hiển thị cho phụ huynh theo từng học sinh.</p>
-  <p class="note">[CHÈN HÌNH 13: Sơ đồ quy trình tổng hợp toàn hệ thống từ học sinh, giáo viên, phụ huynh đến quản trị viên.]</p>
+  <figure class="figure">
+    <img src="so_do_quy_trinh_tong_hop_EduSelf.svg" alt="Sơ đồ quy trình tổng hợp toàn hệ thống EduSelf từ học sinh, giáo viên, phụ huynh đến quản trị viên">
+    <figcaption class="caption">Hình 13. Sơ đồ quy trình tổng hợp toàn hệ thống từ học sinh, giáo viên, phụ huynh đến quản trị viên.</figcaption>
+  </figure>
 
   <h4>3. Tài liệu, sản phẩm mẫu kèm theo</h4>
   <ul>

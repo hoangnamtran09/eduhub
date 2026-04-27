@@ -1,116 +1,96 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1100" viewBox="0 0 1800 1100">
   <defs>
     <style>
-      .title { font: 700 34px Arial, sans-serif; fill: #0f172a; }
-      .subtitle { font: 500 18px Arial, sans-serif; fill: #475569; }
-      .box-title { font: 700 21px Arial, sans-serif; fill: #0f172a; }
-      .box-text { font: 500 16px Arial, sans-serif; fill: #334155; }
-      .small { font: 500 14px Arial, sans-serif; fill: #475569; }
-      .arrow { stroke: #2563eb; stroke-width: 3; fill: none; marker-end: url(#arrowhead); }
-      .arrow2 { stroke: #059669; stroke-width: 3; fill: none; marker-end: url(#arrowhead-green); }
-      .dash { stroke-dasharray: 8 8; }
+      .title{font:700 42px Arial,sans-serif;fill:#000}
+      .sub{font:500 24px Arial,sans-serif;fill:#111}
+      .layerTitle{font:700 26px Arial,sans-serif;fill:#000}
+      .boxTitle{font:700 24px Arial,sans-serif;fill:#000}
+      .text{font:500 20px Arial,sans-serif;fill:#000}
+      .small{font:500 18px Arial,sans-serif;fill:#111}
+      .outer{fill:#f2f2f2;stroke:#000;stroke-width:3}
+      .box{fill:#fff;stroke:#000;stroke-width:3}
+      .storage{fill:#fff;stroke:#000;stroke-width:4}
+      .arrow{stroke:#000;stroke-width:4;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#000;stroke-width:3;fill:none;stroke-dasharray:12 9;marker-end:url(#arrow)}
     </style>
-    <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
-      <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb" />
+    <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto">
+      <path d="M2,2 L12,7 L2,12 Z" fill="#000"/>
     </marker>
-    <marker id="arrowhead-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
-      <path d="M2,2 L10,6 L2,10 Z" fill="#059669" />
-    </marker>
-    <linearGradient id="userBg" x1="0" x2="1">
-      <stop offset="0" stop-color="#eff6ff" />
-      <stop offset="1" stop-color="#dbeafe" />
-    </linearGradient>
-    <linearGradient id="webBg" x1="0" x2="1">
-      <stop offset="0" stop-color="#f0fdf4" />
-      <stop offset="1" stop-color="#dcfce7" />
-    </linearGradient>
-    <linearGradient id="apiBg" x1="0" x2="1">
-      <stop offset="0" stop-color="#fff7ed" />
-      <stop offset="1" stop-color="#ffedd5" />
-    </linearGradient>
-    <linearGradient id="dataBg" x1="0" x2="1">
-      <stop offset="0" stop-color="#f8fafc" />
-      <stop offset="1" stop-color="#e2e8f0" />
-    </linearGradient>
-    <linearGradient id="aiBg" x1="0" x2="1">
-      <stop offset="0" stop-color="#f5f3ff" />
-      <stop offset="1" stop-color="#ede9fe" />
-    </linearGradient>
   </defs>
 
-  <rect width="1400" height="900" fill="#ffffff" />
-  <text x="700" y="58" text-anchor="middle" class="title">Sơ đồ kiến trúc tổng quan hệ thống EduSelf</text>
-  <text x="700" y="88" text-anchor="middle" class="subtitle">Người dùng - Giao diện web - API nghiệp vụ - Cơ sở dữ liệu - Dịch vụ AI - Lưu trữ PDF</text>
+  <rect width="1800" height="1100" fill="#fff"/>
+  <text x="900" y="62" text-anchor="middle" class="title">Hình 1. Sơ đồ kiến trúc tổng quan hệ thống EduSelf</text>
+  <text x="900" y="102" text-anchor="middle" class="sub">Người dùng, giao diện web, API nghiệp vụ, PostgreSQL, dịch vụ AI và lưu trữ PDF</text>
 
-  <rect x="60" y="170" width="250" height="420" rx="28" fill="url(#userBg)" stroke="#60a5fa" stroke-width="2" />
-  <text x="185" y="210" text-anchor="middle" class="box-title">Người dùng</text>
-  <rect x="90" y="245" width="190" height="58" rx="16" fill="#ffffff" stroke="#bfdbfe" />
-  <text x="185" y="281" text-anchor="middle" class="box-text">Học sinh</text>
-  <rect x="90" y="320" width="190" height="58" rx="16" fill="#ffffff" stroke="#bfdbfe" />
-  <text x="185" y="356" text-anchor="middle" class="box-text">Phụ huynh</text>
-  <rect x="90" y="395" width="190" height="58" rx="16" fill="#ffffff" stroke="#bfdbfe" />
-  <text x="185" y="431" text-anchor="middle" class="box-text">Giáo viên</text>
-  <rect x="90" y="470" width="190" height="58" rx="16" fill="#ffffff" stroke="#bfdbfe" />
-  <text x="185" y="506" text-anchor="middle" class="box-text">Quản trị viên</text>
-  <text x="185" y="555" text-anchor="middle" class="small">Truy cập bằng trình duyệt</text>
+  <rect x="60" y="155" width="300" height="650" rx="16" class="outer"/>
+  <text x="210" y="200" text-anchor="middle" class="layerTitle">1. Người dùng</text>
+  <rect x="100" y="255" width="220" height="75" rx="10" class="box"/>
+  <text x="210" y="302" text-anchor="middle" class="boxTitle">Học sinh</text>
+  <rect x="100" y="365" width="220" height="75" rx="10" class="box"/>
+  <text x="210" y="412" text-anchor="middle" class="boxTitle">Phụ huynh</text>
+  <rect x="100" y="475" width="220" height="75" rx="10" class="box"/>
+  <text x="210" y="522" text-anchor="middle" class="boxTitle">Giáo viên</text>
+  <rect x="100" y="585" width="220" height="75" rx="10" class="box"/>
+  <text x="210" y="632" text-anchor="middle" class="boxTitle">Quản trị viên</text>
+  <text x="210" y="725" text-anchor="middle" class="text">Truy cập bằng</text>
+  <text x="210" y="755" text-anchor="middle" class="text">trình duyệt web</text>
 
-  <rect x="395" y="150" width="290" height="460" rx="28" fill="url(#webBg)" stroke="#22c55e" stroke-width="2" />
-  <text x="540" y="190" text-anchor="middle" class="box-title">Giao diện Web</text>
-  <text x="540" y="220" text-anchor="middle" class="small">Next.js 14, React, TypeScript</text>
-  <rect x="425" y="260" width="230" height="54" rx="16" fill="#ffffff" stroke="#bbf7d0" />
-  <text x="540" y="293" text-anchor="middle" class="box-text">Dashboard</text>
-  <rect x="425" y="330" width="230" height="54" rx="16" fill="#ffffff" stroke="#bbf7d0" />
-  <text x="540" y="363" text-anchor="middle" class="box-text">Trang học + PDF</text>
-  <rect x="425" y="400" width="230" height="54" rx="16" fill="#ffffff" stroke="#bbf7d0" />
-  <text x="540" y="433" text-anchor="middle" class="box-text">Chat AI trợ giảng</text>
-  <rect x="425" y="470" width="230" height="54" rx="16" fill="#ffffff" stroke="#bbf7d0" />
-  <text x="540" y="503" text-anchor="middle" class="box-text">Bài tập, tiến độ</text>
-  <rect x="425" y="540" width="230" height="54" rx="16" fill="#ffffff" stroke="#bbf7d0" />
-  <text x="540" y="573" text-anchor="middle" class="box-text">Quản trị học liệu</text>
+  <rect x="445" y="155" width="360" height="650" rx="16" class="outer"/>
+  <text x="625" y="200" text-anchor="middle" class="layerTitle">2. Giao diện Web</text>
+  <text x="625" y="232" text-anchor="middle" class="small">Next.js, React, TypeScript, Tailwind CSS</text>
+  <rect x="495" y="275" width="260" height="65" rx="10" class="box"/>
+  <text x="625" y="316" text-anchor="middle" class="boxTitle">Dashboard</text>
+  <rect x="495" y="370" width="260" height="65" rx="10" class="box"/>
+  <text x="625" y="411" text-anchor="middle" class="boxTitle">Trang học + PDF</text>
+  <rect x="495" y="465" width="260" height="65" rx="10" class="box"/>
+  <text x="625" y="506" text-anchor="middle" class="boxTitle">Chat AI trợ giảng</text>
+  <rect x="495" y="560" width="260" height="65" rx="10" class="box"/>
+  <text x="625" y="601" text-anchor="middle" class="boxTitle">Bài tập, tiến độ</text>
+  <rect x="495" y="655" width="260" height="65" rx="10" class="box"/>
+  <text x="625" y="696" text-anchor="middle" class="boxTitle">Quản trị học liệu</text>
 
-  <rect x="775" y="150" width="300" height="460" rx="28" fill="url(#apiBg)" stroke="#fb923c" stroke-width="2" />
-  <text x="925" y="190" text-anchor="middle" class="box-title">API nghiệp vụ</text>
-  <text x="925" y="220" text-anchor="middle" class="small">Next.js API Routes</text>
-  <rect x="805" y="260" width="240" height="54" rx="16" fill="#ffffff" stroke="#fed7aa" />
-  <text x="925" y="293" text-anchor="middle" class="box-text">Xác thực, phân quyền</text>
-  <rect x="805" y="330" width="240" height="54" rx="16" fill="#ffffff" stroke="#fed7aa" />
-  <text x="925" y="363" text-anchor="middle" class="box-text">Môn học, bài học</text>
-  <rect x="805" y="400" width="240" height="54" rx="16" fill="#ffffff" stroke="#fed7aa" />
-  <text x="925" y="433" text-anchor="middle" class="box-text">Bài tập, chấm bài</text>
-  <rect x="805" y="470" width="240" height="54" rx="16" fill="#ffffff" stroke="#fed7aa" />
-  <text x="925" y="503" text-anchor="middle" class="box-text">Tiến độ, phiên học</text>
-  <rect x="805" y="540" width="240" height="54" rx="16" fill="#ffffff" stroke="#fed7aa" />
-  <text x="925" y="573" text-anchor="middle" class="box-text">Điểm yếu, báo cáo</text>
+  <rect x="890" y="155" width="360" height="650" rx="16" class="outer"/>
+  <text x="1070" y="200" text-anchor="middle" class="layerTitle">3. API nghiệp vụ</text>
+  <text x="1070" y="232" text-anchor="middle" class="small">Next.js API Routes</text>
+  <rect x="940" y="275" width="260" height="65" rx="10" class="box"/>
+  <text x="1070" y="316" text-anchor="middle" class="boxTitle">Xác thực, phân quyền</text>
+  <rect x="940" y="370" width="260" height="65" rx="10" class="box"/>
+  <text x="1070" y="411" text-anchor="middle" class="boxTitle">Môn học, bài học</text>
+  <rect x="940" y="465" width="260" height="65" rx="10" class="box"/>
+  <text x="1070" y="506" text-anchor="middle" class="boxTitle">Bài tập, chấm bài</text>
+  <rect x="940" y="560" width="260" height="65" rx="10" class="box"/>
+  <text x="1070" y="601" text-anchor="middle" class="boxTitle">Tiến độ, phiên học</text>
+  <rect x="940" y="655" width="260" height="65" rx="10" class="box"/>
+  <text x="1070" y="696" text-anchor="middle" class="boxTitle">Điểm yếu, báo cáo</text>
 
-  <rect x="1145" y="160" width="210" height="150" rx="24" fill="url(#dataBg)" stroke="#64748b" stroke-width="2" />
-  <text x="1250" y="200" text-anchor="middle" class="box-title">PostgreSQL</text>
-  <text x="1250" y="232" text-anchor="middle" class="box-text">Neon + Prisma ORM</text>
-  <text x="1250" y="263" text-anchor="middle" class="small">Người dùng, bài học,</text>
-  <text x="1250" y="285" text-anchor="middle" class="small">tiến độ, bài tập, điểm yếu</text>
+  <rect x="1340" y="160" width="360" height="180" rx="16" class="storage"/>
+  <text x="1520" y="205" text-anchor="middle" class="layerTitle">4. PostgreSQL</text>
+  <text x="1520" y="240" text-anchor="middle" class="text">Neon + Prisma ORM</text>
+  <text x="1520" y="272" text-anchor="middle" class="small">Người dùng, bài học, bài tập</text>
+  <text x="1520" y="302" text-anchor="middle" class="small">tiến độ, điểm yếu, báo cáo</text>
 
-  <rect x="1145" y="375" width="210" height="150" rx="24" fill="url(#aiBg)" stroke="#8b5cf6" stroke-width="2" />
-  <text x="1250" y="415" text-anchor="middle" class="box-title">Dịch vụ AI</text>
-  <text x="1250" y="447" text-anchor="middle" class="box-text">OpenAI / Gemini</text>
-  <text x="1250" y="478" text-anchor="middle" class="small">Hỏi đáp, tạo bài,</text>
-  <text x="1250" y="500" text-anchor="middle" class="small">chấm bài, phản hồi</text>
+  <rect x="1340" y="425" width="360" height="180" rx="16" class="storage"/>
+  <text x="1520" y="470" text-anchor="middle" class="layerTitle">5. Dịch vụ AI</text>
+  <text x="1520" y="505" text-anchor="middle" class="text">OpenAI / Gemini</text>
+  <text x="1520" y="537" text-anchor="middle" class="small">Hỏi đáp, tạo bài, chấm bài</text>
+  <text x="1520" y="567" text-anchor="middle" class="small">phản hồi, phát hiện điểm yếu</text>
 
-  <rect x="1145" y="590" width="210" height="150" rx="24" fill="#ecfeff" stroke="#06b6d4" stroke-width="2" />
-  <text x="1250" y="630" text-anchor="middle" class="box-title">Lưu trữ PDF</text>
-  <text x="1250" y="662" text-anchor="middle" class="box-text">S3 / public storage</text>
-  <text x="1250" y="693" text-anchor="middle" class="small">Tài liệu bài học,</text>
-  <text x="1250" y="715" text-anchor="middle" class="small">file bài tập, bài nộp</text>
+  <rect x="1340" y="690" width="360" height="180" rx="16" class="storage"/>
+  <text x="1520" y="735" text-anchor="middle" class="layerTitle">6. Lưu trữ PDF</text>
+  <text x="1520" y="770" text-anchor="middle" class="text">S3 / Public Storage</text>
+  <text x="1520" y="802" text-anchor="middle" class="small">Tài liệu bài học, file bài tập</text>
+  <text x="1520" y="832" text-anchor="middle" class="small">và bài nộp của học sinh</text>
 
-  <path class="arrow" d="M310 380 C340 380 360 380 395 380" />
-  <path class="arrow" d="M685 380 C720 380 740 380 775 380" />
-  <path class="arrow" d="M1075 235 C1105 235 1115 235 1145 235" />
-  <path class="arrow" d="M1075 450 C1105 450 1115 450 1145 450" />
-  <path class="arrow" d="M1075 665 C1105 665 1115 665 1145 665" />
+  <path d="M360 480 H445" class="arrow"/>
+  <path d="M805 480 H890" class="arrow"/>
+  <path d="M1250 250 H1340" class="arrow"/>
+  <path d="M1250 515 H1340" class="arrow"/>
+  <path d="M1250 780 H1340" class="arrow"/>
+  <path d="M1340 300 C1285 365 1285 615 1250 670" class="dash"/>
+  <path d="M1340 565 C1285 610 1285 640 1250 670" class="dash"/>
+  <path d="M1340 820 C1285 780 1285 720 1250 680" class="dash"/>
 
-  <path class="arrow2 dash" d="M1145 285 C1105 320 1105 525 1075 560" />
-  <path class="arrow2 dash" d="M1145 500 C1105 520 1105 540 1075 560" />
-  <path class="arrow2 dash" d="M1145 715 C1105 690 1105 610 1075 570" />
-
-  <rect x="165" y="790" width="1070" height="62" rx="20" fill="#f8fafc" stroke="#cbd5e1" />
-  <text x="700" y="815" text-anchor="middle" class="box-text">Luồng chính: Người dùng thao tác trên giao diện web -> API xử lý nghiệp vụ -> lưu dữ liệu, gọi AI hoặc truy xuất PDF</text>
-  <text x="700" y="842" text-anchor="middle" class="small">Dữ liệu học tập được lưu lại để phục vụ cá nhân hóa, báo cáo phụ huynh/giáo viên và phát hiện điểm yếu</text>
+  <rect x="170" y="930" width="1460" height="100" rx="10" fill="#fff" stroke="#000" stroke-width="2"/>
+  <text x="900" y="968" text-anchor="middle" class="text">Luồng chính: Người dùng thao tác trên giao diện web -> API xử lý nghiệp vụ -> lưu dữ liệu, gọi AI hoặc truy xuất PDF.</text>
+  <text x="900" y="1000" text-anchor="middle" class="small">Mũi tên liền: yêu cầu xử lý chính. Mũi tên nét đứt: dữ liệu trả về API để cá nhân hóa học tập, báo cáo và phát hiện điểm yếu.</text>
 </svg>

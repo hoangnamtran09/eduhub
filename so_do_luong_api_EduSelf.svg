@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120">
+  <defs>
+    <style>
+      .title{font:700 42px Arial,sans-serif;fill:#000}.sub{font:500 24px Arial,sans-serif;fill:#111}.laneTitle{font:700 26px Arial,sans-serif;fill:#000}.boxTitle{font:700 24px Arial,sans-serif;fill:#000}.text{font:500 20px Arial,sans-serif;fill:#000}.small{font:500 18px Arial,sans-serif;fill:#111}.lane{fill:#f2f2f2;stroke:#000;stroke-width:3}.box{fill:#fff;stroke:#000;stroke-width:3}.service{fill:#fff;stroke:#000;stroke-width:4}.arrow{stroke:#000;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#000;stroke-width:3;fill:none;stroke-dasharray:12 9;marker-end:url(#arrow)}
+    </style>
+    <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M2,2 L12,7 L2,12 Z" fill="#000"/></marker>
+  </defs>
+
+  <rect width="1800" height="1120" fill="#fff"/>
+  <text x="900" y="62" text-anchor="middle" class="title">Hình 11. Sơ đồ luồng API trong hệ thống EduSelf</text>
+  <text x="900" y="102" text-anchor="middle" class="sub">Giao diện người dùng gửi yêu cầu đến Next.js API Routes, sau đó API truy cập PostgreSQL, dịch vụ AI và lưu trữ PDF</text>
+
+  <rect x="70" y="155" width="1660" height="160" rx="16" class="lane"/>
+  <text x="110" y="200" class="laneTitle">1. Giao diện người dùng</text>
+  <rect x="260" y="220" width="260" height="70" rx="10" class="box"/>
+  <text x="390" y="263" text-anchor="middle" class="boxTitle">Dashboard</text>
+  <rect x="610" y="220" width="260" height="70" rx="10" class="box"/>
+  <text x="740" y="263" text-anchor="middle" class="boxTitle">Trang học + PDF</text>
+  <rect x="960" y="220" width="260" height="70" rx="10" class="box"/>
+  <text x="1090" y="263" text-anchor="middle" class="boxTitle">Chat AI, bài tập</text>
+  <rect x="1310" y="220" width="260" height="70" rx="10" class="box"/>
+  <text x="1440" y="263" text-anchor="middle" class="boxTitle">Báo cáo, quản trị</text>
+
+  <rect x="70" y="370" width="1660" height="210" rx="16" class="lane"/>
+  <text x="110" y="415" class="laneTitle">2. Next.js API Routes</text>
+  <rect x="170" y="460" width="250" height="75" rx="10" class="box"/>
+  <text x="295" y="490" text-anchor="middle" class="boxTitle">Auth API</text>
+  <text x="295" y="520" text-anchor="middle" class="text">Đăng nhập, phân quyền</text>
+  <rect x="500" y="460" width="250" height="75" rx="10" class="box"/>
+  <text x="625" y="490" text-anchor="middle" class="boxTitle">Lesson API</text>
+  <text x="625" y="520" text-anchor="middle" class="text">Môn học, bài học, PDF</text>
+  <rect x="830" y="460" width="250" height="75" rx="10" class="box"/>
+  <text x="955" y="490" text-anchor="middle" class="boxTitle">Assignment API</text>
+  <text x="955" y="520" text-anchor="middle" class="text">Giao, nộp, chấm bài</text>
+  <rect x="1160" y="460" width="250" height="75" rx="10" class="box"/>
+  <text x="1285" y="490" text-anchor="middle" class="boxTitle">AI API</text>
+  <text x="1285" y="520" text-anchor="middle" class="text">Hỏi đáp, phản hồi</text>
+  <rect x="1490" y="460" width="190" height="75" rx="10" class="box"/>
+  <text x="1585" y="490" text-anchor="middle" class="boxTitle">Report API</text>
+  <text x="1585" y="520" text-anchor="middle" class="text">Tiến độ, cảnh báo</text>
+
+  <rect x="70" y="645" width="520" height="230" rx="16" class="service"/>
+  <text x="330" y="695" text-anchor="middle" class="laneTitle">3. Cơ sở dữ liệu PostgreSQL</text>
+  <text x="330" y="735" text-anchor="middle" class="text">Neon + Prisma ORM</text>
+  <rect x="125" y="770" width="410" height="60" rx="10" class="box"/>
+  <text x="330" y="808" text-anchor="middle" class="text">Người dùng, vai trò, phụ huynh - học sinh</text>
+  <text x="330" y="850" text-anchor="middle" class="small">Bài học, bài tập, bài nộp, tiến độ, điểm yếu, báo cáo</text>
+
+  <rect x="640" y="645" width="520" height="230" rx="16" class="service"/>
+  <text x="900" y="695" text-anchor="middle" class="laneTitle">4. Dịch vụ AI</text>
+  <text x="900" y="735" text-anchor="middle" class="text">OpenAI / Gemini</text>
+  <rect x="695" y="770" width="410" height="60" rx="10" class="box"/>
+  <text x="900" y="808" text-anchor="middle" class="text">Hỏi đáp, tạo bài, chấm bài, nhận xét</text>
+  <text x="900" y="850" text-anchor="middle" class="small">Nhận ngữ cảnh từ bài học, bài nộp và dữ liệu tiến độ</text>
+
+  <rect x="1210" y="645" width="520" height="230" rx="16" class="service"/>
+  <text x="1470" y="695" text-anchor="middle" class="laneTitle">5. Lưu trữ PDF và tệp</text>
+  <text x="1470" y="735" text-anchor="middle" class="text">S3 / Public Storage</text>
+  <rect x="1265" y="770" width="410" height="60" rx="10" class="box"/>
+  <text x="1470" y="808" text-anchor="middle" class="text">PDF bài học, tệp bài tập, tệp bài nộp</text>
+  <text x="1470" y="850" text-anchor="middle" class="small">Trả đường dẫn tệp cho API và giao diện web</text>
+
+  <path d="M390 290 C390 340 295 340 295 460" class="arrow"/>
+  <path d="M740 290 C740 340 625 340 625 460" class="arrow"/>
+  <path d="M1090 290 C1090 340 955 340 955 460" class="arrow"/>
+  <path d="M1090 290 C1090 340 1285 340 1285 460" class="arrow"/>
+  <path d="M1440 290 C1440 340 1585 340 1585 460" class="arrow"/>
+
+  <path d="M295 535 C295 590 330 590 330 645" class="arrow"/>
+  <path d="M625 535 C625 590 330 590 330 645" class="arrow"/>
+  <path d="M955 535 C955 590 330 590 330 645" class="arrow"/>
+  <path d="M1585 535 C1585 590 330 590 330 645" class="arrow"/>
+  <path d="M1285 535 C1285 590 900 590 900 645" class="arrow"/>
+  <path d="M625 535 C625 600 1470 600 1470 645" class="arrow"/>
+  <path d="M955 535 C955 600 1470 600 1470 645" class="arrow"/>
+
+  <path d="M330 875 C330 940 625 940 625 535" class="dash"/>
+  <path d="M900 875 C900 940 1285 940 1285 535" class="dash"/>
+  <path d="M1470 875 C1470 940 625 940 625 535" class="dash"/>
+  <path d="M1470 875 C1470 960 1440 960 1440 290" class="dash"/>
+
+  <rect x="135" y="950" width="1530" height="110" rx="10" fill="#fff" stroke="#000" stroke-width="2"/>
+  <text x="900" y="990" text-anchor="middle" class="text">Luồng chính: Giao diện gửi HTTP request -> API kiểm tra quyền -> API đọc/ghi PostgreSQL, gọi AI hoặc lấy tệp PDF -> trả JSON/đường dẫn tệp về giao diện.</text>
+  <text x="900" y="1025" text-anchor="middle" class="small">Mũi tên liền: yêu cầu xử lý. Mũi tên nét đứt: dữ liệu phản hồi hoặc dữ liệu được dùng lại cho báo cáo, cá nhân hóa và phát hiện điểm yếu.</text>
+</svg>

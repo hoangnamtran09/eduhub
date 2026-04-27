@@ -56,9 +56,7 @@ export default function ChemistryText({ children }: { children: React.ReactNode 
   }
 
   if (React.isValidElement(children)) {
-    return React.cloneElement(children, {
-      children: <ChemistryText>{children.props.children}</ChemistryText>,
-    } as Partial<React.HTMLAttributes<HTMLElement>>);
+    return <>{children}</>;
   }
 
   if (typeof children !== "string" && typeof children !== "number") {

@@ -1,69 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1050" viewBox="0 0 1800 1050">
   <defs>
     <style>
-      .title{font:700 34px Arial,sans-serif;fill:#0f172a}.sub{font:500 18px Arial,sans-serif;fill:#475569}.boxTitle{font:700 20px Arial,sans-serif;fill:#0f172a}.text{font:500 15px Arial,sans-serif;fill:#334155}.small{font:500 13px Arial,sans-serif;fill:#64748b}.arrow{stroke:#2563eb;stroke-width:4;fill:none;marker-end:url(#arrow)}.green{stroke:#059669;stroke-width:4;fill:none;marker-end:url(#arrowGreen)}
+      .title{font:700 42px Arial,sans-serif;fill:#000}.sub{font:500 24px Arial,sans-serif;fill:#111}.boxTitle{font:700 25px Arial,sans-serif;fill:#000}.text{font:500 21px Arial,sans-serif;fill:#000}.small{font:500 18px Arial,sans-serif;fill:#111}.box{fill:#fff;stroke:#000;stroke-width:3}.group{fill:#f2f2f2;stroke:#000;stroke-width:3}.arrow{stroke:#000;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#000;stroke-width:3;fill:none;stroke-dasharray:12 9;marker-end:url(#arrow)}
     </style>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10 Z" fill="#2563eb"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10 Z" fill="#059669"/></marker>
-    <linearGradient id="a" x1="0" x2="1"><stop offset="0" stop-color="#eff6ff"/><stop offset="1" stop-color="#dbeafe"/></linearGradient>
-    <linearGradient id="b" x1="0" x2="1"><stop offset="0" stop-color="#fff7ed"/><stop offset="1" stop-color="#ffedd5"/></linearGradient>
-    <linearGradient id="c" x1="0" x2="1"><stop offset="0" stop-color="#f5f3ff"/><stop offset="1" stop-color="#ede9fe"/></linearGradient>
-    <linearGradient id="d" x1="0" x2="1"><stop offset="0" stop-color="#f0fdf4"/><stop offset="1" stop-color="#dcfce7"/></linearGradient>
+    <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M2,2 L12,7 L2,12 Z" fill="#000"/></marker>
   </defs>
-  <rect width="1600" height="900" fill="#fff"/>
-  <text x="800" y="58" text-anchor="middle" class="title">Hình 10. Quy trình giáo viên tạo bài tập, chấm AI và trả phản hồi</text>
-  <text x="800" y="88" text-anchor="middle" class="sub">Luồng quản lý bài tập: tạo nhiệm vụ - giao cho học sinh - nhận bài - AI hỗ trợ chấm - giáo viên xác nhận</text>
+  <rect width="1800" height="1050" fill="#fff"/>
+  <text x="900" y="62" text-anchor="middle" class="title">Hình 10. Quy trình giáo viên tạo bài tập, chấm AI và trả phản hồi</text>
+  <text x="900" y="102" text-anchor="middle" class="sub">Luồng quản lý bài tập: tạo nhiệm vụ, giao bài, nhận bài, AI hỗ trợ chấm, giáo viên xác nhận và trả phản hồi</text>
 
-  <rect x="75" y="185" width="205" height="125" rx="24" fill="url(#a)" stroke="#60a5fa" stroke-width="2"/>
-  <text x="177" y="226" text-anchor="middle" class="boxTitle">1. Chọn nội dung</text>
-  <text x="177" y="260" text-anchor="middle" class="text">Môn học, bài học</text>
-  <text x="177" y="285" text-anchor="middle" class="small">Tài liệu PDF nếu có</text>
+  <rect x="70" y="150" width="1660" height="230" rx="16" class="group"/>
+  <text x="110" y="195" class="boxTitle">Giai đoạn 1: Giáo viên tạo và giao bài</text>
+  <rect x="160" y="235" width="285" height="95" rx="10" class="box"/>
+  <text x="302" y="270" text-anchor="middle" class="boxTitle">1. Chọn nội dung</text>
+  <text x="302" y="300" text-anchor="middle" class="text">Môn học, bài học, PDF</text>
+  <rect x="540" y="235" width="285" height="95" rx="10" class="box"/>
+  <text x="682" y="270" text-anchor="middle" class="boxTitle">2. Tạo bài tập</text>
+  <text x="682" y="300" text-anchor="middle" class="text">Tiêu đề, yêu cầu, rubric</text>
+  <rect x="920" y="235" width="285" height="95" rx="10" class="box"/>
+  <text x="1062" y="270" text-anchor="middle" class="boxTitle">3. Chọn người nhận</text>
+  <text x="1062" y="300" text-anchor="middle" class="text">Học sinh, lớp, hạn nộp</text>
+  <rect x="1300" y="235" width="285" height="95" rx="10" class="box"/>
+  <text x="1442" y="270" text-anchor="middle" class="boxTitle">4. Giao bài</text>
+  <text x="1442" y="300" text-anchor="middle" class="text">Tạo bản ghi bài giao</text>
+  <path d="M445 282 H540" class="arrow"/><path d="M825 282 H920" class="arrow"/><path d="M1205 282 H1300" class="arrow"/>
 
-  <rect x="340" y="185" width="205" height="125" rx="24" fill="url(#b)" stroke="#fb923c" stroke-width="2"/>
-  <text x="442" y="226" text-anchor="middle" class="boxTitle">2. Tạo bài tập</text>
-  <text x="442" y="260" text-anchor="middle" class="text">Tiêu đề, mô tả</text>
-  <text x="442" y="285" text-anchor="middle" class="small">Hạn nộp, điểm, rubric</text>
+  <rect x="70" y="440" width="1660" height="230" rx="16" class="group"/>
+  <text x="110" y="485" class="boxTitle">Giai đoạn 2: Học sinh nhận bài và nộp bài</text>
+  <rect x="250" y="525" width="330" height="95" rx="10" class="box"/>
+  <text x="415" y="560" text-anchor="middle" class="boxTitle">5. Học sinh nhận bài</text>
+  <text x="415" y="590" text-anchor="middle" class="text">Xem yêu cầu, nội dung, hạn nộp</text>
+  <rect x="735" y="525" width="330" height="95" rx="10" class="box"/>
+  <text x="900" y="560" text-anchor="middle" class="boxTitle">6. Làm bài</text>
+  <text x="900" y="590" text-anchor="middle" class="text">Soạn câu trả lời hoặc tệp nộp</text>
+  <rect x="1220" y="525" width="330" height="95" rx="10" class="box"/>
+  <text x="1385" y="560" text-anchor="middle" class="boxTitle">7. Nộp bài</text>
+  <text x="1385" y="590" text-anchor="middle" class="text">Lưu nội dung và thời điểm nộp</text>
+  <path d="M1442 330 C1442 410 415 410 415 525" class="arrow"/>
+  <path d="M580 572 H735" class="arrow"/><path d="M1065 572 H1220" class="arrow"/>
 
-  <rect x="605" y="185" width="205" height="125" rx="24" fill="url(#b)" stroke="#fb923c" stroke-width="2"/>
-  <text x="707" y="226" text-anchor="middle" class="boxTitle">3. Giao bài</text>
-  <text x="707" y="260" text-anchor="middle" class="text">Chọn học sinh/lớp</text>
-  <text x="707" y="285" text-anchor="middle" class="small">Tạo bản ghi người nhận</text>
+  <rect x="70" y="730" width="1660" height="210" rx="16" class="group"/>
+  <text x="110" y="775" class="boxTitle">Giai đoạn 3: AI hỗ trợ chấm, giáo viên kiểm tra và trả phản hồi</text>
+  <rect x="170" y="815" width="310" height="90" rx="10" class="box"/>
+  <text x="325" y="848" text-anchor="middle" class="boxTitle">8. AI hỗ trợ chấm</text>
+  <text x="325" y="878" text-anchor="middle" class="text">Đề xuất điểm và nhận xét</text>
+  <rect x="580" y="815" width="310" height="90" rx="10" class="box"/>
+  <text x="735" y="848" text-anchor="middle" class="boxTitle">9. Giáo viên kiểm tra</text>
+  <text x="735" y="878" text-anchor="middle" class="text">Duyệt, chỉnh điểm nếu cần</text>
+  <rect x="990" y="815" width="310" height="90" rx="10" class="box"/>
+  <text x="1145" y="848" text-anchor="middle" class="boxTitle">10. Trả phản hồi</text>
+  <text x="1145" y="878" text-anchor="middle" class="text">Gửi điểm, góp ý cho học sinh</text>
+  <rect x="1400" y="815" width="250" height="90" rx="10" class="box"/>
+  <text x="1525" y="848" text-anchor="middle" class="boxTitle">11. Lưu báo cáo</text>
+  <text x="1525" y="878" text-anchor="middle" class="text">Dashboard, lịch sử</text>
+  <path d="M1385 620 C1385 700 325 700 325 815" class="arrow"/>
+  <path d="M480 860 H580" class="arrow"/><path d="M890 860 H990" class="arrow"/><path d="M1300 860 H1400" class="arrow"/>
+  <path d="M1525 905 C1525 985 735 985 735 905" class="dash"/>
 
-  <rect x="870" y="185" width="205" height="125" rx="24" fill="url(#d)" stroke="#22c55e" stroke-width="2"/>
-  <text x="972" y="226" text-anchor="middle" class="boxTitle">4. Học sinh nhận</text>
-  <text x="972" y="260" text-anchor="middle" class="text">Xem yêu cầu</text>
-  <text x="972" y="285" text-anchor="middle" class="small">Làm bài, chuẩn bị nộp</text>
-
-  <rect x="1135" y="185" width="205" height="125" rx="24" fill="url(#d)" stroke="#22c55e" stroke-width="2"/>
-  <text x="1237" y="226" text-anchor="middle" class="boxTitle">5. Nộp bài</text>
-  <text x="1237" y="260" text-anchor="middle" class="text">Văn bản/tệp đính kèm</text>
-  <text x="1237" y="285" text-anchor="middle" class="small">Lưu thời điểm nộp</text>
-
-  <path class="arrow" d="M280 247 H340"/><path class="arrow" d="M545 247 H605"/><path class="arrow" d="M810 247 H870"/><path class="arrow" d="M1075 247 H1135"/>
-
-  <rect x="250" y="500" width="245" height="130" rx="26" fill="url(#c)" stroke="#8b5cf6" stroke-width="2"/>
-  <text x="372" y="542" text-anchor="middle" class="boxTitle">6. AI hỗ trợ chấm</text>
-  <text x="372" y="575" text-anchor="middle" class="text">Phân tích bài theo rubric</text>
-  <text x="372" y="600" text-anchor="middle" class="small">Đề xuất điểm và nhận xét</text>
-
-  <rect x="680" y="500" width="245" height="130" rx="26" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
-  <text x="802" y="542" text-anchor="middle" class="boxTitle">7. Giáo viên kiểm tra</text>
-  <text x="802" y="575" text-anchor="middle" class="text">Xem điểm AI</text>
-  <text x="802" y="600" text-anchor="middle" class="small">Chỉnh điểm/nhận xét nếu cần</text>
-
-  <rect x="1110" y="500" width="245" height="130" rx="26" fill="#ecfeff" stroke="#06b6d4" stroke-width="2"/>
-  <text x="1232" y="542" text-anchor="middle" class="boxTitle">8. Trả phản hồi</text>
-  <text x="1232" y="575" text-anchor="middle" class="text">Gửi điểm và góp ý</text>
-  <text x="1232" y="600" text-anchor="middle" class="small">Cập nhật dashboard học sinh</text>
-
-  <path class="arrow" d="M1237 310 C1237 420 372 410 372 500"/>
-  <path class="arrow" d="M495 565 H680"/><path class="arrow" d="M925 565 H1110"/>
-
-  <rect x="520" y="705" width="560" height="95" rx="24" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
-  <text x="800" y="740" text-anchor="middle" class="boxTitle">9. Lưu lịch sử và báo cáo</text>
-  <text x="800" y="772" text-anchor="middle" class="text">Trạng thái bài, điểm, rubric, phản hồi, số lần nộp và lịch sử trả bài được lưu lại</text>
-  <text x="800" y="795" text-anchor="middle" class="small">Dữ liệu phục vụ phụ huynh, giáo viên, quản trị viên và AI phát hiện điểm yếu</text>
-
-  <path class="green" d="M1232 630 C1232 720 1080 752 1080 752"/>
-  <path class="green" d="M520 752 C390 752 372 650 372 630"/>
+  <rect x="170" y="970" width="1460" height="50" rx="8" fill="#fff" stroke="#000" stroke-width="2"/>
+  <text x="900" y="1002" text-anchor="middle" class="small">Dữ liệu lưu lại: trạng thái bài giao, bài nộp, điểm AI, điểm giáo viên, nhận xét, lịch sử phản hồi và cảnh báo quá hạn.</text>
 </svg>

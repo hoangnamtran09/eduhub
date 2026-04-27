@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1800 1200">
+  <defs>
+    <style>
+      .title{font:700 42px Arial,sans-serif;fill:#000}
+      .sub{font:500 24px Arial,sans-serif;fill:#111}
+      .laneTitle{font:700 26px Arial,sans-serif;fill:#000}
+      .boxTitle{font:700 24px Arial,sans-serif;fill:#000}
+      .text{font:500 20px Arial,sans-serif;fill:#000}
+      .small{font:500 18px Arial,sans-serif;fill:#111}
+      .box{fill:#fff;stroke:#000;stroke-width:3}
+      .lane{fill:#fff;stroke:#000;stroke-width:3}
+      .system{fill:#f2f2f2;stroke:#000;stroke-width:4}
+      .arrow{stroke:#000;stroke-width:4;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#000;stroke-width:3;fill:none;stroke-dasharray:12 9;marker-end:url(#arrow)}
+    </style>
+    <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto">
+      <path d="M2,2 L12,7 L2,12 Z" fill="#000"/>
+    </marker>
+  </defs>
+
+  <rect width="1800" height="1200" fill="#fff"/>
+  <text x="900" y="62" text-anchor="middle" class="title">Hình 13. Sơ đồ quy trình tổng hợp toàn hệ thống EduSelf</text>
+  <text x="900" y="102" text-anchor="middle" class="sub">Từ học sinh học tập, giáo viên quản lý, phụ huynh theo dõi đến quản trị viên vận hành hệ thống</text>
+
+  <rect x="70" y="145" width="1660" height="190" rx="16" class="lane"/>
+  <text x="105" y="187" class="laneTitle">1. HỌC SINH</text>
+  <rect x="240" y="205" width="230" height="90" rx="10" class="box"/>
+  <text x="355" y="238" text-anchor="middle" class="boxTitle">Đăng nhập</text>
+  <text x="355" y="268" text-anchor="middle" class="text">Chọn môn, bài học</text>
+  <rect x="555" y="205" width="230" height="90" rx="10" class="box"/>
+  <text x="670" y="238" text-anchor="middle" class="boxTitle">Học nội dung</text>
+  <text x="670" y="268" text-anchor="middle" class="text">PDF, bài giảng, AI</text>
+  <rect x="870" y="205" width="230" height="90" rx="10" class="box"/>
+  <text x="985" y="238" text-anchor="middle" class="boxTitle">Làm bài</text>
+  <text x="985" y="268" text-anchor="middle" class="text">Quiz, bài tập được giao</text>
+  <rect x="1185" y="205" width="250" height="90" rx="10" class="box"/>
+  <text x="1310" y="238" text-anchor="middle" class="boxTitle">Nhận phản hồi</text>
+  <text x="1310" y="268" text-anchor="middle" class="text">Điểm yếu, gợi ý luyện</text>
+
+  <rect x="70" y="390" width="1660" height="210" rx="16" class="system"/>
+  <text x="105" y="433" class="laneTitle">2. NỀN TẢNG EDUSELF</text>
+  <rect x="205" y="470" width="250" height="90" rx="10" class="box"/>
+  <text x="330" y="503" text-anchor="middle" class="boxTitle">API nghiệp vụ</text>
+  <text x="330" y="533" text-anchor="middle" class="text">Xác thực, phân quyền</text>
+  <rect x="545" y="470" width="250" height="90" rx="10" class="box"/>
+  <text x="670" y="503" text-anchor="middle" class="boxTitle">AI học tập</text>
+  <text x="670" y="533" text-anchor="middle" class="text">Hỏi đáp, chấm bài</text>
+  <rect x="885" y="470" width="250" height="90" rx="10" class="box"/>
+  <text x="1010" y="503" text-anchor="middle" class="boxTitle">Cơ sở dữ liệu</text>
+  <text x="1010" y="533" text-anchor="middle" class="text">Tiến độ, bài làm</text>
+  <rect x="1225" y="470" width="290" height="90" rx="10" class="box"/>
+  <text x="1370" y="503" text-anchor="middle" class="boxTitle">Báo cáo, cảnh báo</text>
+  <text x="1370" y="533" text-anchor="middle" class="text">Dashboard theo vai trò</text>
+
+  <rect x="70" y="655" width="1660" height="190" rx="16" class="lane"/>
+  <text x="105" y="697" class="laneTitle">3. GIÁO VIÊN</text>
+  <rect x="205" y="715" width="260" height="90" rx="10" class="box"/>
+  <text x="335" y="748" text-anchor="middle" class="boxTitle">Quản lý học liệu</text>
+  <text x="335" y="778" text-anchor="middle" class="text">Môn học, bài học, PDF</text>
+  <rect x="545" y="715" width="260" height="90" rx="10" class="box"/>
+  <text x="675" y="748" text-anchor="middle" class="boxTitle">Giao, chấm bài</text>
+  <text x="675" y="778" text-anchor="middle" class="text">AI hỗ trợ phản hồi</text>
+  <rect x="885" y="715" width="260" height="90" rx="10" class="box"/>
+  <text x="1015" y="748" text-anchor="middle" class="boxTitle">Theo dõi lớp</text>
+  <text x="1015" y="778" text-anchor="middle" class="text">Tiến độ, điểm yếu</text>
+  <rect x="1225" y="715" width="260" height="90" rx="10" class="box"/>
+  <text x="1355" y="748" text-anchor="middle" class="boxTitle">Hỗ trợ học sinh</text>
+  <text x="1355" y="778" text-anchor="middle" class="text">Nhắc học, luyện bù</text>
+
+  <rect x="70" y="900" width="800" height="190" rx="16" class="lane"/>
+  <text x="105" y="942" class="laneTitle">4. PHỤ HUYNH</text>
+  <rect x="180" y="965" width="270" height="90" rx="10" class="box"/>
+  <text x="315" y="998" text-anchor="middle" class="boxTitle">Xem báo cáo</text>
+  <text x="315" y="1028" text-anchor="middle" class="text">Thời lượng, bài tập</text>
+  <rect x="520" y="965" width="270" height="90" rx="10" class="box"/>
+  <text x="655" y="998" text-anchor="middle" class="boxTitle">Đồng hành tại nhà</text>
+  <text x="655" y="1028" text-anchor="middle" class="text">Nhắc lịch, hỗ trợ con</text>
+
+  <rect x="930" y="900" width="800" height="190" rx="16" class="lane"/>
+  <text x="965" y="942" class="laneTitle">5. QUẢN TRỊ VIÊN</text>
+  <rect x="1040" y="965" width="270" height="90" rx="10" class="box"/>
+  <text x="1175" y="998" text-anchor="middle" class="boxTitle">Quản trị dữ liệu</text>
+  <text x="1175" y="1028" text-anchor="middle" class="text">Người dùng, nội dung</text>
+  <rect x="1380" y="965" width="270" height="90" rx="10" class="box"/>
+  <text x="1515" y="998" text-anchor="middle" class="boxTitle">Đánh giá hệ thống</text>
+  <text x="1515" y="1028" text-anchor="middle" class="text">Chỉ số, chất lượng</text>
+
+  <path d="M470 250 H555" class="arrow"/>
+  <path d="M785 250 H870" class="arrow"/>
+  <path d="M1100 250 H1185" class="arrow"/>
+  <path d="M1310 295 V390" class="arrow"/>
+  <path d="M455 515 H545" class="arrow"/>
+  <path d="M795 515 H885" class="arrow"/>
+  <path d="M1135 515 H1225" class="arrow"/>
+  <path d="M335 560 V715" class="arrow"/>
+  <path d="M675 560 V715" class="arrow"/>
+  <path d="M1015 560 V715" class="arrow"/>
+  <path d="M1370 560 V715" class="arrow"/>
+  <path d="M465 760 H545" class="arrow"/>
+  <path d="M805 760 H885" class="arrow"/>
+  <path d="M1145 760 H1225" class="arrow"/>
+  <path d="M1370 560 C1370 840 315 840 315 965" class="dash"/>
+  <path d="M1370 560 C1370 840 1175 840 1175 965" class="dash"/>
+  <path d="M1370 560 C1370 840 1515 840 1515 965" class="dash"/>
+  <path d="M1515 1055 C1515 1140 150 1140 150 250 H240" class="dash"/>
+
+  <rect x="80" y="1120" width="1640" height="52" rx="8" fill="#fff" stroke="#000" stroke-width="2"/>
+  <text x="900" y="1154" text-anchor="middle" class="small">Mũi tên liền: luồng xử lý chính. Mũi tên nét đứt: dữ liệu báo cáo và vòng lặp cải tiến nội dung, bài tập, cảnh báo, lộ trình học.</text>
+</svg>
