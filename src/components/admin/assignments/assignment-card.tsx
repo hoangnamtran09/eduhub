@@ -48,10 +48,12 @@ interface ReviewDraft {
 
 interface AssignmentCardProps {
   assignment: AssignmentRecord;
+  detailBasePath?: string;
+  reviewBasePath?: string;
   onReviewed?: () => void;
 }
 
-export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) {
+export function AssignmentCard({ assignment, detailBasePath = "/admin/assignments", reviewBasePath = "/api/admin/assignments", onReviewed }: AssignmentCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedRecipient, setExpandedRecipient] = useState<string | null>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
@@ -132,7 +134,7 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
         comment: draft.rubricScores[c.id]?.comment || "",
       }));
 
-      const response = await fetch(`/api/admin/assignments/recipients/${recipient.id}/review`, {
+      const response = await fetch(`${reviewBasePath}/recipients/${recipient.id}/review`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -164,7 +166,7 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
               {assignment.lesson && <Badge variant="outline">{assignment.lesson.subjectName}</Badge>}
             </CardTitle>
           <div className="flex items-center gap-4 text-xs">
-            <Link href={`/admin/assignments/${assignment.id}`} className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-200">
+            <Link href={`${detailBasePath}/${assignment.id}`} className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-200">
               Mở chi tiết
             </Link>
             <span className="text-slate-500">{submittedCount} nộp</span>

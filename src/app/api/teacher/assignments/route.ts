@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     }
 
     const normalizedStudentIds = Array.isArray(studentIds)
-      ? [...new Set(studentIds.filter((value: unknown) => typeof value === "string" && value))]
+      ? Array.from(new Set(studentIds.filter((value: unknown) => typeof value === "string" && value)))
       : [];
 
     let recipients: string[] = [];

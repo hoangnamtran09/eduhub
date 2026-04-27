@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { AssignmentRecord, StudentOption, LessonOption, AssignmentForm } from "@/types/assignment";
 
@@ -19,7 +19,9 @@ const emptyForm: AssignmentForm = {
   studentIds: [],
 };
 
-export function useAssignments() {
+export function useAssignments(options?: { apiBase?: string; uploadPdfPath?: string }) {
+  const apiBase = options?.apiBase || "/api/admin";
+  const uploadPdfPath = options?.uploadPdfPath || "/api/admin/assignments/upload-pdf";
   const user = useAuthStore((state) => state.user);
   const [assignments, setAssignments] = useState<AssignmentRecord[]>([]);
   const [students, setStudents] = useState<StudentOption[]>([]);
@@ -31,12 +33,12 @@ export function useAssignments() {
   const [assignmentPdfName, setAssignmentPdfName] = useState("");
   const [form, setForm] = useState<AssignmentForm>(emptyForm);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [assignmentRes, studentRes, subjectRes] = await Promise.all([
-        fetch("/api/admin/assignments"),
-        fetch("/api/admin/students"),
+        fetch(`${apiBase}/assignments`),
+        fetch(`${apiBase}/students`),
         fetch("/api/admin/subjects"),
       ]);
 
@@ -67,15 +69,15 @@ export function useAssignments() {
 
       setLessons(lessonOptions);
     } catch (error) {
-      console.error("Failed to load admin assignments page:", error);
+      console.error("Failed to load assignments page:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiBase]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleCreateAssignment = async () => {
     if (!form.title.trim() || !form.description.trim()) {
@@ -92,7 +94,7 @@ export function useAssignments() {
     setSubmitError("");
 
     try {
-      const response = await fetch("/api/admin/assignments", {
+      const response = await fetch(`${apiBase}/assignments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -133,7 +135,7 @@ export function useAssignments() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/admin/assignments/upload-pdf", {
+      const response = await fetch(uploadPdfPath, {
         method: "POST",
         body: formData,
       });
