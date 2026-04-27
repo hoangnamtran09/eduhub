@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const setLoading = useAuthStore((state) => state.setLoading);
 
@@ -12,7 +11,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     const initAuth = async () => {
-      setLoading(!user);
+      setLoading(true);
 
       try {
         const response = await fetch("/api/auth/me", {
@@ -44,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [setUser, setLoading, user]);
+  }, [setUser, setLoading]);
 
   return <>{children}</>;
 }
