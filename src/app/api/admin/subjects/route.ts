@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { generateSlug } from "@/lib/slug";
@@ -242,7 +243,7 @@ export async function DELETE(request: Request) {
 
       if (lessonIds.length) {
         if (await tableExists(tx, "ChatHistory")) {
-          await tx.$executeRawUnsafe('DELETE FROM "ChatHistory" WHERE "lessonId" = ANY($1)', lessonIds);
+          await tx.$executeRaw`DELETE FROM "ChatHistory" WHERE "lessonId" IN (${Prisma.join(lessonIds)})`;
         }
 
         const recipients = await tx.assignmentRecipient.findMany({
