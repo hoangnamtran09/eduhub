@@ -8,6 +8,8 @@ import { AuthProvider } from "@/components/auth-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "EduHub - Học thông minh với AI",
   description: "Nền tảng học tập cá nhân hóa với trợ giảng AI, giúp học sinh tự học hiệu quả theo đúng trình độ.",
