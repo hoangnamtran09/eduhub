@@ -1529,23 +1529,8 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         {/* ==================== CENTER CONTENT ==================== */}
         <div className="flex min-h-[520px] flex-1 flex-col overflow-hidden bg-paper-50/40 lg:min-h-0">
           <div className="flex-1 overflow-auto p-3 lg:p-4">
-            <div className="mb-4 flex justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setGuideStepIndex(0);
-                  setIsGuideOpen(true);
-                }}
-                className="border-amber-200 bg-white/90 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
-              >
-                Xem hướng dẫn từng bước
-              </Button>
-            </div>
-
             {pdfUrl ? (
-              <div className={cn("flex min-h-[640px] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/96 shadow-soft lg:h-[calc(100%-4rem)]", getGuideHighlightClass(1))}>
+              <div className={cn("flex min-h-[640px] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/96 shadow-soft lg:h-full", getGuideHighlightClass(1))}>
                 <div className="flex items-center justify-between border-b border-paper-200 px-4 py-3">
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900">Tài liệu học tập</h3>
