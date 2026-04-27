@@ -133,34 +133,24 @@ const mathSymbols = [
 
 const learningGuideSteps = [
   {
-    title: "Chọn tiết học bên trái",
-    description: "Bấm vào một tiết trong danh sách để mở nội dung cần học.",
-    pointer: "left",
-    target: "Danh sách tiết học",
+    title: "Chọn tiết học",
+    description: "Đây là danh sách tiết học. Học sinh bấm vào từng tiết để mở đúng bài cần học hoặc chuyển sang bài khác.",
   },
   {
-    title: "Đọc tài liệu ở giữa",
-    description: "Theo dõi PDF, chuyển trang khi cần; hệ thống tự lưu trang và thời gian đọc.",
-    pointer: "down",
-    target: "Khung tài liệu PDF",
+    title: "Đọc tài liệu PDF",
+    description: "Khung giữa hiển thị tài liệu học tập. Hệ thống tự lưu trang đang đọc và tính thời gian đọc trước khi mở chat AI.",
   },
   {
-    title: "Mở AI Tutor bên phải",
-    description: "Khi đọc đủ thời gian, bấm Bắt đầu học ngay để AI tóm tắt và hướng dẫn.",
-    pointer: "right",
-    target: "Khung AI Tutor",
+    title: "Hỏi AI Tutor",
+    description: "Khung bên phải là gia sư AI. Sau khi đủ điều kiện, học sinh bấm Bắt đầu học ngay để AI tóm tắt, giải thích và đặt câu hỏi.",
   },
   {
-    title: "Luyện tập với AI",
-    description: "Bấm Tạo trắc nghiệm AI, nhập đáp án và xem phản hồi tức thì.",
-    pointer: "right-down",
-    target: "Nút tạo trắc nghiệm",
+    title: "Làm trắc nghiệm AI",
+    description: "Nút này tạo câu hỏi luyện tập. Học sinh nhập đáp án, AI chấm điểm và hệ thống cập nhật điểm yếu, roadmap, kim cương.",
   },
   {
-    title: "Kết thúc để lưu tiến độ",
-    description: "Bấm Kết thúc học trên thanh trên cùng để lưu thời gian, điểm yếu và đánh giá cuối phiên.",
-    pointer: "up",
-    target: "Nút Kết thúc học",
+    title: "Kết thúc học",
+    description: "Nút này lưu tiến độ, thời gian học và mở bài đánh giá cuối phiên nếu có. Đây là bước hoàn tất phiên học.",
   },
 ];
 
@@ -213,6 +203,8 @@ export default function LearningPage({
   const [weaknessPopup, setWeaknessPopup] = useState<WeaknessPopup | null>(null);
 
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
+  const [isGuideOpen, setIsGuideOpen] = useState(true);
+  const [guideStepIndex, setGuideStepIndex] = useState(0);
 
   const handleQuizCorrect = async () => {
     if (!user) return;
@@ -1104,6 +1096,26 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
     });
   };
 
+  const currentGuideStep = learningGuideSteps[guideStepIndex];
+  const isLastGuideStep = guideStepIndex === learningGuideSteps.length - 1;
+
+  const getGuideHighlightClass = (index: number) => cn(
+    isGuideOpen && guideStepIndex === index && "relative z-[70] rounded-[28px] ring-4 ring-amber-300 ring-offset-4 ring-offset-white shadow-2xl shadow-amber-950/30"
+  );
+
+  const handleNextGuideStep = () => {
+    if (isLastGuideStep) {
+      setIsGuideOpen(false);
+      return;
+    }
+
+    setGuideStepIndex((current) => current + 1);
+  };
+
+  const handlePreviousGuideStep = () => {
+    setGuideStepIndex((current) => Math.max(0, current - 1));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-paper-100">
@@ -1276,8 +1288,70 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         </div>
       )}
 
+      {isGuideOpen && currentGuideStep && (
+        <div className="fixed inset-0 z-[55] pointer-events-none">
+          <div className="absolute inset-0 bg-ink-900/55 backdrop-blur-[2px]" />
+          <div className="absolute left-1/2 top-20 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 rounded-[28px] border border-amber-200 bg-white p-5 shadow-2xl shadow-ink-900/25 pointer-events-auto lg:left-auto lg:right-8 lg:top-20 lg:translate-x-0">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-600">Hướng dẫn sử dụng</p>
+                <h2 className="mt-1 text-xl font-semibold text-ink-900">{currentGuideStep.title}</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsGuideOpen(false)}
+                className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Bỏ qua hướng dẫn"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-600">{currentGuideStep.description}</p>
+            <div className="mt-4 flex items-center gap-2">
+              {learningGuideSteps.map((step, index) => (
+                <button
+                  key={step.title}
+                  type="button"
+                  onClick={() => setGuideStepIndex(index)}
+                  className={cn(
+                    "h-2 rounded-full transition-all",
+                    index === guideStepIndex ? "w-8 bg-amber-500" : "w-2 bg-slate-200 hover:bg-slate-300"
+                  )}
+                  aria-label={`Chuyển đến bước ${index + 1}`}
+                />
+              ))}
+            </div>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-medium text-slate-500">
+                Bước {guideStepIndex + 1}/{learningGuideSteps.length}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousGuideStep}
+                  disabled={guideStepIndex === 0}
+                  className="border-slate-200 bg-white text-slate-700"
+                >
+                  Quay lại
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleNextGuideStep}
+                  className="bg-ink-900 text-white hover:bg-ink-800"
+                >
+                  {isLastGuideStep ? "Hoàn tất" : "Tiếp"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Inline navigation - no header */}
-      <div className="h-12 bg-white/90 border-b border-white/80 px-4 flex items-center justify-between shrink-0 backdrop-blur-sm">
+      <div className={cn("h-12 bg-white/90 border-b border-white/80 px-4 flex items-center justify-between shrink-0 backdrop-blur-sm", getGuideHighlightClass(4))}>
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -1322,7 +1396,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
       {/* Main 3-Column Layout */}
       <div className="flex-1 flex flex-col overflow-auto lg:flex-row lg:overflow-hidden">
         {/* ==================== LEFT SIDEBAR ==================== */}
-        <div className="max-h-64 w-full shrink-0 border-b border-white/80 bg-white/88 backdrop-blur-sm lg:max-h-none lg:w-72 lg:border-b-0 lg:border-r lg:flex lg:flex-col">
+        <div className={cn("max-h-64 w-full shrink-0 border-b border-white/80 bg-white/88 backdrop-blur-sm lg:max-h-none lg:w-72 lg:border-b-0 lg:border-r lg:flex lg:flex-col", getGuideHighlightClass(0))}>
           {/* Sidebar Header */}
           <div className="p-4 border-b border-slate-100">
             <h2 className="text-sm font-semibold text-slate-900 mb-3">
@@ -1411,51 +1485,23 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         {/* ==================== CENTER CONTENT ==================== */}
         <div className="flex min-h-[520px] flex-1 flex-col overflow-hidden bg-paper-50/40 lg:min-h-0">
           <div className="flex-1 overflow-auto p-3 lg:p-4">
-            <section className="mb-4 overflow-hidden rounded-[28px] border border-amber-200/70 bg-[radial-gradient(circle_at_top_left,#fff7d6_0%,#ffffff_42%,#eefcff_100%)] shadow-soft">
-              <div className="border-b border-amber-100/80 px-5 py-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-600">Dành cho ban giám khảo</p>
-                <h2 className="mt-1 text-lg font-semibold text-ink-900">Luồng thao tác học tập</h2>
-                <p className="mt-1 text-sm text-slate-600">
-                  Làm theo các con trỏ bên dưới để quan sát đúng thứ tự học sinh sử dụng màn hình này.
-                </p>
-              </div>
-              <div className="relative px-5 py-5">
-                <div className="absolute left-9 top-8 bottom-8 hidden w-px bg-gradient-to-b from-amber-300 via-brand-300 to-cyan-300 md:block" />
-                <div className="space-y-4">
-                  {learningGuideSteps.map((step, index) => (
-                    <div key={step.title} className="relative grid gap-3 rounded-3xl border border-white/80 bg-white/88 p-4 shadow-sm md:grid-cols-[2.75rem_1fr_auto] md:items-center">
-                      <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-ink-900 text-sm font-bold text-white shadow-lg shadow-ink-900/15">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
-                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700">
-                            Chỉ tới: {step.target}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-xs leading-5 text-slate-600">{step.description}</p>
-                      </div>
-                      <div className={cn(
-                        "flex items-center gap-2 rounded-2xl border border-brand-100 bg-brand-50 px-3 py-2 text-xs font-semibold text-brand-800",
-                        step.pointer === "left" && "md:-translate-x-2",
-                        step.pointer === "right" && "md:translate-x-2",
-                        step.pointer === "right-down" && "md:translate-x-2 md:translate-y-2",
-                        step.pointer === "up" && "md:-translate-y-2",
-                      )}>
-                        <span>
-                          {step.pointer === "left" ? "←" : step.pointer === "right" ? "→" : step.pointer === "right-down" ? "↘" : step.pointer === "up" ? "↑" : "↓"}
-                        </span>
-                        <span>Con trỏ thao tác</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
+            <div className="mb-4 flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setGuideStepIndex(0);
+                  setIsGuideOpen(true);
+                }}
+                className="border-amber-200 bg-white/90 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+              >
+                Xem hướng dẫn từng bước
+              </Button>
+            </div>
 
             {pdfUrl ? (
-              <div className="flex min-h-[640px] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/96 shadow-soft lg:h-[calc(100%-14.5rem)]">
+              <div className={cn("flex min-h-[640px] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/96 shadow-soft lg:h-[calc(100%-4rem)]", getGuideHighlightClass(1))}>
                 <div className="flex items-center justify-between border-b border-paper-200 px-4 py-3">
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900">Tài liệu học tập</h3>
@@ -1493,7 +1539,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                 />
               </div>
             ) : (
-              <div className="min-h-[420px] bg-white/96 border-dashed border-paper-300 rounded-[28px] flex flex-col items-center justify-center shadow-soft">
+              <div className={cn("min-h-[420px] bg-white/96 border-dashed border-paper-300 rounded-[28px] flex flex-col items-center justify-center shadow-soft", getGuideHighlightClass(1))}>
                 <div className="w-16 h-16 bg-paper-50 flex items-center justify-center mb-4 rounded-full">
                   <FileText className="w-8 h-8 text-slate-400" />
                 </div>
@@ -1509,7 +1555,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         </div>
 
         {/* ==================== RIGHT CHAT PANEL ==================== */}
-        <div className="min-h-[520px] w-full shrink-0 border-t border-white/80 bg-white/92 backdrop-blur-sm lg:min-h-0 lg:w-80 lg:border-l lg:border-t-0 lg:flex lg:flex-col">
+        <div className={cn("min-h-[520px] w-full shrink-0 border-t border-white/80 bg-white/92 backdrop-blur-sm lg:min-h-0 lg:w-80 lg:border-l lg:border-t-0 lg:flex lg:flex-col", getGuideHighlightClass(2))}>
           {/* Chat Header */}
           <div className="p-4 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1688,7 +1734,8 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                   disabled={isGeneratingExercise || !!currentExercise || !hasUnlockedChat}
                   className={cn(
                     "h-8 gap-2 text-xs border-brand-200 text-brand-700 hover:bg-brand-50 hover:text-brand-800",
-                    !!currentExercise && "opacity-50 cursor-not-allowed"
+                    !!currentExercise && "opacity-50 cursor-not-allowed",
+                    getGuideHighlightClass(3)
                   )}
                 >
                   {isGeneratingExercise ? (
