@@ -33,8 +33,9 @@ export interface StudentRecord {
   parentId: string | null;
   parent: ParentSummary | null;
   profile: StudentProfile | null;
-  studySessions: StudySessionRecord[];
-  enrollments: StudentEnrollment[];
+  totalStudySeconds?: number;
+  studySessions?: StudySessionRecord[];
+  enrollments?: StudentEnrollment[];
 }
 
 export interface StudentForm {

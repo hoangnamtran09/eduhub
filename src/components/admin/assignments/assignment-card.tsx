@@ -212,6 +212,7 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                 const statusCfg = STATUS_MAP[statusKey] || STATUS_MAP.assigned;
                 const isOpen = expandedRecipient === recipient.id;
                 const hasSubmission = isAssignmentSubmitted(recipient.status);
+                const hasSubmissionDetails = Boolean(recipient.submissionText || recipient.submissionFiles?.length || recipient.feedback || recipient.rubricScores?.length || recipient.feedbackEvents?.length);
                 const draft = getDraft(recipient.id);
 
                 return (
@@ -240,7 +241,13 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
 
                     {isOpen && (
                       <div className="border-t px-4 py-3 space-y-3">
-                        {hasSubmission && (
+                        {hasSubmission && !hasSubmissionDetails && (
+                          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                            Dữ liệu bài nộp chi tiết chỉ tải ở trang chi tiết. <Link href={`/admin/assignments/${assignment.id}`} className="font-semibold text-slate-900 underline">Mở chi tiết</Link> để chấm và xem lịch sử phản hồi.
+                          </div>
+                        )}
+
+                        {hasSubmission && hasSubmissionDetails && (
                           <>
                             {inlineError && expandedRecipient === recipient.id && (
                               <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
@@ -276,7 +283,7 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                           </>
                         )}
 
-                        {(recipient.aiScore != null || aiGradingId === recipient.id) && (
+                        {hasSubmissionDetails && (recipient.aiScore != null || aiGradingId === recipient.id) && (
                           <div className="rounded-lg border border-violet-200 bg-violet-50 p-3">
                             <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-600 mb-2">
                               <Bot className="w-3.5 h-3.5" /> Chấm sơ bộ AI
@@ -307,7 +314,7 @@ export function AssignmentCard({ assignment, onReviewed }: AssignmentCardProps) 
                           </div>
                         )}
 
-                        {["submitted", "returned"].includes(normalizedRecipientStatus) && (
+                        {hasSubmissionDetails && ["submitted", "returned"].includes(normalizedRecipientStatus) && (
                           <div className="rounded-lg border border-brand-200 bg-brand-50 p-3 space-y-3">
                             <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">Chấm bài</p>
                             {rubric.length > 0 && (

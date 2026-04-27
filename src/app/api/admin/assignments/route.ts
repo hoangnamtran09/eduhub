@@ -29,7 +29,16 @@ export async function GET() {
       where: authorization.authUser.role === "TEACHER"
         ? { createdById: authorization.authUser.userId }
         : undefined,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        pdfUrl: true,
+        pdfStorageKey: true,
+        dueDate: true,
+        maxScore: true,
+        rubric: true,
+        targetGradeLevel: true,
         lesson: {
           select: {
             id: true,
@@ -43,10 +52,15 @@ export async function GET() {
           },
         },
         recipients: {
-          include: {
-            feedbackEvents: {
-              orderBy: { createdAt: "desc" },
-            },
+          select: {
+            id: true,
+            status: true,
+            score: true,
+            aiScore: true,
+            submittedAt: true,
+            reviewedAt: true,
+            returnedAt: true,
+            attemptCount: true,
             student: {
               select: {
                 id: true,

@@ -306,7 +306,7 @@ export default function AdminStudentsPage() {
 
           <div className="space-y-2.5">
             {filteredStudents.map((student) => {
-              const totalStudySeconds = student.studySessions.reduce((sum, session) => sum + (session.durationSec || 0), 0);
+              const totalStudySeconds = student.totalStudySeconds ?? student.studySessions?.reduce((sum, session) => sum + (session.durationSec || 0), 0) ?? 0;
 
               return (
                 <Card key={student.id} className="border-white/90 bg-white shadow-soft">

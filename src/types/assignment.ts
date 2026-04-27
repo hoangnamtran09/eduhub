@@ -40,16 +40,16 @@ export interface LessonOption {
 export interface AssignmentRecipient {
   id: string;
   status: AssignmentRecipientStatus;
-  submissionText: string | null;
+  submissionText?: string | null;
   submissionFiles?: AssignmentSubmissionFile[] | null;
   score: number | null;
   aiScore: number | null;
-  feedback: string | null;
+  feedback?: string | null;
   rubricScores?: RubricScore[] | null;
   feedbackEvents?: FeedbackHistoryItem[] | null;
-  submittedAt: string | null;
-  reviewedAt: string | null;
-  returnedAt: string | null;
+  submittedAt?: string | null;
+  reviewedAt?: string | null;
+  returnedAt?: string | null;
   attemptCount: number;
   student: StudentOption;
 }

@@ -44,7 +44,14 @@ export async function GET() {
     const [students, parents] = await Promise.all([
       prismaAny.user.findMany({
         where: { role: "STUDENT" },
-        include: {
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          gradeLevel: true,
+          diamonds: true,
+          createdAt: true,
+          parentId: true,
           parent: {
             select: {
               id: true,
@@ -53,21 +60,6 @@ export async function GET() {
             },
           },
           profile: true,
-          studySessions: {
-            select: {
-              durationSec: true,
-            },
-          },
-          enrollments: {
-            include: {
-              course: {
-                select: {
-                  id: true,
-                  title: true,
-                },
-              },
-            },
-          },
         },
         orderBy: {
           createdAt: "desc",
@@ -90,7 +82,31 @@ export async function GET() {
       }),
     ]);
 
-    return NextResponse.json({ students, parents });
+    const studyTimeByStudent = new Map<string, number>();
+
+    if (students.length) {
+      const studyTimeRows = await prismaAny.studySession.groupBy({
+        by: ["userId"],
+        where: {
+          userId: { in: students.map((student: { id: string }) => student.id) },
+        },
+        _sum: {
+          durationSec: true,
+        },
+      });
+
+      studyTimeRows.forEach((row: { userId: string; _sum: { durationSec: number | null } }) => {
+        studyTimeByStudent.set(row.userId, row._sum.durationSec || 0);
+      });
+    }
+
+    return NextResponse.json({
+      students: students.map((student: { id: string }) => ({
+        ...student,
+        totalStudySeconds: studyTimeByStudent.get(student.id) || 0,
+      })),
+      parents,
+    });
   } catch (error) {
     console.error("Error fetching students:", error);
     return NextResponse.json(
