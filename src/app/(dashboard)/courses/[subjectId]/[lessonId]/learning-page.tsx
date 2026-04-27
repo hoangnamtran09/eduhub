@@ -133,24 +133,34 @@ const mathSymbols = [
 
 const learningGuideSteps = [
   {
-    title: "Chọn bài học",
-    description: "Dùng danh sách tiết học bên trái để mở đúng bài cần xem hoặc chuyển nhanh sang bài khác.",
+    title: "Chọn tiết học bên trái",
+    description: "Bấm vào một tiết trong danh sách để mở nội dung cần học.",
+    pointer: "left",
+    target: "Danh sách tiết học",
   },
   {
-    title: "Đọc tài liệu",
-    description: "Xem PDF ở khung giữa; hệ thống tự ghi nhớ trang đang đọc và yêu cầu đọc đủ thời gian trước khi chat AI.",
+    title: "Đọc tài liệu ở giữa",
+    description: "Theo dõi PDF, chuyển trang khi cần; hệ thống tự lưu trang và thời gian đọc.",
+    pointer: "down",
+    target: "Khung tài liệu PDF",
   },
   {
-    title: "Hỏi AI Tutor",
-    description: "Sau khi mở khóa, bấm Bắt đầu học ngay để AI tóm tắt bài, giải thích kiến thức và đặt câu hỏi luyện tập.",
+    title: "Mở AI Tutor bên phải",
+    description: "Khi đọc đủ thời gian, bấm Bắt đầu học ngay để AI tóm tắt và hướng dẫn.",
+    pointer: "right",
+    target: "Khung AI Tutor",
   },
   {
-    title: "Làm trắc nghiệm AI",
-    description: "Bấm Tạo trắc nghiệm AI, nhập câu trả lời; kết quả sẽ cập nhật điểm yếu, roadmap và thưởng kim cương khi làm tốt.",
+    title: "Luyện tập với AI",
+    description: "Bấm Tạo trắc nghiệm AI, nhập đáp án và xem phản hồi tức thì.",
+    pointer: "right-down",
+    target: "Nút tạo trắc nghiệm",
   },
   {
-    title: "Kết thúc học",
-    description: "Bấm Kết thúc học để lưu tiến độ, ghi nhận thời gian học và làm bài đánh giá cuối phiên nếu hệ thống tạo ra.",
+    title: "Kết thúc để lưu tiến độ",
+    description: "Bấm Kết thúc học trên thanh trên cùng để lưu thời gian, điểm yếu và đánh giá cuối phiên.",
+    pointer: "up",
+    target: "Nút Kết thúc học",
   },
 ];
 
@@ -1404,30 +1414,43 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
             <section className="mb-4 overflow-hidden rounded-[28px] border border-amber-200/70 bg-[radial-gradient(circle_at_top_left,#fff7d6_0%,#ffffff_42%,#eefcff_100%)] shadow-soft">
               <div className="border-b border-amber-100/80 px-5 py-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-600">Dành cho ban giám khảo</p>
-                <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-ink-900">Chỉ dẫn học tập từng bước</h2>
-                    <p className="mt-1 text-sm text-slate-600">
-                      Quy trình này mô tả cách học sinh sử dụng màn hình học tập từ lúc chọn bài đến khi lưu tiến độ.
-                    </p>
-                  </div>
-                  <div className="rounded-full border border-amber-200 bg-white/80 px-3 py-1 text-xs font-semibold text-amber-700">
-                    {learningGuideSteps.length} bước thao tác
-                  </div>
-                </div>
+                <h2 className="mt-1 text-lg font-semibold text-ink-900">Luồng thao tác học tập</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Làm theo các con trỏ bên dưới để quan sát đúng thứ tự học sinh sử dụng màn hình này.
+                </p>
               </div>
-              <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
-                {learningGuideSteps.map((step, index) => (
-                  <div key={step.title} className="group relative rounded-3xl border border-white/80 bg-white/86 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md">
-                    <div className="mb-3 flex items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-ink-900 text-sm font-bold text-white shadow-lg shadow-ink-900/15">
+              <div className="relative px-5 py-5">
+                <div className="absolute left-9 top-8 bottom-8 hidden w-px bg-gradient-to-b from-amber-300 via-brand-300 to-cyan-300 md:block" />
+                <div className="space-y-4">
+                  {learningGuideSteps.map((step, index) => (
+                    <div key={step.title} className="relative grid gap-3 rounded-3xl border border-white/80 bg-white/88 p-4 shadow-sm md:grid-cols-[2.75rem_1fr_auto] md:items-center">
+                      <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-ink-900 text-sm font-bold text-white shadow-lg shadow-ink-900/15">
                         {index + 1}
                       </div>
-                      <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700">
+                            Chỉ tới: {step.target}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">{step.description}</p>
+                      </div>
+                      <div className={cn(
+                        "flex items-center gap-2 rounded-2xl border border-brand-100 bg-brand-50 px-3 py-2 text-xs font-semibold text-brand-800",
+                        step.pointer === "left" && "md:-translate-x-2",
+                        step.pointer === "right" && "md:translate-x-2",
+                        step.pointer === "right-down" && "md:translate-x-2 md:translate-y-2",
+                        step.pointer === "up" && "md:-translate-y-2",
+                      )}>
+                        <span>
+                          {step.pointer === "left" ? "←" : step.pointer === "right" ? "→" : step.pointer === "right-down" ? "↘" : step.pointer === "up" ? "↑" : "↓"}
+                        </span>
+                        <span>Con trỏ thao tác</span>
+                      </div>
                     </div>
-                    <p className="text-xs leading-5 text-slate-600">{step.description}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </section>
 
