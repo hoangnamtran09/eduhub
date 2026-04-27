@@ -131,6 +131,29 @@ const mathSymbols = [
   { label: "frac", value: "()/()" },
 ];
 
+const learningGuideSteps = [
+  {
+    title: "Chọn bài học",
+    description: "Dùng danh sách tiết học bên trái để mở đúng bài cần xem hoặc chuyển nhanh sang bài khác.",
+  },
+  {
+    title: "Đọc tài liệu",
+    description: "Xem PDF ở khung giữa; hệ thống tự ghi nhớ trang đang đọc và yêu cầu đọc đủ thời gian trước khi chat AI.",
+  },
+  {
+    title: "Hỏi AI Tutor",
+    description: "Sau khi mở khóa, bấm Bắt đầu học ngay để AI tóm tắt bài, giải thích kiến thức và đặt câu hỏi luyện tập.",
+  },
+  {
+    title: "Làm trắc nghiệm AI",
+    description: "Bấm Tạo trắc nghiệm AI, nhập câu trả lời; kết quả sẽ cập nhật điểm yếu, roadmap và thưởng kim cương khi làm tốt.",
+  },
+  {
+    title: "Kết thúc học",
+    description: "Bấm Kết thúc học để lưu tiến độ, ghi nhận thời gian học và làm bài đánh giá cuối phiên nếu hệ thống tạo ra.",
+  },
+];
+
 export default function LearningPage({
   params,
 }: {
@@ -1378,8 +1401,38 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         {/* ==================== CENTER CONTENT ==================== */}
         <div className="flex min-h-[520px] flex-1 flex-col overflow-hidden bg-paper-50/40 lg:min-h-0">
           <div className="flex-1 overflow-auto p-3 lg:p-4">
+            <section className="mb-4 overflow-hidden rounded-[28px] border border-amber-200/70 bg-[radial-gradient(circle_at_top_left,#fff7d6_0%,#ffffff_42%,#eefcff_100%)] shadow-soft">
+              <div className="border-b border-amber-100/80 px-5 py-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-600">Dành cho ban giám khảo</p>
+                <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-ink-900">Chỉ dẫn học tập từng bước</h2>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Quy trình này mô tả cách học sinh sử dụng màn hình học tập từ lúc chọn bài đến khi lưu tiến độ.
+                    </p>
+                  </div>
+                  <div className="rounded-full border border-amber-200 bg-white/80 px-3 py-1 text-xs font-semibold text-amber-700">
+                    {learningGuideSteps.length} bước thao tác
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
+                {learningGuideSteps.map((step, index) => (
+                  <div key={step.title} className="group relative rounded-3xl border border-white/80 bg-white/86 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md">
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-ink-900 text-sm font-bold text-white shadow-lg shadow-ink-900/15">
+                        {index + 1}
+                      </div>
+                      <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
+                    </div>
+                    <p className="text-xs leading-5 text-slate-600">{step.description}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
             {pdfUrl ? (
-              <div className="flex h-full flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/96 shadow-soft">
+              <div className="flex min-h-[640px] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/96 shadow-soft lg:h-[calc(100%-14.5rem)]">
                 <div className="flex items-center justify-between border-b border-paper-200 px-4 py-3">
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900">Tài liệu học tập</h3>
@@ -1417,7 +1470,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                 />
               </div>
             ) : (
-              <div className="h-full bg-white/96 border-dashed border-paper-300 rounded-[28px] flex flex-col items-center justify-center shadow-soft">
+              <div className="min-h-[420px] bg-white/96 border-dashed border-paper-300 rounded-[28px] flex flex-col items-center justify-center shadow-soft">
                 <div className="w-16 h-16 bg-paper-50 flex items-center justify-center mb-4 rounded-full">
                   <FileText className="w-8 h-8 text-slate-400" />
                 </div>

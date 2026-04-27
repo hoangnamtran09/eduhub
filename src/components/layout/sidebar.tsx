@@ -61,6 +61,12 @@ const parentNavItems = [
   { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
 
+const teacherNavItems = [
+  { href: "/teacher/students", label: "Học sinh của tôi", icon: Library },
+  { href: "/teacher/assignments", label: "Giao bài tập", icon: NotebookPen },
+  { href: "/settings", label: "Cài đặt", icon: Settings },
+];
+
 const adminNavGroups: NavGroupItem[] = [
   {
     label: "Quản lí bổ sung",
@@ -86,16 +92,18 @@ export function Sidebar() {
   });
   const navItems = user?.role === "ADMIN"
     ? adminNavItems
-    : user?.role === "PARENT"
-      ? parentNavItems
-      : defaultNavItems;
+    : user?.role === "TEACHER"
+      ? teacherNavItems
+      : user?.role === "PARENT"
+        ? parentNavItems
+        : defaultNavItems;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (!user || user.role === "ADMIN") return;
+    if (!user || user.role !== "STUDENT") return;
 
     const handleStudyProgressUpdated = (event: Event) => {
       const streakDays = (event as CustomEvent<{ streakDays?: number }>).detail?.streakDays;
@@ -298,7 +306,7 @@ export function Sidebar() {
       </nav>
 
       <div className={cn("absolute left-5 right-5 hidden lg:block", collapsed ? "bottom-24 left-3 right-3" : "bottom-24")}>
-        {!collapsed && user?.role !== "ADMIN" && (
+        {!collapsed && user?.role !== "ADMIN" && user?.role !== "TEACHER" && (
           <div className="rounded-[28px] border border-white/10 bg-white/8 p-4 shadow-soft transition-all backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-accent-500/14">

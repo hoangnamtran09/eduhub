@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma/client";
 import { createAuthToken, setAuthCookie } from "@/lib/auth/session";
 import { hashPassword, needsPasswordRehash, verifyPassword } from "@/lib/auth/password";
 import { isJwtSecretConfigurationError } from "@/lib/auth/jwt-secret";
+import type { UserRole } from "@/types";
+
+const USER_ROLES: UserRole[] = ["STUDENT", "PARENT", "ADMIN", "TEACHER"];
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +16,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const normalizedEmail = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     const password = body?.password;
+    const expectedRole = body?.expectedRole;
+
+    if (expectedRole && !USER_ROLES.includes(expectedRole)) {
+      return NextResponse.json(
+        { error: "Vai trò không hợp lệ" },
+        { status: 400 }
+      );
+    }
 
     if (!normalizedEmail || !password) {
       return NextResponse.json(
@@ -50,9 +61,16 @@ export async function POST(request: Request) {
         });
       }
     }
-    
+
+    if (expectedRole && user.role !== expectedRole) {
+      return NextResponse.json(
+        { error: "Tài khoản không thuộc vai trò đã chọn" },
+        { status: 403 }
+      );
+    }
+
     // Create JWT
-    const token = await createAuthToken({ 
+    const token = await createAuthToken({
       userId: user.id, 
       email: user.email,
       role: user.role 

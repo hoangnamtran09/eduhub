@@ -30,3 +30,7 @@ export async function requireAdminOrTeacher() {
 export async function requireAdmin() {
   return requireRole(["ADMIN"]);
 }
+
+export async function requireTeacher() {
+  return requireRole(["TEACHER"]);
+}

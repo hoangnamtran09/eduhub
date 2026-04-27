@@ -49,6 +49,10 @@ model User {
   parent          User?            @relation("ParentChildren", fields: [parentId], references: [id])
   parentId        String?
 
+  teacherStudents User[]           @relation("TeacherStudents")
+  teacher         User?            @relation("TeacherStudents", fields: [teacherId], references: [id])
+  teacherId       String?
+
   aiConversations AICo[]
   enrollments     Enrollment[]
   progress        LessonProgress[]
@@ -60,6 +64,8 @@ model User {
   assignedTasks   AssignmentRecipient[]
   createdAssignments Assignment[]   @relation("AssignmentCreator")
   profile         StudentProfile?
+
+  @@index([teacherId, role])
 }
 
 model StudentProfile {

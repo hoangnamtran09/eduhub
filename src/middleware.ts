@@ -12,6 +12,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/auth") ||
     pathname === "/login" ||
+    pathname.startsWith("/login/") ||
     pathname === "/register" ||
     pathname.includes(".") // static files
   ) {
@@ -32,6 +33,12 @@ export async function middleware(request: NextRequest) {
     // Admin routes protection
     if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
       if (userRole !== "ADMIN") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
+
+    if (pathname.startsWith("/teacher") || pathname.startsWith("/api/teacher")) {
+      if (userRole !== "TEACHER") {
         return NextResponse.redirect(new URL("/", request.url));
       }
     }
