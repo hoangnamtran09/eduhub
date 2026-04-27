@@ -6,6 +6,8 @@ const aiBaseURL = process.env.BEEKNOEE_BASE_URL || "https://api.krouter.net/v1";
 const beeknoeeClient = new OpenAI({
   apiKey: process.env.BEEKNOEE_API_KEY!,
   baseURL: aiBaseURL,
+  timeout: 20_000,
+  maxRetries: 1,
 });
 
 

@@ -108,6 +108,12 @@ function getAssistantMessageVariant(content: string) {
   return questionSignals.some((signal) => normalized.includes(signal)) ? "question" : "theory";
 }
 
+function getChatErrorMessage(status: number) {
+  if (status === 401) return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục học.";
+  if (status === 429) return "AI Tutor đang nhận quá nhiều yêu cầu. Em thử lại sau khoảng một phút nhé.";
+  return "AI Tutor chưa phản hồi được. Em thử bấm bắt đầu lại sau vài giây nhé.";
+}
+
 type FilterTab = "all" | "file" | "question";
 
 const mathSymbols = [
@@ -766,20 +772,40 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (!response.ok) {
         setMessages((prev) => [
           ...prev,
           {
             id: (Date.now() + 1).toString(),
             role: "assistant",
-            content: data.message,
+            content: getChatErrorMessage(response.status),
             timestamp: new Date(),
           },
         ]);
+        return;
       }
+
+      const data = await response.json();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: data.message,
+          timestamp: new Date(),
+        },
+      ]);
     } catch (error) {
       console.error("Chat error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "AI Tutor đang phản hồi chậm. Em thử gửi lại sau vài giây nhé.",
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setSending(false);
     }
@@ -845,19 +871,37 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (!response.ok) {
         setMessages([
           {
             id: Date.now().toString(),
             role: "assistant",
-            content: data.message,
+            content: getChatErrorMessage(response.status),
             timestamp: new Date(),
           },
         ]);
+        return;
       }
+
+      const data = await response.json();
+      setMessages([
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: data.message,
+          timestamp: new Date(),
+        },
+      ]);
     } catch (error) {
       console.error("New chat error:", error);
+      setMessages([
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: "AI Tutor đang phản hồi chậm. Em thử bấm bắt đầu lại sau vài giây nhé.",
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setIsStarting(false);
     }
