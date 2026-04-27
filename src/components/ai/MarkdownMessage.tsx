@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Component, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -60,8 +60,29 @@ function sanitizeMathContent(value: string) {
   });
 }
 
+class MessageRenderBoundary extends Component<{ children: ReactNode; fallback: string }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error("Failed to render AI message:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <p className="whitespace-pre-wrap leading-6 text-current/95">{this.props.fallback}</p>;
+    }
+
+    return this.props.children;
+  }
+}
+
 export default function MarkdownMessage({ content, onQuizCorrect, onQuizAnswered }: MarkdownMessageProps) {
-  const safeContent = sanitizeMathContent(content);
+  const normalizedContent = typeof content === "string" ? content : String(content ?? "");
+  const safeContent = sanitizeMathContent(normalizedContent);
   // Regex to find :::quiz {json} :::
   const quizRegex = /:::quiz\s*(\{[\s\S]*?\})\s*:::/g;
   
@@ -107,40 +128,44 @@ export default function MarkdownMessage({ content, onQuizCorrect, onQuizAnswered
   // If no quiz blocks found, just render the whole thing as markdown
   if (parts.length === 0) {
     return (
-      <ReactMarkdown
-        remarkPlugins={[[remarkMath, remarkMathOptions]]}
-        rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}
-        components={markdownComponents}
-      >
-        {safeContent}
-      </ReactMarkdown>
+      <MessageRenderBoundary fallback={normalizedContent}>
+        <ReactMarkdown
+          remarkPlugins={[[remarkMath, remarkMathOptions]]}
+          rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}
+          components={markdownComponents}
+        >
+          {safeContent}
+        </ReactMarkdown>
+      </MessageRenderBoundary>
     );
   }
 
   return (
-    <div className="space-y-2">
-      {parts.map((part, index) => {
-        if (part.type === "quiz") {
+    <MessageRenderBoundary fallback={normalizedContent}>
+      <div className="space-y-2">
+        {parts.map((part, index) => {
+          if (part.type === "quiz") {
+            return (
+              <InteractiveQuiz
+                key={index}
+                data={part.data as any}
+                onCorrect={onQuizCorrect}
+                onAnswered={onQuizAnswered}
+              />
+            );
+          }
           return (
-            <InteractiveQuiz 
-              key={index} 
-              data={part.data as any} 
-              onCorrect={onQuizCorrect}
-              onAnswered={onQuizAnswered}
-            />
+            <ReactMarkdown
+              key={index}
+              remarkPlugins={[[remarkMath, remarkMathOptions]]}
+              rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}
+              components={markdownComponents}
+            >
+              {part.content as string}
+            </ReactMarkdown>
           );
-        }
-        return (
-          <ReactMarkdown
-            key={index}
-            remarkPlugins={[[remarkMath, remarkMathOptions]]}
-            rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}
-            components={markdownComponents}
-          >
-            {part.content as string}
-          </ReactMarkdown>
-        );
-      })}
-    </div>
+        })}
+      </div>
+    </MessageRenderBoundary>
   );
 }
