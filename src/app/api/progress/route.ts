@@ -43,30 +43,90 @@ export async function GET() {
 
     const prismaAny = prisma as any;
 
-    const [user, studySessions, quizAttempts, exerciseAttempts, assignmentRecipients] = await Promise.all([
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weeklyStart = new Date(startOfToday);
+    weeklyStart.setDate(startOfToday.getDate() - 6);
+
+    const [
+      user,
+      weeklyStudySessions,
+      totalStudyAggregate,
+      weeklyStudyAggregate,
+      quizScoreAggregate,
+      completedExercises,
+      recentExerciseAttempts,
+      recentQuizAttempts,
+      recentStudySessions,
+      assignmentRecipients,
+    ] = await Promise.all([
       prismaAny.user.findUnique({
         where: { id: authUser.userId },
         include: { profile: true },
       }),
       prismaAny.studySession.findMany({
+        where: {
+          userId: authUser.userId,
+          startedAt: { gte: weeklyStart },
+        },
+        select: {
+          startedAt: true,
+          durationSec: true,
+        },
+        orderBy: { startedAt: "desc" },
+      }),
+      prismaAny.studySession.aggregate({
         where: { userId: authUser.userId },
-        include: {
+        _sum: { durationSec: true },
+      }),
+      prismaAny.studySession.aggregate({
+        where: {
+          userId: authUser.userId,
+          startedAt: { gte: weeklyStart },
+        },
+        _sum: { durationSec: true },
+      }),
+      prismaAny.quizAttempt.aggregate({
+        where: { userId: authUser.userId },
+        _avg: { score: true },
+      }),
+      prismaAny.exerciseAttempt.count({
+        where: {
+          userId: authUser.userId,
+          score: { gte: 80 },
+        },
+      }),
+      prismaAny.exerciseAttempt.findMany({
+        where: { userId: authUser.userId },
+        select: {
+          score: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 3,
+      }),
+      prismaAny.quizAttempt.findMany({
+        where: { userId: authUser.userId },
+        select: {
+          score: true,
+          totalQuestions: true,
+          startedAt: true,
+        },
+        orderBy: { startedAt: "desc" },
+        take: 3,
+      }),
+      prismaAny.studySession.findMany({
+        where: { userId: authUser.userId },
+        select: {
+          startedAt: true,
           lesson: {
             select: {
-              id: true,
               title: true,
             },
           },
         },
         orderBy: { startedAt: "desc" },
-      }),
-      prismaAny.quizAttempt.findMany({
-        where: { userId: authUser.userId },
-        orderBy: { startedAt: "desc" },
-      }),
-      prismaAny.exerciseAttempt.findMany({
-        where: { userId: authUser.userId },
-        orderBy: { createdAt: "desc" },
+        take: 3,
       }),
       prismaAny.assignmentRecipient.findMany({
         where: {
@@ -89,16 +149,13 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
     const weeklyProgress = Array.from({ length: 7 }, (_, index) => {
       const date = new Date(startOfToday);
       date.setDate(startOfToday.getDate() - (6 - index));
       const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
       const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
 
-      const totalSeconds = (studySessions || [])
+      const totalSeconds = (weeklyStudySessions || [])
         .filter((session: any) => {
           const startedAt = new Date(session.startedAt);
           return startedAt >= dayStart && startedAt < dayEnd;
@@ -112,18 +169,9 @@ export async function GET() {
       };
     });
 
-    const totalStudySeconds = (studySessions || []).reduce((sum: number, session: any) => sum + (session.durationSec || 0), 0);
-    const weeklyStudySeconds = (studySessions || [])
-      .filter((session: any) => new Date(session.startedAt) >= new Date(startOfToday.getTime() - 6 * 24 * 60 * 60 * 1000))
-      .reduce((sum: number, session: any) => sum + (session.durationSec || 0), 0);
-
-    const avgQuizScore = quizAttempts?.length
-      ? quizAttempts.reduce((sum: number, attempt: any) => sum + (attempt.score || 0), 0) / quizAttempts.length
-      : 0;
-
-    const completedExercises = (exerciseAttempts || []).filter(
-      (attempt: any) => typeof attempt.score === "number" && attempt.score >= 80,
-    ).length;
+    const totalStudySeconds = totalStudyAggregate._sum.durationSec || 0;
+    const weeklyStudySeconds = weeklyStudyAggregate._sum.durationSec || 0;
+    const avgQuizScore = quizScoreAggregate._avg.score || 0;
     const pendingAssignments = assignmentRecipients.length;
     const overdueAssignments = assignmentRecipients.filter((recipient: any) => {
       if (!recipient.assignment?.dueDate) return false;
@@ -171,7 +219,7 @@ export async function GET() {
     }));
 
     const recentActivity = [
-      ...(exerciseAttempts || []).slice(0, 3).map((attempt: any) => ({
+      ...(recentExerciseAttempts || []).map((attempt: any) => ({
         type: "exercise",
         title: `Bài tập AI: ${attempt.score ?? 0}/100 điểm`,
         timestamp: new Date(attempt.createdAt).toISOString(),
@@ -179,7 +227,7 @@ export async function GET() {
         color: "text-brand-600",
         bgColor: "bg-brand-50",
       })),
-      ...(quizAttempts || []).slice(0, 3).map((attempt: any) => ({
+      ...(recentQuizAttempts || []).map((attempt: any) => ({
         type: "quiz",
         title: `Quiz: ${attempt.score}/${attempt.totalQuestions}`,
         timestamp: new Date(attempt.startedAt).toISOString(),
@@ -187,7 +235,7 @@ export async function GET() {
         color: "text-emerald-500",
         bgColor: "bg-emerald-50",
       })),
-      ...(studySessions || []).slice(0, 3).map((session: any) => ({
+      ...(recentStudySessions || []).map((session: any) => ({
         type: "study",
         title: `Học bài: ${session.lesson?.title || "Bài học"}`,
         timestamp: new Date(session.startedAt).toISOString(),
