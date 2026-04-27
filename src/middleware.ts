@@ -36,6 +36,12 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    if (pathname.startsWith("/courses") || pathname.startsWith("/learn")) {
+      if (userRole !== "STUDENT") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
+
     // Role-based dashboard protection
     return NextResponse.next();
   } catch (error) {
