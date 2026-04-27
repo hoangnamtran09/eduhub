@@ -231,9 +231,12 @@ export default function TeacherStudentsPage() {
                     <div className="text-sm text-gray-600">Cần củng cố: {student.profile.weaknesses.slice(0, 3).join(", ")}</div>
                   ) : null}
                   <div className="flex justify-between gap-2">
-                    <Button asChild variant="outline" className="gap-2">
-                      <Link href={`/teacher/students/${student.id}/report`}><Eye className="h-4 w-4" />Xem báo cáo</Link>
-                    </Button>
+                    <Link
+                      href={`/teacher/students/${student.id}/report`}
+                      className={buttonVariants({ variant: "outline", className: "gap-2" })}
+                    >
+                      <Eye className="h-4 w-4" />Xem báo cáo
+                    </Link>
                     <Button variant="outline" className="gap-2 text-red-600 hover:text-red-700" onClick={() => handleDelete(student)}>
                       <Trash2 className="h-4 w-4" />Xóa
                     </Button>

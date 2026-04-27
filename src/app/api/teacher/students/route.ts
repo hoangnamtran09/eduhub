@@ -44,7 +44,7 @@ async function getScopedParentIds(teacherId: string) {
     select: { parentId: true },
   });
 
-  return [...new Set(rows.map((row: { parentId: string | null }) => row.parentId).filter(Boolean))];
+  return Array.from(new Set(rows.map((row: { parentId: string | null }) => row.parentId).filter(Boolean)));
 }
 
 export async function GET() {
@@ -76,7 +76,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    const parentIds = [...new Set(students.map((student: { parentId: string | null }) => student.parentId).filter(Boolean))];
+    const parentIds = Array.from(new Set(students.map((student: { parentId: string | null }) => student.parentId).filter(Boolean)));
     const [parents, studyTimeRows] = await Promise.all([
       parentIds.length
         ? prismaAny.user.findMany({
