@@ -581,12 +581,14 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
     try {
       setHasExistingChatHistory(false);
 
-      const response = await fetch(`/api/courses/${params.subjectId}`, {
-        cache: "no-store",
-      });
+      const [courseResponse, lessonResponse, learningStateResponse] = await Promise.all([
+        fetch(`/api/courses/${params.subjectId}`, { cache: "no-store" }),
+        fetch(`/api/lessons/${params.lessonId}`, { cache: "no-store" }),
+        fetch(`/api/learning-state?lessonId=${params.lessonId}`, { cache: "no-store" }),
+      ]);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (courseResponse.ok) {
+        const data = await courseResponse.json();
         setSubject(data);
 
         const lesson = (data.lessons || []).find(
@@ -595,10 +597,6 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
         setCurrentLesson(lesson || null);
       }
-
-      const lessonResponse = await fetch(`/api/lessons/${params.lessonId}`, {
-        cache: "no-store",
-      });
 
       if (lessonResponse.ok) {
         const lessonData = await lessonResponse.json();
@@ -612,10 +610,6 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
       } else {
         setPdfUrl(null);
       }
-
-      const learningStateResponse = await fetch(`/api/learning-state?lessonId=${params.lessonId}`, {
-        cache: "no-store",
-      });
 
       if (learningStateResponse.ok) {
         const learningState = await learningStateResponse.json();
@@ -648,26 +642,6 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         } else {
           activeConversationIdRef.current = null;
           setMessages([]);
-        }
-      }
-
-      const chatResponse = await fetch(`/api/chat-history?lessonId=${params.lessonId}`, {
-        cache: "no-store",
-      });
-
-      if (chatResponse.ok) {
-        const chatData = await chatResponse.json();
-        if (!activeConversationIdRef.current && chatData.length > 0) {
-          const latestHistory = chatData[chatData.length - 1];
-          activeConversationIdRef.current = latestHistory.id;
-          if (latestHistory.messages) {
-            const loadedMessages = latestHistory.messages.map((m: any) => ({
-              ...m,
-              timestamp: new Date(m.timestamp || Date.now())
-            }));
-            setMessages(loadedMessages);
-            setHasExistingChatHistory(loadedMessages.length > 0);
-          }
         }
       }
     } catch (error) {

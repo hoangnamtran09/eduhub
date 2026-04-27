@@ -97,40 +97,20 @@ export function Sidebar() {
   useEffect(() => {
     if (!user || user.role === "ADMIN") return;
 
-    let cancelled = false;
-
-    const loadProgressSummary = async () => {
-      try {
-        const response = await fetch("/api/progress");
-        if (!response.ok) return;
-
-        const data = await response.json();
-        if (!cancelled) {
-          setStreakDays(Number(data?.stats?.streakDays || 0));
-        }
-      } catch (error) {
-        console.error("Failed to load streak summary:", error);
-      }
-    };
-
     const handleStudyProgressUpdated = (event: Event) => {
       const streakDays = (event as CustomEvent<{ streakDays?: number }>).detail?.streakDays;
       if (typeof streakDays === "number") {
         setStreakDays(streakDays);
       }
-
-      loadProgressSummary();
     };
 
     setStreakDays(Number(user.profile?.streakDays || 0));
-    loadProgressSummary();
     window.addEventListener("study-progress-updated", handleStudyProgressUpdated);
 
     return () => {
-      cancelled = true;
       window.removeEventListener("study-progress-updated", handleStudyProgressUpdated);
     };
-  }, [pathname, user]);
+  }, [user]);
 
   useEffect(() => {
     if (user?.role !== "ADMIN") return;
