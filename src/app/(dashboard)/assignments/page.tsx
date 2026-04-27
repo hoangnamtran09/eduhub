@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Image from "next/image";
-import { BookOpenCheck, Bot, CalendarClock, CheckCircle2, ClipboardList, Download, FileText, Loader2, RotateCcw, Search, Send, SlidersHorizontal, Upload } from "lucide-react";
+import { BookOpenCheck, Bot, CalendarClock, CheckCircle2, ChevronRight, ClipboardList, Download, FileText, Loader2, RotateCcw, Search, Send, SlidersHorizontal, Upload, UserRound } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,7 +59,55 @@ interface StudentAssignment {
   };
 }
 
+type ParentAssignmentStats = {
+  total: number;
+  pending: number;
+  accepted: number;
+  submitted: number;
+  reviewed: number;
+  returned: number;
+  overdue: number;
+  dueSoon: number;
+};
+
+type ParentAssignment = StudentAssignment & {
+  childId: string;
+  childName: string;
+  childEmail: string;
+  childGradeLevel: number | null;
+};
+
+type ParentAssignmentChild = {
+  id: string;
+  name: string;
+  email: string;
+  gradeLevel: number | null;
+  stats: ParentAssignmentStats;
+  assignments: ParentAssignment[];
+};
+
+type ParentAssignmentsResponse = {
+  role: "PARENT";
+  children: ParentAssignmentChild[];
+  summary: ParentAssignmentStats & {
+    totalChildren: number;
+    totalAssignments: number;
+  };
+};
+
+type ParentFilter = "priority" | "all" | "overdue" | "dueSoon" | "pending" | "submitted" | "reviewed" | "returned";
+
 export default function AssignmentsPage() {
+  const user = useAuthStore((state) => state.user);
+
+  if (user?.role === "PARENT") {
+    return <ParentAssignmentsView />;
+  }
+
+  return <StudentAssignmentsView />;
+}
+
+function StudentAssignmentsView() {
   const user = useAuthStore((state) => state.user);
   const [items, setItems] = useState<StudentAssignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -730,6 +778,338 @@ export default function AssignmentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function ParentAssignmentsView() {
+  const user = useAuthStore((state) => state.user);
+  const [data, setData] = useState<ParentAssignmentsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedChildId, setSelectedChildId] = useState("all");
+  const [filter, setFilter] = useState<ParentFilter>("priority");
+  const [selectedAssignment, setSelectedAssignment] = useState<ParentAssignment | null>(null);
+
+  const loadAssignments = useCallback(async () => {
+    if (!user?.id) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/assignments");
+      if (!response.ok) throw new Error("Failed to load parent assignments");
+      const responseData = await response.json();
+      setData(responseData);
+    } catch (error) {
+      console.error("Failed to load parent assignments:", error);
+      setError("Không tải được danh sách bài tập. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    loadAssignments();
+  }, [loadAssignments]);
+
+  const assignments = useMemo(() => data?.children.flatMap((child) => child.assignments) || [], [data]);
+
+  const filteredAssignments = useMemo(() => {
+    return assignments.filter((item) => {
+      const normalizedStatus = normalizeAssignmentStatus(item.status);
+      const childMatch = selectedChildId === "all" || item.childId === selectedChildId;
+      const isOverdue = isAssignmentOverdue(item.status, item.assignment.dueDate);
+      const isDueSoon = isParentAssignmentDueSoon(item);
+      const statusMatch = filter === "all"
+        || (filter === "priority" && (isOverdue || isDueSoon || normalizedStatus === "returned" || normalizedStatus === "assigned" || normalizedStatus === "accepted"))
+        || (filter === "overdue" && isOverdue)
+        || (filter === "dueSoon" && isDueSoon)
+        || (filter === "pending" && (normalizedStatus === "assigned" || normalizedStatus === "accepted"))
+        || (filter === "submitted" && normalizedStatus === "submitted")
+        || (filter === "reviewed" && normalizedStatus === "reviewed")
+        || (filter === "returned" && normalizedStatus === "returned");
+
+      return childMatch && statusMatch;
+    });
+  }, [assignments, filter, selectedChildId]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f2e8] px-6">
+        <div className="rounded-[2rem] border border-amber-200 bg-white px-6 py-8 text-center shadow-soft">
+          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-amber-600" />
+          <p className="font-semibold text-stone-700">Đang tải bài tập của con...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f7f2e8] text-stone-950">
+      <div className="sticky top-0 z-10 border-b border-stone-200 bg-[#f7f2e8]/95 px-4 pb-4 pt-5 backdrop-blur">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-amber-700">Phụ huynh</p>
+            <h1 className="mt-1 font-serif text-3xl font-bold tracking-tight">Bài tập của con</h1>
+            <p className="mt-1 max-w-xs text-sm leading-5 text-stone-600">Theo dõi hạn nộp, trạng thái và phản hồi giáo viên trong một màn hình.</p>
+          </div>
+          <div className="rounded-2xl bg-stone-950 px-3 py-2 text-right text-white shadow-lg shadow-stone-300">
+            <p className="text-2xl font-black leading-none">{data?.summary.totalChildren ?? 0}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-100">học sinh</p>
+          </div>
+        </div>
+      </div>
+
+      <main className="space-y-4 px-4 py-4">
+        {error && <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div>}
+
+        <div className="grid grid-cols-2 gap-3">
+          <ParentMetric label="Quá hạn" value={data?.summary.overdue ?? 0} tone="danger" onClick={() => setFilter("overdue")} />
+          <ParentMetric label="Sắp hạn" value={data?.summary.dueSoon ?? 0} tone="warn" onClick={() => setFilter("dueSoon")} />
+          <ParentMetric label="Chờ làm" value={(data?.summary.pending ?? 0) + (data?.summary.accepted ?? 0)} tone="ink" onClick={() => setFilter("pending")} />
+          <ParentMetric label="Cần sửa" value={data?.summary.returned ?? 0} tone="orange" onClick={() => setFilter("returned")} />
+        </div>
+
+        {!!data?.children.length && (
+          <div className="-mx-4 overflow-x-auto px-4 pb-1">
+            <div className="flex min-w-max gap-2">
+              <ParentChip active={selectedChildId === "all"} onClick={() => setSelectedChildId("all")}>Tất cả</ParentChip>
+              {data.children.map((child) => (
+                <ParentChip key={child.id} active={selectedChildId === child.id} onClick={() => setSelectedChildId(child.id)}>
+                  {child.name}
+                  {(child.stats.overdue + child.stats.dueSoon + child.stats.returned) > 0 && (
+                    <span className="ml-1 rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] text-white">{child.stats.overdue + child.stats.dueSoon + child.stats.returned}</span>
+                  )}
+                </ParentChip>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="-mx-4 overflow-x-auto px-4 pb-1">
+          <div className="flex min-w-max gap-2">
+            {([
+              ["priority", "Ưu tiên"],
+              ["all", "Tất cả"],
+              ["overdue", "Quá hạn"],
+              ["dueSoon", "Sắp hạn"],
+              ["pending", "Chờ làm"],
+              ["submitted", "Đã nộp"],
+              ["reviewed", "Đã chấm"],
+              ["returned", "Cần sửa"],
+            ] as Array<[ParentFilter, string]>).map(([value, label]) => (
+              <ParentChip key={value} active={filter === value} onClick={() => setFilter(value)}>{label}</ParentChip>
+            ))}
+          </div>
+        </div>
+
+        {!data?.children.length && (
+          <ParentEmpty icon={UserRound} title="Chưa có học sinh liên kết" body="Tài khoản phụ huynh này chưa được gán học sinh. Vui lòng liên hệ quản trị viên." />
+        )}
+
+        {!!data?.children.length && assignments.length === 0 && (
+          <ParentEmpty icon={ClipboardList} title="Chưa có bài tập nào" body="Khi giáo viên giao bài, danh sách sẽ hiển thị tại đây." />
+        )}
+
+        {assignments.length > 0 && filteredAssignments.length === 0 && (
+          <ParentEmpty icon={Search} title="Không có bài phù hợp" body="Thử đổi bộ lọc con hoặc trạng thái để xem thêm bài tập." />
+        )}
+
+        <div className="space-y-3">
+          {filteredAssignments.map((item) => (
+            <ParentAssignmentCard key={item.id} item={item} onOpen={() => setSelectedAssignment(item)} />
+          ))}
+        </div>
+      </main>
+
+      <Dialog open={!!selectedAssignment} onOpenChange={() => setSelectedAssignment(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-left font-serif text-2xl">{selectedAssignment?.assignment.title}</DialogTitle>
+          </DialogHeader>
+          {selectedAssignment && <ParentAssignmentDetail item={selectedAssignment} />}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedAssignment(null)} className="w-full rounded-2xl">Đóng</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function isParentAssignmentDueSoon(item: { status: AssignmentRecipientStatus; assignment: { dueDate: string | null } }) {
+  if (!item.assignment.dueDate || isAssignmentSubmitted(item.status)) return false;
+  const dueTime = new Date(item.assignment.dueDate).getTime();
+  const now = Date.now();
+  return dueTime >= now && dueTime <= now + 3 * 24 * 60 * 60 * 1000;
+}
+
+function getParentStatusLabel(item: ParentAssignment) {
+  const normalizedStatus = normalizeAssignmentStatus(item.status);
+  if (isAssignmentOverdue(item.status, item.assignment.dueDate)) return "Quá hạn";
+  if (isParentAssignmentDueSoon(item)) return "Sắp hạn";
+  if (normalizedStatus === "returned") return "Cần sửa";
+  if (normalizedStatus === "reviewed") return "Đã chấm";
+  if (normalizedStatus === "submitted") return "Đã nộp";
+  if (normalizedStatus === "accepted") return "Đang làm";
+  return "Chưa nhận";
+}
+
+function ParentMetric({ label, value, tone, onClick }: { label: string; value: number; tone: "danger" | "warn" | "ink" | "orange"; onClick: () => void }) {
+  const tones = {
+    danger: "bg-rose-600 text-white shadow-rose-200",
+    warn: "bg-amber-400 text-stone-950 shadow-amber-200",
+    ink: "bg-stone-950 text-white shadow-stone-300",
+    orange: "bg-orange-500 text-white shadow-orange-200",
+  };
+
+  return (
+    <button onClick={onClick} className={cn("rounded-[1.6rem] p-4 text-left shadow-lg transition active:scale-[0.98]", tones[tone])}>
+      <p className="text-3xl font-black leading-none">{value}</p>
+      <p className="mt-2 text-xs font-black uppercase tracking-wider opacity-85">{label}</p>
+    </button>
+  );
+}
+
+function ParentChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button onClick={onClick} className={cn(
+      "inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-bold transition active:scale-95",
+      active ? "border-stone-950 bg-stone-950 text-white" : "border-stone-200 bg-white text-stone-700 shadow-sm"
+    )}>
+      {children}
+    </button>
+  );
+}
+
+function ParentAssignmentCard({ item, onOpen }: { item: ParentAssignment; onOpen: () => void }) {
+  const label = getParentStatusLabel(item);
+  const urgent = label === "Quá hạn" || label === "Sắp hạn" || label === "Cần sửa";
+
+  return (
+    <button onClick={onOpen} className={cn(
+      "w-full rounded-[1.75rem] border bg-white p-4 text-left shadow-soft transition active:scale-[0.99]",
+      urgent ? "border-amber-300" : "border-stone-200"
+    )}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-wider text-stone-500">
+            <span>{item.childName}</span>
+            <span className="h-1 w-1 rounded-full bg-stone-300" />
+            <span>{item.assignment.lesson?.subject.name || "Bài tập"}</span>
+          </div>
+          <h2 className="mt-2 line-clamp-2 text-lg font-black leading-6 text-stone-950">{item.assignment.title}</h2>
+        </div>
+        <span className={cn(
+          "shrink-0 rounded-full px-3 py-1 text-xs font-black",
+          label === "Quá hạn" ? "bg-rose-100 text-rose-700" : label === "Sắp hạn" ? "bg-amber-100 text-amber-800" : label === "Cần sửa" ? "bg-orange-100 text-orange-700" : label === "Đã chấm" ? "bg-emerald-100 text-emerald-700" : "bg-stone-100 text-stone-700"
+        )}>{label}</span>
+      </div>
+
+      <div className="mt-4 space-y-2 text-sm text-stone-600">
+        <div className="flex items-center gap-2"><CalendarClock className="h-4 w-4 text-amber-700" />{item.assignment.dueDate ? new Date(item.assignment.dueDate).toLocaleString("vi-VN") : "Không có hạn nộp"}</div>
+        <div className="flex items-center gap-2"><BookOpenCheck className="h-4 w-4 text-amber-700" />{item.assignment.lesson?.title || "Chưa gắn bài học"}</div>
+      </div>
+
+      {(item.score != null || item.aiScore != null || item.feedback) && (
+        <div className="mt-4 rounded-2xl bg-stone-50 px-3 py-2 text-sm text-stone-700">
+          {item.score != null && <p className="font-bold">Điểm giáo viên: {item.score}/{item.assignment.maxScore}</p>}
+          {item.aiScore != null && <p className="font-bold">Điểm AI: {item.aiScore}/{item.assignment.maxScore}</p>}
+          {item.feedback && <p className="mt-1 line-clamp-2 text-xs leading-5 text-stone-500">{item.feedback}</p>}
+        </div>
+      )}
+
+      <div className="mt-4 flex items-center justify-between text-sm font-bold text-stone-950">
+        <span>Xem chi tiết</span>
+        <ChevronRight className="h-4 w-4" />
+      </div>
+    </button>
+  );
+}
+
+function ParentAssignmentDetail({ item }: { item: ParentAssignment }) {
+  return (
+    <div className="space-y-4 text-sm text-stone-700">
+      <div className="rounded-2xl bg-amber-50 px-4 py-3">
+        <p className="font-black text-stone-950">{item.childName}</p>
+        <p className="mt-1 text-xs text-stone-500">{item.childGradeLevel ? `Lớp ${item.childGradeLevel}` : item.childEmail}</p>
+      </div>
+
+      <div className="grid gap-2">
+        <MetaRow icon={CalendarClock} text={item.assignment.dueDate ? `Hạn nộp: ${new Date(item.assignment.dueDate).toLocaleString("vi-VN")}` : "Không có hạn nộp"} />
+        <MetaRow icon={BookOpenCheck} text={item.assignment.lesson ? `${item.assignment.lesson.subject.name} · ${item.assignment.lesson.title}` : "Bài tập tự do"} />
+      </div>
+
+      <div>
+        <p className="font-black text-stone-950">Mô tả</p>
+        <p className="mt-2 whitespace-pre-line leading-6">{item.assignment.description}</p>
+      </div>
+
+      {item.assignment.pdfUrl && (
+        <a href={item.assignment.pdfUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-2xl bg-stone-950 px-4 py-3 font-bold text-white">
+          <Download className="h-4 w-4" />
+          Mở đề bài
+        </a>
+      )}
+
+      {item.submissionText && (
+        <div className="rounded-2xl border border-stone-200 bg-white px-4 py-3">
+          <p className="font-black text-stone-950">Nội dung con đã nộp</p>
+          <p className="mt-2 whitespace-pre-line leading-6">{item.submissionText}</p>
+        </div>
+      )}
+
+      {!!item.submissionFiles?.length && (
+        <div className="rounded-2xl border border-stone-200 bg-white px-4 py-3">
+          <p className="font-black text-stone-950">File đã nộp</p>
+          <div className="mt-3 space-y-2">
+            {item.submissionFiles.map((file) => (
+              <a key={file.url} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 px-3 py-2 font-semibold text-stone-700">
+                <span className="truncate">{file.name}</span>
+                <FileText className="h-4 w-4 shrink-0" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(item.score != null || item.aiScore != null || item.feedback) && (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <p className="font-black text-emerald-950">Kết quả & phản hồi</p>
+          {item.score != null && <p className="mt-2 font-bold">Điểm giáo viên: {item.score}/{item.assignment.maxScore}</p>}
+          {item.aiScore != null && <p className="mt-1 font-bold">Điểm AI: {item.aiScore}/{item.assignment.maxScore}</p>}
+          {item.feedback && <p className="mt-2 whitespace-pre-line leading-6">{item.feedback}</p>}
+        </div>
+      )}
+
+      {!!item.feedbackEvents?.length && (
+        <div className="rounded-2xl border border-stone-200 bg-white px-4 py-3">
+          <p className="font-black text-stone-950">Lịch sử phản hồi</p>
+          <div className="mt-3 space-y-2">
+            {item.feedbackEvents.map((entry, index) => (
+              <div key={`${entry.createdAt}-${index}`} className="rounded-xl bg-stone-50 p-3 text-xs leading-5">
+                <div className="flex justify-between gap-2 font-bold text-stone-600">
+                  <span>{normalizeAssignmentStatus(entry.status) === "returned" ? "Trả bài sửa" : "Đã chấm"}</span>
+                  <span>{new Date(entry.createdAt).toLocaleString("vi-VN")}</span>
+                </div>
+                {entry.score != null && <p className="mt-1 font-semibold">Điểm: {entry.score}/{item.assignment.maxScore}</p>}
+                {entry.feedback && <p className="mt-1 whitespace-pre-line">{entry.feedback}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ParentEmpty({ icon: Icon, title, body }: { icon: any; title: string; body: string }) {
+  return (
+    <div className="rounded-[2rem] border border-dashed border-stone-300 bg-white px-6 py-12 text-center shadow-soft">
+      <Icon className="mx-auto mb-4 h-11 w-11 text-amber-600" />
+      <h2 className="text-xl font-black text-stone-900">{title}</h2>
+      <p className="mt-2 text-sm leading-6 text-stone-500">{body}</p>
     </div>
   );
 }
