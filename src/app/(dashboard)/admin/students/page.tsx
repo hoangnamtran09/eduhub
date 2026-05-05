@@ -34,9 +34,16 @@ interface ParentOption {
   children: { id: string }[];
 }
 
+interface TeacherOption {
+  id: string;
+  email: string;
+  fullName: string | null;
+}
+
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [parents, setParents] = useState<ParentOption[]>([]);
+  const [teachers, setTeachers] = useState<TeacherOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
@@ -49,6 +56,7 @@ export default function AdminStudentsPage() {
     password: "",
     gradeLevel: "6",
     parentId: "",
+    teacherId: "",
     createParent: false,
     parentFullName: "",
     parentEmail: "",
@@ -68,6 +76,7 @@ export default function AdminStudentsPage() {
       const data = await response.json();
       setStudents(Array.isArray(data?.students) ? data.students : []);
       setParents(Array.isArray(data?.parents) ? data.parents : []);
+      setTeachers(Array.isArray(data?.teachers) ? data.teachers : []);
     } catch (error) {
       console.error("Failed to fetch students:", error);
       setStudents([]);
@@ -117,6 +126,7 @@ export default function AdminStudentsPage() {
       password: "",
       gradeLevel: "6",
       parentId: "",
+      teacherId: "",
       createParent: false,
       parentFullName: "",
       parentEmail: "",
@@ -146,6 +156,7 @@ export default function AdminStudentsPage() {
           password: createFormState.password,
           gradeLevel: Number(createFormState.gradeLevel),
           parentId: createFormState.createParent ? null : createFormState.parentId || null,
+          teacherId: createFormState.teacherId || null,
           createParent: createFormState.createParent,
           parentFullName: createFormState.createParent ? createFormState.parentFullName : undefined,
           parentEmail: createFormState.createParent ? createFormState.parentEmail : undefined,
@@ -341,6 +352,9 @@ export default function AdminStudentsPage() {
                               Chưa liên kết
                             </span>
                           )}
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 font-semibold text-slate-700">
+                            Giáo viên: {student.teacher?.fullName || student.teacher?.email || "Chưa gán"}
+                          </span>
                         </div>
                         <p className="mt-2 text-xs text-slate-600">
                           Thời gian học đã ghi nhận: <span className="font-semibold text-slate-900">{formatStudyTime(totalStudySeconds)}</span>
@@ -506,6 +520,31 @@ export default function AdminStudentsPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <Card className="border-slate-200 bg-white shadow-none">
+                  <CardContent className="space-y-5 p-5">
+                    <SectionTitle icon={Link2} title="Liên kết giáo viên" />
+                    <Field label="Tài khoản giáo viên">
+                      <select
+                        value={form.teacherId}
+                        onChange={(event) => setForm((current) => current ? { ...current, teacherId: event.target.value } : current)}
+                        className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                      >
+                        <option value="">Chưa gán giáo viên</option>
+                        {teachers.map((teacher) => (
+                          <option key={teacher.id} value={teacher.id}>
+                            {teacher.fullName || teacher.email}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                      {form.teacherId
+                        ? `Tài khoản đang chọn: ${teachers.find((t) => t.id === form.teacherId)?.fullName || teachers.find((t) => t.id === form.teacherId)?.email || "Không xác định"}`
+                        : "Chọn một tài khoản giáo viên để giáo viên có thể quản lý và theo dõi học sinh này."}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
@@ -601,6 +640,21 @@ export default function AdminStudentsPage() {
                   </select>
                 </Field>
               </div>
+
+              <Field label="Tài khoản giáo viên">
+                  <select
+                    value={createFormState.teacherId}
+                    onChange={(event) => setCreateFormState((current) => ({ ...current, teacherId: event.target.value }))}
+                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                  >
+                    <option value="">Chưa gán giáo viên</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {teacher.fullName || teacher.email}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <label className="flex items-start gap-3 text-sm text-slate-700">

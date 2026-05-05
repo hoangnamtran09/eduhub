@@ -4,6 +4,12 @@ export interface ParentSummary {
   fullName: string | null;
 }
 
+export interface TeacherSummary {
+  id: string;
+  email: string;
+  fullName: string | null;
+}
+
 export interface StudentProfile {
   goals: string[];
   strengths: string[];
@@ -32,6 +38,8 @@ export interface StudentRecord {
   createdAt: string;
   parentId: string | null;
   parent: ParentSummary | null;
+  teacherId: string | null;
+  teacher: TeacherSummary | null;
   profile: StudentProfile | null;
   totalStudySeconds?: number;
   studySessions?: StudySessionRecord[];
@@ -45,6 +53,7 @@ export interface StudentForm {
   gradeLevel: string;
   diamonds: string;
   parentId: string;
+  teacherId: string;
   goals: string;
   strengths: string;
   weaknesses: string;
@@ -69,6 +78,7 @@ export function createForm(student: StudentRecord): StudentForm {
     gradeLevel: student.gradeLevel ? String(student.gradeLevel) : "6",
     diamonds: String(student.diamonds ?? 0),
     parentId: student.parentId || "",
+    teacherId: student.teacherId || "",
     goals: toLineValue(student.profile?.goals),
     strengths: toLineValue(student.profile?.strengths),
     weaknesses: toLineValue(student.profile?.weaknesses),

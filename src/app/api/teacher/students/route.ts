@@ -34,17 +34,13 @@ const createStudentSchema = z.object({
   weaknesses: z.array(z.string().trim().min(1).max(120)).optional(),
 });
 
-async function getScopedParentIds(teacherId: string) {
+async function getAllParents() {
   const rows = await (prisma as any).user.findMany({
-    where: {
-      role: "STUDENT",
-      teacherId,
-      parentId: { not: null },
-    },
-    select: { parentId: true },
+    where: { role: "PARENT" },
+    select: { id: true, email: true, fullName: true },
+    orderBy: [{ fullName: "asc" }, { email: "asc" }],
   });
-
-  return Array.from(new Set(rows.map((row: { parentId: string | null }) => row.parentId).filter(Boolean)));
+  return rows;
 }
 
 export async function GET() {
@@ -76,23 +72,8 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    const parentIds = Array.from(new Set(students.map((student: { parentId: string | null }) => student.parentId).filter(Boolean)));
     const [parents, studyTimeRows] = await Promise.all([
-      parentIds.length
-        ? prismaAny.user.findMany({
-            where: { id: { in: parentIds }, role: "PARENT" },
-            select: {
-              id: true,
-              email: true,
-              fullName: true,
-              children: {
-                where: { role: "STUDENT", teacherId },
-                select: { id: true },
-              },
-            },
-            orderBy: [{ fullName: "asc" }, { email: "asc" }],
-          })
-        : Promise.resolve([]),
+      getAllParents(),
       students.length
         ? prismaAny.studySession.groupBy({
             by: ["userId"],
@@ -156,8 +137,11 @@ export async function POST(request: Request) {
     }
 
     if (normalizedParentId) {
-      const scopedParentIds = await getScopedParentIds(teacherId);
-      if (!scopedParentIds.includes(normalizedParentId)) {
+      const parentAccount = await prismaAny.user.findFirst({
+        where: { id: normalizedParentId, role: "PARENT" },
+        select: { id: true },
+      });
+      if (!parentAccount) {
         return NextResponse.json({ error: "Parent account not found" }, { status: 404 });
       }
     }
@@ -176,15 +160,7 @@ export async function POST(request: Request) {
             role: "PARENT",
             passwordHash: parentPasswordHash,
           },
-          select: {
-            id: true,
-            email: true,
-            fullName: true,
-            children: {
-              where: { role: "STUDENT", teacherId },
-              select: { id: true },
-            },
-          },
+          select: { id: true, email: true, fullName: true },
         });
         normalizedParentId = createdParent.id;
       }
@@ -250,8 +226,11 @@ export async function PUT(request: Request) {
 
     const normalizedParentId = parentId?.trim() || null;
     if (normalizedParentId) {
-      const scopedParentIds = await getScopedParentIds(teacherId);
-      if (!scopedParentIds.includes(normalizedParentId)) {
+      const parentAccount = await prismaAny.user.findFirst({
+        where: { id: normalizedParentId, role: "PARENT" },
+        select: { id: true },
+      });
+      if (!parentAccount) {
         return NextResponse.json({ error: "Parent account not found" }, { status: 404 });
       }
     }

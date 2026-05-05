@@ -15,6 +15,7 @@ const updateStudentSchema = z.object({
   gradeLevel: z.coerce.number().int().min(1).max(12),
   diamonds: z.coerce.number().int().min(0).max(1_000_000).optional(),
   parentId: z.string().trim().optional().nullable(),
+  teacherId: z.string().trim().optional().nullable(),
   goals: z.array(z.string().trim().min(1).max(120)).optional(),
   strengths: z.array(z.string().trim().min(1).max(120)).optional(),
   weaknesses: z.array(z.string().trim().min(1).max(120)).optional(),
@@ -26,6 +27,7 @@ const createStudentSchema = z.object({
   fullName: z.string().trim().min(1).max(120),
   gradeLevel: z.coerce.number().int().min(1).max(12),
   parentId: z.string().trim().optional().nullable(),
+  teacherId: z.string().trim().optional().nullable(),
   createParent: z.boolean().optional(),
   parentEmail: z.string().trim().email().optional().or(z.literal("")),
   parentPassword: z.string().min(8).max(128).optional().or(z.literal("")),
@@ -41,7 +43,7 @@ export async function GET() {
 
   try {
     const prismaAny = prisma as any;
-    const [students, parents] = await Promise.all([
+    const [students, parents, teachers] = await Promise.all([
       prismaAny.user.findMany({
         where: { role: "STUDENT" },
         select: {
@@ -52,7 +54,15 @@ export async function GET() {
           diamonds: true,
           createdAt: true,
           parentId: true,
+          teacherId: true,
           parent: {
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+            },
+          },
+          teacher: {
             select: {
               id: true,
               email: true,
@@ -78,6 +88,11 @@ export async function GET() {
             },
           },
         },
+        orderBy: [{ fullName: "asc" }, { email: "asc" }],
+      }),
+      prismaAny.user.findMany({
+        where: { role: "TEACHER" },
+        select: { id: true, email: true, fullName: true },
         orderBy: [{ fullName: "asc" }, { email: "asc" }],
       }),
     ]);
@@ -106,6 +121,7 @@ export async function GET() {
         totalStudySeconds: studyTimeByStudent.get(student.id) || 0,
       })),
       parents,
+      teachers,
     });
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -138,6 +154,7 @@ export async function POST(request: Request) {
       fullName,
       gradeLevel,
       parentId,
+      teacherId,
       createParent,
       parentEmail,
       parentPassword,
@@ -148,6 +165,7 @@ export async function POST(request: Request) {
     } = parsed.data;
     const prismaAny = prisma as any;
     let normalizedParentId = parentId?.trim() || null;
+    const normalizedTeacherId = teacherId?.trim() || null;
 
     if (createParent) {
       if (!parentEmail?.trim() || !parentPassword) {
@@ -171,6 +189,16 @@ export async function POST(request: Request) {
 
       if (!parentAccount) {
         return NextResponse.json({ error: "Parent account not found" }, { status: 404 });
+      }
+    }
+
+    if (normalizedTeacherId) {
+      const teacherAccount = await prismaAny.user.findFirst({
+        where: { id: normalizedTeacherId, role: "TEACHER" },
+        select: { id: true },
+      });
+      if (!teacherAccount) {
+        return NextResponse.json({ error: "Teacher account not found" }, { status: 404 });
       }
     }
 
@@ -208,6 +236,7 @@ export async function POST(request: Request) {
           role: "STUDENT",
           gradeLevel,
           parentId: normalizedParentId,
+          teacherId: normalizedTeacherId,
           passwordHash: studentPasswordHash,
           profile: {
             create: {
@@ -219,6 +248,13 @@ export async function POST(request: Request) {
         },
         include: {
           parent: {
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+            },
+          },
+          teacher: {
             select: {
               id: true,
               email: true,
@@ -280,7 +316,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { id, email, fullName, gradeLevel, diamonds, parentId, goals, strengths, weaknesses } = parsed.data;
+    const { id, email, fullName, gradeLevel, diamonds, parentId, teacherId, goals, strengths, weaknesses } = parsed.data;
 
     if (!id || !email.trim()) {
       return NextResponse.json({ error: "Missing student id or email" }, { status: 400 });
@@ -289,6 +325,7 @@ export async function PUT(request: Request) {
     const prismaAny = prisma as any;
 
     const normalizedParentId = parentId?.trim() || null;
+    const normalizedTeacherId = teacherId?.trim() || null;
 
     if (normalizedParentId) {
       const parentAccount = await prismaAny.user.findFirst({
@@ -304,6 +341,16 @@ export async function PUT(request: Request) {
       }
     }
 
+    if (normalizedTeacherId) {
+      const teacherAccount = await prismaAny.user.findFirst({
+        where: { id: normalizedTeacherId, role: "TEACHER" },
+        select: { id: true },
+      });
+      if (!teacherAccount) {
+        return NextResponse.json({ error: "Teacher account not found" }, { status: 404 });
+      }
+    }
+
     const updatedStudent = await prismaAny.user.update({
       where: { id },
       data: {
@@ -312,6 +359,7 @@ export async function PUT(request: Request) {
         gradeLevel: gradeLevel ? Number(gradeLevel) : null,
         diamonds: Number.isFinite(Number(diamonds)) ? Number(diamonds) : 0,
         parentId: normalizedParentId,
+        teacherId: normalizedTeacherId,
         profile: {
           upsert: {
             create: {
@@ -329,6 +377,13 @@ export async function PUT(request: Request) {
       },
       include: {
         parent: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
+        teacher: {
           select: {
             id: true,
             email: true,
