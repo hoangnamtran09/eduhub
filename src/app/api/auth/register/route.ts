@@ -14,19 +14,10 @@ export async function POST(request: Request) {
     const normalizedEmail = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     const password = body?.password;
     const fullName = typeof body?.fullName === "string" ? body.fullName.trim() : "";
-    const role = body?.role === "PARENT" ? "PARENT" : "STUDENT";
-    const gradeLevel = role === "STUDENT" ? Number(body.gradeLevel) : null;
 
     if (!normalizedEmail || !password || !fullName) {
       return NextResponse.json(
         { error: "Vui lòng điền đầy đủ thông tin" },
-        { status: 400 }
-      );
-    }
-
-    if (role === "STUDENT" && (!Number.isInteger(gradeLevel) || (gradeLevel as number) < 1 || (gradeLevel as number) > 12)) {
-      return NextResponse.json(
-        { error: "Vui lòng chọn lớp" },
         { status: 400 }
       );
     }
@@ -46,19 +37,10 @@ export async function POST(request: Request) {
       data: {
         email: normalizedEmail,
         fullName,
-        role,
-        gradeLevel,
+        role: "PARENT",
         passwordHash: await hashPassword(password),
       },
     });
-
-    if (user.role === "STUDENT") {
-      await prisma.studentProfile.create({
-        data: {
-          userId: user.id,
-        },
-      });
-    }
 
     const token = await createAuthToken({
       userId: user.id,

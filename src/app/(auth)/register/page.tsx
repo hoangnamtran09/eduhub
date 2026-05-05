@@ -7,8 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { GraduationCap, Mail, Lock, User, Eye, EyeOff, Check, UserCircle, Users } from "lucide-react";
-import { UserRole } from "@/types";
+import { GraduationCap, Mail, Lock, User, Eye, EyeOff, Check, Users } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 
 export default function RegisterPage() {
@@ -16,11 +15,9 @@ export default function RegisterPage() {
   const setUser = useAuthStore((state) => state.setUser);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("STUDENT");
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    gradeLevel: "6",
     password: "",
     confirmPassword: "",
   });
@@ -53,9 +50,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           fullName: formData.fullName,
           email: formData.email,
-          gradeLevel: Number(formData.gradeLevel),
           password: formData.password,
-          role: selectedRole,
         }),
       });
 
@@ -105,41 +100,9 @@ export default function RegisterPage() {
           </CardHeader>
 
           <CardContent className="space-y-6 pt-4">
-            {/* Role Selection */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setSelectedRole("STUDENT")}
-                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
-                  selectedRole === "STUDENT"
-                    ? "border-blue-600 bg-blue-50 text-blue-700"
-                    : "border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200"
-                }`}
-              >
-                <UserCircle className="w-6 h-6" />
-                <span className="text-xs font-bold">Học sinh</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedRole("PARENT")}
-                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
-                  selectedRole === "PARENT"
-                    ? "border-blue-600 bg-blue-50 text-blue-700"
-                    : "border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200"
-                }`}
-              >
-                <Users className="w-6 h-6" />
-                <span className="text-xs font-bold">Phụ huynh</span>
-              </button>
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-100" />
-              </div>
-              <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
-                <span className="bg-white px-3 text-slate-400">Thông tin cá nhân</span>
-              </div>
+            <div className="flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-sm text-blue-700">
+              <Users className="h-5 w-5 shrink-0" />
+              <span>Sau khi đăng ký, bạn có thể tạo tài khoản cho con trong bảng điều hành. Mỗi tài khoản con sẽ được tự động liên kết với bạn.</span>
             </div>
 
             {/* Register Form */}
@@ -172,27 +135,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {selectedRole === "STUDENT" && (
-                <div className="space-y-1.5">
-                  <select
-                    value={formData.gradeLevel}
-                    onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
-                    className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
-                    required
-                  >
-                    {Array.from({ length: 12 }, (_, index) => index + 1).map((grade) => (
-                      <option key={grade} value={grade}>Lớp {grade}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {selectedRole === "PARENT" && (
-                <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-sm text-blue-700">
-                  Bạn sẽ tạo tài khoản cho con sau khi đăng ký. Mỗi tài khoản con sẽ được tự động liên kết với bạn.
-                </div>
-              )}
-
               <div className="space-y-1.5">
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -216,7 +158,7 @@ export default function RegisterPage() {
                 {/* Password Requirements */}
                 <div className="grid grid-cols-1 gap-1 px-1">
                   {passwordRequirements.map((req, index) => (
-                    <div key={index} className="flex items-center gap-2 text-[10px] font-medium">
+                    <div key={index} className="flex items-center gap-2 text-xs font-medium">
                       <Check
                         className={`w-3 h-3 ${req.met ? "text-emerald-500" : "text-slate-300"}`}
                       />
@@ -257,7 +199,7 @@ export default function RegisterPage() {
         </Card>
 
         {/* Terms */}
-        <p className="mt-6 text-[11px] text-center text-slate-400 font-medium leading-relaxed">
+        <p className="mt-6 text-xs text-center text-slate-400 font-medium leading-relaxed">
           Bằng việc đăng ký, bạn đồng ý với{" "}
           <Link href="/terms" className="text-slate-600 hover:text-blue-600 underline underline-offset-2">
             Điều khoản sử dụng
