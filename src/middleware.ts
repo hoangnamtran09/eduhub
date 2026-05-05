@@ -43,14 +43,29 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    if (pathname.startsWith("/courses") || pathname.startsWith("/learn")) {
+    // Student-only routes
+    if (
+      pathname.startsWith("/courses") ||
+      pathname.startsWith("/learn") ||
+      pathname.startsWith("/progress") ||
+      pathname.startsWith("/roadmap") ||
+      pathname.startsWith("/mistakes")
+    ) {
       if (userRole !== "STUDENT") {
         return NextResponse.redirect(new URL("/", request.url));
       }
     }
 
+    // Parent-only routes
     if (pathname.startsWith("/child")) {
       if (userRole !== "PARENT") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
+
+    // Shared routes: STUDENT or PARENT
+    if (pathname.startsWith("/assignments")) {
+      if (userRole !== "STUDENT" && userRole !== "PARENT") {
         return NextResponse.redirect(new URL("/", request.url));
       }
     }
