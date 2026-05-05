@@ -6,10 +6,17 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from "lucide-react";
+import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, Copy, Check } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { GoogleLoginErrorToast } from "@/components/auth/google-login-error-toast";
 import type { UserRole } from "@/types";
+
+const DEMO_ACCOUNTS: Record<string, { email: string; password: string; label: string }> = {
+  ADMIN: { email: "admin@eduself.local", password: "Admin@123456", label: "Admin" },
+  TEACHER: { email: "teacher.demo@eduself.local", password: "Teacher@123456", label: "Giáo viên" },
+  STUDENT: { email: "student.demo@eduself.local", password: "Student@123456", label: "Học sinh" },
+  PARENT: { email: "parent.demo@eduself.local", password: "Parent@123456", label: "Phụ huynh" },
+};
 
 type RoleLoginFormProps = {
   role: UserRole;
@@ -41,6 +48,15 @@ function RoleLoginFormContent({ role, title, description, showGoogleLogin }: Rol
     email: "",
     password: "",
   });
+  const [filledRole, setFilledRole] = useState<string | null>(null);
+
+  const handleDemoFill = () => {
+    const account = DEMO_ACCOUNTS[role];
+    if (!account) return;
+    setFormData({ email: account.email, password: account.password });
+    setFilledRole(role);
+    setTimeout(() => setFilledRole(null), 2000);
+  };
 
   const callbackUrl = searchParams.get("callbackUrl");
   const safeCallbackUrl = callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : null;
@@ -243,11 +259,27 @@ function RoleLoginFormContent({ role, title, description, showGoogleLogin }: Rol
             </Link>
           </p>
 
-          <div className="mt-6 p-4 bg-ink-50 rounded-xl border border-ink-200/50">
-            <p className="text-sm text-center text-ink-500">
-              <span className="font-semibold text-ink-700">Demo:</span> Sử dụng tài khoản demo để trải nghiệm
-            </p>
-          </div>
+          {DEMO_ACCOUNTS[role] && (
+            <div className="mt-6 p-4 bg-ink-50 rounded-xl border border-ink-200/50 space-y-3">
+              <p className="text-sm text-center text-ink-500">
+                <span className="font-semibold text-ink-700">Demo:</span> Dùng tài khoản có sẵn để trải nghiệm
+              </p>
+              <button
+                type="button"
+                onClick={handleDemoFill}
+                className="w-full flex items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2.5 text-sm font-medium text-brand-700 transition-all hover:bg-brand-100 hover:border-brand-300 active:scale-[0.98]"
+              >
+                {filledRole === role ? (
+                  <Check className="w-4 h-4 text-emerald-600" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+                {filledRole === role
+                  ? "Đã điền tài khoản demo"
+                  : `Điền tài khoản ${DEMO_ACCOUNTS[role].label}`}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
