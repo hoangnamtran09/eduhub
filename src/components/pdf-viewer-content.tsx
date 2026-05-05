@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Viewer, Worker, type DocumentLoadEvent, type PageChangeEvent } from "@react-pdf-viewer/core";
 import { pageNavigationPlugin } from "@react-pdf-viewer/page-navigation";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import "@react-pdf-viewer/core/lib/styles/index.css";
 import { Button } from "@/components/ui/button";
 
 interface PDFViewerContentProps {
