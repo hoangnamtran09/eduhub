@@ -66,6 +66,7 @@ model User {
   profile         StudentProfile?
 
   @@index([teacherId, role])
+  @@index([parentId])
 }
 
 model StudentProfile {
@@ -123,6 +124,8 @@ model Course {
   Chapter     Chapter[]
   enrollments Enrollment[]
   subject     Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([subjectId])
 }
 
 model Lesson {
@@ -169,6 +172,8 @@ model Assignment {
   createdBy        User?                 @relation("AssignmentCreator", fields: [createdById], references: [id], onDelete: SetNull)
   lesson           Lesson?               @relation(fields: [lessonId], references: [id], onDelete: SetNull)
   recipients       AssignmentRecipient[]
+
+  @@index([createdById])
 }
 
 model AssignmentRecipient {
@@ -241,6 +246,9 @@ model QuizAttempt {
   completedAt    DateTime?
   quiz           Quiz      @relation(fields: [quizId], references: [id])
   user           User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, startedAt])
+  @@index([quizId])
 }
 
 model LessonProgress {
@@ -310,6 +318,9 @@ model ExerciseAttempt {
   score         Int?     // 0-100
   diamondsEarned Int     @default(0)
   createdAt     DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([lessonId])
 }
 
 model LessonWeakness {
@@ -365,6 +376,8 @@ model DiagnosticQuiz {
   gradeLevel Int
   questions  Json
   createdAt  DateTime @default(now())
+
+  @@index([subjectId])
 }
 
 model DiagnosticAttempt {
@@ -375,6 +388,9 @@ model DiagnosticAttempt {
   score      Int
   weakTopics String[]
   createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([subjectId])
 }
 
 model Chapter {
@@ -386,6 +402,8 @@ model Chapter {
   updatedAt DateTime @updatedAt
   Course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   Lesson    Lesson[]
+
+  @@index([courseId])
 }
 
 model StudySession {

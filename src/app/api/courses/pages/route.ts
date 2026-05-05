@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,11 +35,16 @@ export async function GET(request: NextRequest) {
         ]
       : [];
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       totalPages: pages.length,
       pages,
     });
+    res.headers.set(
+      "Cache-Control",
+      "public, s-maxage=300, stale-while-revalidate=3600"
+    );
+    return res;
   } catch (error) {
     console.error("Error fetching PDF pages:", error);
     return NextResponse.json(

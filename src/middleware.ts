@@ -28,7 +28,9 @@ export async function middleware(request: NextRequest) {
 
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
+    const userId = payload.userId as string;
     const userRole = payload.role as string;
+    const userEmail = payload.email as string | undefined;
 
     // Admin routes protection
     if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
@@ -70,8 +72,18 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Role-based dashboard protection
-    return NextResponse.next();
+    // Inject user context into request headers so route handlers
+    // can read auth info without re-verifying the JWT
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-user-id", userId);
+    requestHeaders.set("x-user-role", userRole);
+    if (userEmail) {
+      requestHeaders.set("x-user-email", userEmail);
+    }
+
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   } catch (error) {
     // Invalid token
     const url = new URL("/login", request.url);

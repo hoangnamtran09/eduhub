@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -16,7 +14,6 @@ export async function GET() {
       orderBy: { createdAt: "asc" },
     });
 
-    // Transform to include statistics
     const subjectsWithStats = subjects.map((subject: any) => {
       const totalLessons = subject.lessons?.length || 0;
 
@@ -31,7 +28,12 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(subjectsWithStats);
+    const response = NextResponse.json(subjectsWithStats);
+    response.headers.set(
+      "Cache-Control",
+      "public, s-maxage=300, stale-while-revalidate=3600"
+    );
+    return response;
   } catch (error) {
     console.error("Error fetching subjects:", error);
     return NextResponse.json(

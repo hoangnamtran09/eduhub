@@ -3,7 +3,6 @@ import { PrismaClient } from "@prisma/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -94,7 +93,12 @@ export async function GET(request: Request) {
         },
       };
 
-      return NextResponse.json(response);
+      const res = NextResponse.json(response);
+      res.headers.set(
+        "Cache-Control",
+        "public, s-maxage=300, stale-while-revalidate=3600"
+      );
+      return res;
     }
 
     // If looking for subject by slug
@@ -171,7 +175,12 @@ export async function GET(request: Request) {
         ),
       };
 
-      return NextResponse.json(response);
+      const res = NextResponse.json(response);
+      res.headers.set(
+        "Cache-Control",
+        "public, s-maxage=300, stale-while-revalidate=3600"
+      );
+      return res;
     }
 
     return NextResponse.json({ error: "Missing subject or lesson parameter" }, { status: 400 });

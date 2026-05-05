@@ -83,7 +83,12 @@ export async function GET(request: Request, { params }: RouteParams) {
       },
     };
 
-    return NextResponse.json(response);
+    const res = NextResponse.json(response);
+    res.headers.set(
+      "Cache-Control",
+      "public, s-maxage=300, stale-while-revalidate=3600"
+    );
+    return res;
   } catch (error) {
     console.error("Error fetching lesson:", error);
     return NextResponse.json(
