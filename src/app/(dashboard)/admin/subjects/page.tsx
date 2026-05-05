@@ -191,13 +191,18 @@ export default function AdminSubjectsPage() {
       const res = await fetch(`/api/admin/subjects?id=${id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        alert(data?.error || "Không thể xóa môn học");
+        const detail = data?.details ? `
+
+Chi tiết: ${data.details}` : "";
+        const code = data?.code ? ` [${data.code}]` : "";
+        alert((data?.error || "Không thể xóa môn học") + code + detail);
         return;
       }
 
       loadSubjects();
     } catch (err) {
       console.error("Failed to delete subject:", err);
+      alert("Lỗi kết nối: " + (err instanceof Error ? err.message : String(err)));
     }
   };
 

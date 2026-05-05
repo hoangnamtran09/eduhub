@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { generateSlug } from "@/lib/slug";
@@ -19,15 +18,6 @@ const subjectMutationSchema = z.object({
   color: z.string().trim().max(40).optional().nullable(),
   gradeLevel: z.coerce.number().int().min(1).max(12).optional().nullable(),
 });
-
-async function tableExists(tx: any, tableName: string) {
-  const result = await tx.$queryRawUnsafe(
-    "SELECT to_regclass($1) IS NOT NULL AS exists",
-    `public."${tableName}"`,
-  ) as Array<{ exists: boolean }>;
-
-  return Boolean(result[0]?.exists);
-}
 
 export async function GET() {
   const authorization = await requireAdminOrTeacher();
@@ -79,12 +69,11 @@ export async function POST(request: Request) {
     const { name, slug, description, icon, color, gradeLevel } = parsed.data;
 
     const baseSlug = slug || generateSlug(name);
-    // Ensure slug is unique by appending timestamp if it already exists
     const prismaAny = prisma as any;
     const existingSubject = await prismaAny.subject.findUnique({
       where: { slug: baseSlug },
     });
-    
+
     const finalSlug = existingSubject ? `${baseSlug}-${Date.now()}` : baseSlug;
 
     const subject = await prismaAny.subject.create({
@@ -115,7 +104,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error creating subject:", error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to create subject",
         details: error instanceof Error ? error.message : String(error)
       },
@@ -224,141 +213,120 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const prismaAny = prisma as any;
+    const tx: any = prisma;
 
-    await prismaAny.$transaction(async (tx: any) => {
-      const [lessons, courses] = await Promise.all([
-        tx.lesson.findMany({
-          where: { subjectId: id },
-          select: { id: true },
-        }),
-        tx.course.findMany({
-          where: { subjectId: id },
-          select: { id: true },
-        }),
-      ]);
-
-      const lessonIds = lessons.map((lesson: { id: string }) => lesson.id);
-      const courseIds = courses.map((course: { id: string }) => course.id);
-
-      if (lessonIds.length) {
-        if (await tableExists(tx, "ChatHistory")) {
-          await tx.$executeRaw`DELETE FROM "ChatHistory" WHERE "lessonId" IN (${Prisma.join(lessonIds)})`;
-        }
-
-        const recipients = await tx.assignmentRecipient.findMany({
-          where: {
-            assignment: {
-              lessonId: { in: lessonIds },
-            },
-          },
-          select: { id: true },
-        });
-        const recipientIds = recipients.map((recipient: { id: string }) => recipient.id);
-
-        if (recipientIds.length) {
-          await tx.assignmentFeedbackEvent.deleteMany({
-            where: { recipientId: { in: recipientIds } },
-          });
-          await tx.assignmentRecipient.deleteMany({
-            where: { id: { in: recipientIds } },
-          });
-        }
-
-        const quizzes = await tx.quiz.findMany({
-          where: { lessonId: { in: lessonIds } },
-          select: { id: true },
-        });
-        const quizIds = quizzes.map((quiz: { id: string }) => quiz.id);
-
-        if (quizIds.length) {
-          await tx.quizAttempt.deleteMany({
-            where: { quizId: { in: quizIds } },
-          });
-          await tx.quizQuestion.deleteMany({
-            where: { quizId: { in: quizIds } },
-          });
-          await tx.quiz.deleteMany({
-            where: { id: { in: quizIds } },
-          });
-        }
-
-        const weaknesses = await tx.lessonWeakness.findMany({
-          where: { lessonId: { in: lessonIds } },
-          select: { id: true },
-        });
-        const weaknessIds = weaknesses.map((weakness: { id: string }) => weakness.id);
-
-        if (weaknessIds.length) {
-          await tx.remediationAttempt.deleteMany({
-            where: { weaknessId: { in: weaknessIds } },
-          });
-          await tx.lessonWeakness.deleteMany({
-            where: { id: { in: weaknessIds } },
-          });
-        }
-
-        const conversations = await tx.aICo.findMany({
-          where: { lessonId: { in: lessonIds } },
-          select: { id: true },
-        });
-        const conversationIds = conversations.map((conversation: { id: string }) => conversation.id);
-
-        if (conversationIds.length) {
-          await tx.aIMessage.deleteMany({
-            where: { conversationId: { in: conversationIds } },
-          });
-          await tx.aICo.deleteMany({
-            where: { id: { in: conversationIds } },
-          });
-        }
-
-        await tx.assignment.updateMany({
-          where: { lessonId: { in: lessonIds } },
-          data: { lessonId: null },
-        });
-        await tx.exerciseAttempt.updateMany({
-          where: { lessonId: { in: lessonIds } },
-          data: { lessonId: null },
-        });
-        await tx.studySession.deleteMany({
-          where: { lessonId: { in: lessonIds } },
-        });
-        await tx.lessonProgress.deleteMany({
-          where: { lessonId: { in: lessonIds } },
-        });
-        await tx.lesson.deleteMany({
-          where: { id: { in: lessonIds } },
-        });
-      }
-
-      if (courseIds.length) {
-        await tx.enrollment.deleteMany({
-          where: { courseId: { in: courseIds } },
-        });
-        await tx.chapter.deleteMany({
-          where: { courseId: { in: courseIds } },
-        });
-        await tx.course.deleteMany({
-          where: { id: { in: courseIds } },
-        });
-      }
-
-      if (await tableExists(tx, "Semester")) {
-        await tx.$executeRawUnsafe('DELETE FROM "Semester" WHERE "subjectId" = $1', id);
-      }
-
-      await tx.diagnosticQuiz.deleteMany({
+    const [lessons, courses] = await Promise.all([
+      tx.lesson.findMany({
         where: { subjectId: id },
-      });
-      await tx.diagnosticAttempt.deleteMany({
+        select: { id: true },
+      }),
+      tx.course.findMany({
         where: { subjectId: id },
+        select: { id: true },
+      }),
+    ]);
+
+    const lessonIds = (lessons as Array<{ id: string }>).map((l) => l.id);
+    const courseIds = (courses as Array<{ id: string }>).map((c) => c.id);
+
+    if (lessonIds.length) {
+      // Delete quiz cascade
+      const quizzes = await tx.quiz.findMany({
+        where: { lessonId: { in: lessonIds } },
+        select: { id: true },
+      });
+      const quizIds = (quizzes as Array<{ id: string }>).map((q) => q.id);
+
+      if (quizIds.length) {
+        await tx.quizAttempt.deleteMany({ where: { quizId: { in: quizIds } } });
+        await tx.quizQuestion.deleteMany({ where: { quizId: { in: quizIds } } });
+        await tx.quiz.deleteMany({ where: { id: { in: quizIds } } });
+      }
+
+      // Delete assignment cascade
+      const recipients = await tx.assignmentRecipient.findMany({
+        where: { assignment: { lessonId: { in: lessonIds } } },
+        select: { id: true },
+      });
+      const recipientIds = (recipients as Array<{ id: string }>).map((r) => r.id);
+
+      if (recipientIds.length) {
+        await tx.assignmentFeedbackEvent.deleteMany({
+          where: { recipientId: { in: recipientIds } },
+        });
+        await tx.assignmentRecipient.deleteMany({
+          where: { id: { in: recipientIds } },
+        });
+      }
+
+      await tx.assignment.updateMany({
+        where: { lessonId: { in: lessonIds } },
+        data: { lessonId: null },
       });
 
-      await tx.subject.delete({
-        where: { id },
+      // Delete weakness cascade
+      const weaknesses = await tx.lessonWeakness.findMany({
+        where: { lessonId: { in: lessonIds } },
+        select: { id: true },
       });
-    });
+      const weaknessIds = (weaknesses as Array<{ id: string }>).map((w) => w.id);
+
+      if (weaknessIds.length) {
+        await tx.remediationAttempt.deleteMany({
+          where: { weaknessId: { in: weaknessIds } },
+        });
+        await tx.lessonWeakness.deleteMany({
+          where: { id: { in: weaknessIds } },
+        });
+      }
+
+      // Delete AI conversation cascade
+      const conversations = await tx.aICo.findMany({
+        where: { lessonId: { in: lessonIds } },
+        select: { id: true },
+      });
+      const conversationIds = (conversations as Array<{ id: string }>).map((c) => c.id);
+
+      if (conversationIds.length) {
+        await tx.aIMessage.deleteMany({
+          where: { conversationId: { in: conversationIds } },
+        });
+        await tx.aICo.deleteMany({
+          where: { id: { in: conversationIds } },
+        });
+      }
+
+      // Delete remaining lesson-related records
+      await tx.exerciseAttempt.updateMany({
+        where: { lessonId: { in: lessonIds } },
+        data: { lessonId: null },
+      });
+      await tx.studySession.deleteMany({
+        where: { lessonId: { in: lessonIds } },
+      });
+      await tx.lessonProgress.deleteMany({
+        where: { lessonId: { in: lessonIds } },
+      });
+      await tx.lesson.deleteMany({
+        where: { id: { in: lessonIds } },
+      });
+    }
+
+    if (courseIds.length) {
+      await tx.enrollment.deleteMany({
+        where: { courseId: { in: courseIds } },
+      });
+      await tx.chapter.deleteMany({
+        where: { courseId: { in: courseIds } },
+      });
+      await tx.course.deleteMany({
+        where: { id: { in: courseIds } },
+      });
+    }
+
+    await tx.diagnosticQuiz.deleteMany({ where: { subjectId: id } });
+    await tx.diagnosticAttempt.deleteMany({ where: { subjectId: id } });
+    await tx.subject.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
