@@ -21,6 +21,7 @@ import {
   BrainCircuit,
   Route,
   ShieldAlert,
+  Users,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ const defaultNavItems = [
 
 const adminNavItems = [
   { href: "/admin/students", label: "Quản lý học sinh", icon: Library },
+  { href: "/admin/teachers", label: "Quản lý giáo viên", icon: Users },
   { href: "/admin/subjects", label: "Quản lý môn học", icon: ClipboardList },
   { href: "/admin/assignments", label: "Giao bài tập", icon: NotebookPen },
 ];
