@@ -81,7 +81,7 @@ function RoleLoginFormContent({ role, title, description, showGoogleLogin }: Rol
 
       setUser(data.user);
 
-      const redirectTarget = safeCallbackUrl || (data.user?.role === "ADMIN" ? "/admin/students" : "/");
+      const redirectTarget = safeCallbackUrl || (data.user?.role === "ADMIN" ? "/admin/students" : data.user?.role === "TEACHER" ? "/teacher" : "/");
 
       toast.success("Đăng nhập thành công!");
       router.push(redirectTarget);
