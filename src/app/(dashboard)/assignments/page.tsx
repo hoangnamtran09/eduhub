@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import Image from "next/image";
 import { BookOpenCheck, Bot, CalendarClock, CheckCircle2, ChevronRight, ClipboardList, Download, FileText, Loader2, RotateCcw, Search, Send, SlidersHorizontal, Upload, UserRound } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/stores/auth-store";
@@ -836,33 +837,33 @@ function ParentAssignmentsView() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f7f2e8] px-6">
-        <div className="rounded-[2rem] border border-amber-200 bg-white px-6 py-8 text-center shadow-soft">
-          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-amber-600" />
-          <p className="font-semibold text-stone-700">Đang tải bài tập của con...</p>
+      <div className="flex min-h-screen items-center justify-center bg-paper-100 px-6">
+        <div className="rounded-xl border border-brand-200 bg-white px-6 py-8 text-center shadow-soft">
+          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-brand-600" />
+          <p className="font-semibold text-ink-600">Đang tải bài tập của con...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f2e8] text-stone-950">
-      <div className="sticky top-0 z-10 border-b border-stone-200 bg-[#f7f2e8]/95 px-4 pb-4 pt-5 backdrop-blur">
+    <div className="min-h-screen bg-paper-100 text-ink-900">
+      <div className="sticky top-0 z-10 border-b border-ink-200 bg-paper-100/95 px-4 pb-4 pt-5 ">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-amber-700">Phụ huynh</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-brand-700">Phụ huynh</p>
             <h1 className="mt-1 font-serif text-3xl font-bold tracking-tight">Bài tập của con</h1>
-            <p className="mt-1 max-w-xs text-sm leading-5 text-stone-600">Theo dõi hạn nộp, trạng thái và phản hồi giáo viên trong một màn hình.</p>
+            <p className="mt-1 max-w-xs text-sm leading-5 text-ink-500">Theo dõi hạn nộp, trạng thái và phản hồi giáo viên trong một màn hình.</p>
           </div>
-          <div className="rounded-2xl bg-stone-950 px-3 py-2 text-right text-white shadow-lg shadow-stone-300">
+          <div className="rounded-xl bg-ink-900 px-3 py-2 text-right text-white shadow-lg shadow-ink-300">
             <p className="text-2xl font-black leading-none">{data?.summary.totalChildren ?? 0}</p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-100">học sinh</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-brand-100">học sinh</p>
           </div>
         </div>
       </div>
 
       <main className="space-y-4 px-4 py-4">
-        {error && <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div>}
+        {error && <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div>}
 
         <div className="grid grid-cols-2 gap-3">
           <ParentMetric label="Quá hạn" value={data?.summary.overdue ?? 0} tone="danger" onClick={() => setFilter("overdue")} />
@@ -879,7 +880,7 @@ function ParentAssignmentsView() {
                 <ParentChip key={child.id} active={selectedChildId === child.id} onClick={() => setSelectedChildId(child.id)}>
                   {child.name}
                   {(child.stats.overdue + child.stats.dueSoon + child.stats.returned) > 0 && (
-                    <span className="ml-1 rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] text-white">{child.stats.overdue + child.stats.dueSoon + child.stats.returned}</span>
+                    <span className="ml-1 rounded-full bg-rose-600 px-1.5 py-0.5 text-xs text-white">{child.stats.overdue + child.stats.dueSoon + child.stats.returned}</span>
                   )}
                 </ParentChip>
               ))}
@@ -924,7 +925,7 @@ function ParentAssignmentsView() {
       </main>
 
       <Dialog open={!!selectedAssignment} onOpenChange={() => setSelectedAssignment(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl sm:max-w-md">
+        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-left font-serif text-2xl">{selectedAssignment?.assignment.title}</DialogTitle>
           </DialogHeader>
@@ -959,13 +960,13 @@ function getParentStatusLabel(item: ParentAssignment) {
 function ParentMetric({ label, value, tone, onClick }: { label: string; value: number; tone: "danger" | "warn" | "ink" | "orange"; onClick: () => void }) {
   const tones = {
     danger: "bg-rose-600 text-white shadow-rose-200",
-    warn: "bg-amber-400 text-stone-950 shadow-amber-200",
-    ink: "bg-stone-950 text-white shadow-stone-300",
+    warn: "bg-amber-400 text-ink-900 shadow-amber-200",
+    ink: "bg-ink-900 text-white shadow-ink-300",
     orange: "bg-orange-500 text-white shadow-orange-200",
   };
 
   return (
-    <button onClick={onClick} className={cn("rounded-[1.6rem] p-4 text-left shadow-lg transition active:scale-[0.98]", tones[tone])}>
+    <button onClick={onClick} className={cn("rounded-2xl p-4 text-left shadow-lg transition active:scale-[0.98]", tones[tone])}>
       <p className="text-3xl font-black leading-none">{value}</p>
       <p className="mt-2 text-xs font-black uppercase tracking-wider opacity-85">{label}</p>
     </button>
@@ -974,12 +975,17 @@ function ParentMetric({ label, value, tone, onClick }: { label: string; value: n
 
 function ParentChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
-    <button onClick={onClick} className={cn(
-      "inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-bold transition active:scale-95",
-      active ? "border-stone-950 bg-stone-950 text-white" : "border-stone-200 bg-white text-stone-700 shadow-sm"
-    )}>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onClick}
+      className={cn(
+        "min-h-11 rounded-full border font-bold transition active:scale-95",
+        active ? "border-ink-900 bg-ink-900 text-white hover:bg-ink-800 hover:text-white" : "border-ink-200 bg-white text-ink-600 shadow-sm"
+      )}
+    >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -988,52 +994,59 @@ function ParentAssignmentCard({ item, onOpen }: { item: ParentAssignment; onOpen
   const urgent = label === "Quá hạn" || label === "Sắp hạn" || label === "Cần sửa";
 
   return (
-    <button onClick={onOpen} className={cn(
-      "w-full rounded-[1.75rem] border bg-white p-4 text-left shadow-soft transition active:scale-[0.99]",
-      urgent ? "border-amber-300" : "border-stone-200"
-    )}>
+    <Card
+      hover
+      padding="sm"
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      className={cn(
+        "w-full text-left transition active:scale-[0.99]",
+        urgent && "border-amber-300"
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-wider text-stone-500">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-wider text-ink-400">
             <span>{item.childName}</span>
-            <span className="h-1 w-1 rounded-full bg-stone-300" />
+            <span className="h-1 w-1 rounded-full bg-ink-300" />
             <span>{item.assignment.lesson?.subject.name || "Bài tập"}</span>
           </div>
-          <h2 className="mt-2 line-clamp-2 text-lg font-black leading-6 text-stone-950">{item.assignment.title}</h2>
+          <h2 className="mt-2 line-clamp-2 text-lg font-black leading-6 text-ink-900">{item.assignment.title}</h2>
         </div>
         <span className={cn(
           "shrink-0 rounded-full px-3 py-1 text-xs font-black",
-          label === "Quá hạn" ? "bg-rose-100 text-rose-700" : label === "Sắp hạn" ? "bg-amber-100 text-amber-800" : label === "Cần sửa" ? "bg-orange-100 text-orange-700" : label === "Đã chấm" ? "bg-emerald-100 text-emerald-700" : "bg-stone-100 text-stone-700"
+          label === "Quá hạn" ? "bg-rose-100 text-rose-700" : label === "Sắp hạn" ? "bg-amber-100 text-amber-800" : label === "Cần sửa" ? "bg-orange-100 text-orange-700" : label === "Đã chấm" ? "bg-emerald-100 text-emerald-700" : "bg-ink-100 text-ink-600"
         )}>{label}</span>
       </div>
 
-      <div className="mt-4 space-y-2 text-sm text-stone-600">
-        <div className="flex items-center gap-2"><CalendarClock className="h-4 w-4 text-amber-700" />{item.assignment.dueDate ? new Date(item.assignment.dueDate).toLocaleString("vi-VN") : "Không có hạn nộp"}</div>
-        <div className="flex items-center gap-2"><BookOpenCheck className="h-4 w-4 text-amber-700" />{item.assignment.lesson?.title || "Chưa gắn bài học"}</div>
+      <div className="mt-4 space-y-2 text-sm text-ink-500">
+        <div className="flex items-center gap-2"><CalendarClock className="h-4 w-4 text-brand-700" />{item.assignment.dueDate ? new Date(item.assignment.dueDate).toLocaleString("vi-VN") : "Không có hạn nộp"}</div>
+        <div className="flex items-center gap-2"><BookOpenCheck className="h-4 w-4 text-brand-700" />{item.assignment.lesson?.title || "Chưa gắn bài học"}</div>
       </div>
 
       {(item.score != null || item.aiScore != null || item.feedback) && (
-        <div className="mt-4 rounded-2xl bg-stone-50 px-3 py-2 text-sm text-stone-700">
+        <div className="mt-4 rounded-xl bg-white px-3 py-2 text-sm text-ink-600">
           {item.score != null && <p className="font-bold">Điểm giáo viên: {item.score}/{item.assignment.maxScore}</p>}
           {item.aiScore != null && <p className="font-bold">Điểm AI: {item.aiScore}/{item.assignment.maxScore}</p>}
-          {item.feedback && <p className="mt-1 line-clamp-2 text-xs leading-5 text-stone-500">{item.feedback}</p>}
+          {item.feedback && <p className="mt-1 line-clamp-2 text-xs leading-5 text-ink-400">{item.feedback}</p>}
         </div>
       )}
 
-      <div className="mt-4 flex items-center justify-between text-sm font-bold text-stone-950">
+      <div className="mt-4 flex items-center justify-between text-sm font-bold text-ink-900">
         <span>Xem chi tiết</span>
         <ChevronRight className="h-4 w-4" />
       </div>
-    </button>
+    </Card>
   );
 }
 
 function ParentAssignmentDetail({ item }: { item: ParentAssignment }) {
   return (
-    <div className="space-y-4 text-sm text-stone-700">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3">
-        <p className="font-black text-stone-950">{item.childName}</p>
-        <p className="mt-1 text-xs text-stone-500">{item.childGradeLevel ? `Lớp ${item.childGradeLevel}` : item.childEmail}</p>
+    <div className="space-y-4 text-sm text-ink-600">
+      <div className="rounded-2xl bg-brand-50 px-4 py-3">
+        <p className="font-black text-ink-900">{item.childName}</p>
+        <p className="mt-1 text-xs text-ink-400">{item.childGradeLevel ? `Lớp ${item.childGradeLevel}` : item.childEmail}</p>
       </div>
 
       <div className="grid gap-2">
@@ -1042,30 +1055,30 @@ function ParentAssignmentDetail({ item }: { item: ParentAssignment }) {
       </div>
 
       <div>
-        <p className="font-black text-stone-950">Mô tả</p>
+        <p className="font-black text-ink-900">Mô tả</p>
         <p className="mt-2 whitespace-pre-line leading-6">{item.assignment.description}</p>
       </div>
 
       {item.assignment.pdfUrl && (
-        <a href={item.assignment.pdfUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-2xl bg-stone-950 px-4 py-3 font-bold text-white">
+        <a href={item.assignment.pdfUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-xl bg-ink-900 px-4 py-3 font-bold text-white">
           <Download className="h-4 w-4" />
           Mở đề bài
         </a>
       )}
 
       {item.submissionText && (
-        <div className="rounded-2xl border border-stone-200 bg-white px-4 py-3">
-          <p className="font-black text-stone-950">Nội dung con đã nộp</p>
+        <div className="rounded-xl border border-ink-200 bg-white px-4 py-3">
+          <p className="font-black text-ink-900">Nội dung con đã nộp</p>
           <p className="mt-2 whitespace-pre-line leading-6">{item.submissionText}</p>
         </div>
       )}
 
       {!!item.submissionFiles?.length && (
-        <div className="rounded-2xl border border-stone-200 bg-white px-4 py-3">
-          <p className="font-black text-stone-950">File đã nộp</p>
+        <div className="rounded-xl border border-ink-200 bg-white px-4 py-3">
+          <p className="font-black text-ink-900">File đã nộp</p>
           <div className="mt-3 space-y-2">
             {item.submissionFiles.map((file) => (
-              <a key={file.url} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 px-3 py-2 font-semibold text-stone-700">
+              <a key={file.url} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2 font-semibold text-ink-600">
                 <span className="truncate">{file.name}</span>
                 <FileText className="h-4 w-4 shrink-0" />
               </a>
@@ -1084,12 +1097,12 @@ function ParentAssignmentDetail({ item }: { item: ParentAssignment }) {
       )}
 
       {!!item.feedbackEvents?.length && (
-        <div className="rounded-2xl border border-stone-200 bg-white px-4 py-3">
-          <p className="font-black text-stone-950">Lịch sử phản hồi</p>
+        <div className="rounded-xl border border-ink-200 bg-white px-4 py-3">
+          <p className="font-black text-ink-900">Lịch sử phản hồi</p>
           <div className="mt-3 space-y-2">
             {item.feedbackEvents.map((entry, index) => (
-              <div key={`${entry.createdAt}-${index}`} className="rounded-xl bg-stone-50 p-3 text-xs leading-5">
-                <div className="flex justify-between gap-2 font-bold text-stone-600">
+              <div key={`${entry.createdAt}-${index}`} className="rounded-xl bg-white p-3 text-xs leading-5">
+                <div className="flex justify-between gap-2 font-bold text-ink-500">
                   <span>{normalizeAssignmentStatus(entry.status) === "returned" ? "Trả bài sửa" : "Đã chấm"}</span>
                   <span>{new Date(entry.createdAt).toLocaleString("vi-VN")}</span>
                 </div>
@@ -1105,13 +1118,7 @@ function ParentAssignmentDetail({ item }: { item: ParentAssignment }) {
 }
 
 function ParentEmpty({ icon: Icon, title, body }: { icon: any; title: string; body: string }) {
-  return (
-    <div className="rounded-[2rem] border border-dashed border-stone-300 bg-white px-6 py-12 text-center shadow-soft">
-      <Icon className="mx-auto mb-4 h-11 w-11 text-amber-600" />
-      <h2 className="text-xl font-black text-stone-900">{title}</h2>
-      <p className="mt-2 text-sm leading-6 text-stone-500">{body}</p>
-    </div>
-  );
+  return <EmptyState icon={Icon} title={title} description={body} />;
 }
 
 function SmallStat({ label, value }: { label: string; value: number }) {

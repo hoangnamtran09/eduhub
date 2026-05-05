@@ -540,7 +540,7 @@ export default function AdminSubjectsPage() {
                               <div>
                                 <h4 className="font-semibold text-slate-900">{lesson.title}</h4>
                                 <div className="flex items-center gap-3 mt-1">
-                                  <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider", getLessonTypeColor(lesson.type))}>
+                                  <span className={cn("px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider", getLessonTypeColor(lesson.type))}>
                                     {LESSON_TYPES.find(t => t.value === lesson.type)?.label}
                                   </span>
                                   {lesson.duration && (
@@ -583,7 +583,7 @@ export default function AdminSubjectsPage() {
 
       {/* Subject Modal */}
       {showSubjectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50  p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-xl font-bold text-slate-900">
@@ -684,7 +684,7 @@ export default function AdminSubjectsPage() {
 
       {/* Bulk PDF Upload Modal */}
       {showBulkUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50  p-4">
           <div className="w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl">
             <div className="border-b border-slate-100 bg-gradient-to-br from-slate-950 via-slate-900 to-brand-900 p-6 text-white">
               <div className="flex items-start justify-between gap-4">
@@ -794,7 +794,7 @@ export default function AdminSubjectsPage() {
 
       {/* Lesson Modal */}
       {showLessonModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50  p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-xl font-bold text-slate-900">

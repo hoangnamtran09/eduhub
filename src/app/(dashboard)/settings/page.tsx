@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/auth-store";
 import { User, Bell, Shield, Palette, Save, Loader2, Lock } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 
 const tabs = [
   { id: "profile", label: "Hồ sơ", icon: User },
@@ -160,10 +161,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Cài đặt</h1>
-        <p className="text-slate-500 mt-1">Quản lý tài khoản và tùy chọn</p>
-      </div>
+      <PageHeader title="Cài đặt" description="Quản lý tài khoản và tùy chọn" />
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Tabs */}

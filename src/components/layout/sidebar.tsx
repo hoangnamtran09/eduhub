@@ -179,7 +179,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 border-white/10 bg-[linear-gradient(180deg,rgba(17,24,39,0.98)_0%,rgba(20,41,58,0.96)_42%,rgba(21,63,61,0.94)_100%)] text-white backdrop-blur-xl lg:h-screen lg:border-r",
+        "fixed left-0 top-0 z-40 border-white/10 bg-[linear-gradient(180deg,#0f172a_0%,#1e293b_100%)] text-white lg:h-screen lg:border-r",
         "h-16 w-full border-b lg:w-auto",
         collapsed ? "lg:w-20" : "lg:w-72"
       )}
@@ -188,7 +188,7 @@ export function Sidebar() {
     >
       <div className="flex h-16 items-center border-white/10 px-4 lg:h-20 lg:border-b lg:px-6">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-brand-200/70 bg-gradient-to-br from-brand-500 to-accent-500 text-white shadow-lg shadow-brand-500/15">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white">
             <GraduationCap className="h-5 w-5 text-white" />
           </div>
           {!collapsed && (
@@ -196,7 +196,7 @@ export function Sidebar() {
               <span className="text-lg font-semibold leading-tight text-white">
                 EduHub
               </span>
-              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/55">
+              <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/55">
                 Learning OS
               </span>
             </div>
@@ -210,7 +210,7 @@ export function Sidebar() {
               <div
                 key={index}
                 className={cn(
-                    "animate-pulse rounded-2xl bg-white/10",
+                    "animate-pulse rounded-xl bg-white/10",
                    collapsed ? "mx-auto h-12 w-12" : "h-12 w-full"
                 )}
               />
@@ -227,9 +227,9 @@ export function Sidebar() {
                   onClick={navigateTo(item.href)}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "group relative flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 transition-all duration-200",
+                    "group relative flex items-center gap-3 rounded-xl border border-transparent px-4 py-3 transition-all duration-200",
                     isActive
-                      ? "border-white/20 bg-white/12 text-white shadow-soft backdrop-blur-sm"
+                      ? "border-white/20 bg-white/12 text-white shadow-soft"
                       : "text-white/72 hover:border-white/10 hover:bg-white/8 hover:text-white",
                     collapsed && "justify-center px-0"
                   )}
@@ -264,7 +264,7 @@ export function Sidebar() {
                     type="button"
                     onClick={() => toggleGroup(group.label)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-left transition-all duration-200",
+                      "flex w-full items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-left transition-all duration-200",
                       isGroupActive
                         ? "border-white/16 bg-white/8 text-white"
                         : "text-white/72 hover:border-white/10 hover:bg-white/8 hover:text-white",
@@ -287,9 +287,9 @@ export function Sidebar() {
                             href={item.href}
                             onClick={navigateTo(item.href)}
                             className={cn(
-                              "group flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 transition-all duration-200",
+                              "group flex items-center gap-3 rounded-xl border border-transparent px-4 py-3 transition-all duration-200",
                               isActive
-                                ? "border-white/20 bg-white/12 text-white shadow-soft backdrop-blur-sm"
+                                ? "border-white/20 bg-white/12 text-white shadow-soft"
                                 : "text-white/68 hover:border-white/10 hover:bg-white/8 hover:text-white",
                             )}
                           >
@@ -307,9 +307,9 @@ export function Sidebar() {
 
       <div className={cn("absolute left-5 right-5 hidden lg:block", collapsed ? "bottom-24 left-3 right-3" : "bottom-24")}>
         {!collapsed && user?.role !== "ADMIN" && user?.role !== "TEACHER" && (
-          <div className="rounded-[28px] border border-white/10 bg-white/8 p-4 shadow-soft transition-all backdrop-blur-sm">
+          <div className="rounded-xl border border-white/10 bg-ink-800 p-4 transition-all">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-accent-500/14">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-accent-500/14">
                 {user?.role === "PARENT" ? (
                   <ShieldAlert className="h-5 w-5 text-accent-300" />
                 ) : (
@@ -317,7 +317,7 @@ export function Sidebar() {
                 )}
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">
                   {user?.role === "PARENT" ? "Ưu tiên theo dõi" : "Chuỗi học hiện tại"}
                 </p>
                 <div className="flex items-center gap-1">
@@ -364,11 +364,11 @@ export function Sidebar() {
       </Button>
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-5 gap-1 border-t border-white/10 bg-ink-900/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 text-white backdrop-blur-xl lg:hidden"
+        className="fixed bottom-0 left-0 right-0 z-40 flex justify-around gap-1 border-t border-white/10 bg-ink-900/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 text-white lg:hidden"
         role="navigation"
         aria-label="Điều hướng chính"
       >
-        {navItems.slice(0, 5).map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
 
@@ -378,7 +378,7 @@ export function Sidebar() {
               href={item.href}
               onClick={navigateTo(item.href)}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-medium",
+                "flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-xs font-medium",
                 isActive ? "bg-white/12 text-white" : "text-white/65",
               )}
               aria-current={isActive ? "page" : undefined}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   Activity,
   AlertTriangle,
@@ -251,48 +252,11 @@ function getAssignmentStatusLabel(status: string) {
   }
 }
 
-function BlockIcon({ icon: Icon, color, bgColor }: { icon: React.ElementType; color: string; bgColor: string }) {
-  return (
-    <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", bgColor)}>
-      <Icon className={cn("h-5 w-5", color)} />
-    </div>
-  );
-}
-
 function SectionTitle({ title, description }: { title: string; description?: string }) {
   return (
     <div className="space-y-1">
       <h2 className="text-base font-semibold text-slate-900">{title}</h2>
       {description && <p className="text-sm text-slate-500">{description}</p>}
-    </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  detail,
-  color,
-  bgColor,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string | number;
-  detail?: string;
-  color: string;
-  bgColor: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/88 p-5 shadow-sm">
-      <div className="flex items-start gap-4">
-        <BlockIcon icon={icon} color={color} bgColor={bgColor} />
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{value}</p>
-          {detail && <p className="mt-1 text-xs text-slate-500">{detail}</p>}
-        </div>
-      </div>
     </div>
   );
 }
@@ -306,8 +270,8 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
   return (
     <div className="animate-fade-in space-y-8 pb-10 font-sans">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr),360px]">
-        <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-7 shadow-sm">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
             Quản trị
           </div>
           <div className="space-y-3">
@@ -332,8 +296,8 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Tổng quan hệ thống</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Tổng quan hệ thống</p>
           <div className="mt-4 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-sm text-white/65">Khối lớp đông nhất</p>
@@ -363,39 +327,35 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
           icon={Users}
           label="Tổng học sinh"
           value={report.summary.totalStudents}
-          detail={`${report.summary.unassignedGradeCount} học sinh chưa phân lớp`}
-          color="text-sky-600"
-          bgColor="bg-sky-100"
+          sublabel={`${report.summary.unassignedGradeCount} học sinh chưa phân lớp`}
+          variant="brand"
         />
         <StatCard
           icon={Clock}
           label="Tổng thời lượng học"
           value={formatStudyTime(report.summary.totalStudySeconds, true)}
-          detail={`${report.summary.totalSessions} phiên học đã ghi nhận`}
-          color="text-violet-600"
-          bgColor="bg-violet-100"
+          sublabel={`${report.summary.totalSessions} phiên học đã ghi nhận`}
+          variant="violet"
         />
         <StatCard
           icon={Activity}
           label="Hoạt động 7 ngày"
           value={report.summary.activeStudents7d}
-          detail={`${report.summary.inactiveStudents7d} học sinh chưa active`}
-          color="text-emerald-600"
-          bgColor="bg-emerald-100"
+          sublabel={`${report.summary.inactiveStudents7d} học sinh chưa active`}
+          variant="emerald"
         />
         <StatCard
           icon={Layers3}
           label="Danh sách cần chú ý"
           value={report.attentionStudents.length}
-          detail="Ưu tiên học sinh chưa học hoặc inactive lâu"
-          color="text-amber-600"
-          bgColor="bg-amber-100"
+          sublabel="Ưu tiên học sinh chưa học hoặc inactive lâu"
+          variant="amber"
         />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr),minmax(0,1fr)]">
         <div className="space-y-6">
-          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <SectionTitle
                 title="Top học sinh theo thời lượng học"
@@ -435,7 +395,7 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <SectionTitle
                 title="Danh sách cần chú ý"
@@ -466,7 +426,7 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="truncate font-semibold text-slate-900">{student.fullName || student.email}</p>
-                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600">
+                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600">
                           {student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}
                         </span>
                       </div>
@@ -498,7 +458,7 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <SectionTitle
               title="Phân bố khối lớp"
               description="Nhanh chóng nhìn ra khối lớp đông học sinh và nhóm chưa được phân lớp."
@@ -521,7 +481,7 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <SectionTitle
               title="Nhật ký vận hành"
               description="Một số tín hiệu nhanh để admin theo dõi nhịp hoạt động của hệ thống."
@@ -544,7 +504,7 @@ function AdminDashboard({ report }: { report: AdminReportData }) {
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <SectionTitle
               title="Tác vụ nhanh"
               description="Đi tới các khu vực vận hành thường dùng mà không phải rời trang chủ."
@@ -636,8 +596,8 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
   return (
     <div className="space-y-8">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr),360px]">
-        <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-7 shadow-sm">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
             Học sinh
           </div>
           <div className="space-y-3">
@@ -662,8 +622,8 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Tổng quan cá nhân</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Tổng quan cá nhân</p>
           <div className="mt-4 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-sm text-white/65">Vị trí bảng xếp hạng</p>
@@ -689,13 +649,13 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard icon={TrendingUp} label="Giờ học (tuần)" value={progress.stats.weeklyStudyHours || 0} color="text-blue-600" bgColor="bg-blue-100" />
-        <StatCard icon={Target} label="Điểm trung bình" value={progress.stats.averageScore || 0} color="text-emerald-600" bgColor="bg-emerald-100" />
-        <StatCard icon={CheckCircle} label="Bài tập AI" value={progress.stats.completedExercises || 0} color="text-brand-600" bgColor="bg-brand-100" />
-        <StatCard icon={Award} label="Chuỗi học" value={progress.stats.streakDays || 0} color="text-amber-500" bgColor="bg-amber-100" />
+        <StatCard icon={TrendingUp} label="Giờ học (tuần)" value={progress.stats.weeklyStudyHours || 0} variant="brand" />
+        <StatCard icon={Target} label="Điểm trung bình" value={progress.stats.averageScore || 0} variant="emerald" />
+        <StatCard icon={CheckCircle} label="Bài tập AI" value={progress.stats.completedExercises || 0} variant="brand" />
+        <StatCard icon={Award} label="Chuỗi học" value={progress.stats.streakDays || 0} variant="amber" />
       </div>
 
-      <section className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(248,250,252,0.9))] p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(248,250,252,0.9))] p-5 shadow-sm">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <SectionTitle
             title="Việc nên làm hôm nay"
@@ -715,11 +675,11 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
                 className={cn("group rounded-3xl border p-4 transition hover:-translate-y-0.5 hover:shadow-lg", action.tone)}
               >
                 <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-white/70 p-2 text-slate-900 shadow-sm">
+                  <div className="rounded-2xl bg-white p-2 text-slate-900 shadow-sm">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0">
-                    <span className="mb-2 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700">
+                    <span className="mb-2 inline-flex rounded-full bg-white px-2 py-0.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-700">
                       {action.priority}
                     </span>
                     <p className="font-semibold">{action.title}</p>
@@ -737,7 +697,7 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <SectionTitle
                 title="Bảng xếp hạng học tập"
@@ -761,7 +721,7 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate font-semibold text-slate-900">{student.fullName || "Học sinh"}</p>
                       {student.isCurrentUser && (
-                        <span className="rounded-full bg-brand-100 px-2 py-1 text-[11px] font-medium text-brand-700">Bạn</span>
+                        <span className="rounded-full bg-brand-100 px-2 py-1 text-xs font-medium text-brand-700">Bạn</span>
                       )}
                     </div>
                     <p className="truncate text-sm text-slate-500">{student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}</p>
@@ -811,7 +771,7 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
         </div>
 
         <div className="space-y-8">
-          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <SectionTitle
               title="Bạn học của bạn"
               description="Một số học sinh khác đang học cùng khối lớp hoặc cùng hệ thống để bạn dễ theo dõi nhịp học chung."
@@ -824,7 +784,7 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
                       <p className="truncate font-semibold text-slate-900">{student.fullName || "Học sinh"}</p>
                       <p className="mt-1 text-sm text-slate-500">{student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}</p>
                     </div>
-                    <div className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                    <div className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600">
                       {student.totalSessions} phiên
                     </div>
                   </div>
@@ -844,12 +804,12 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
 
           <section className="space-y-3">
             <h3 className="px-2 text-lg font-bold text-slate-800">Mục tiêu tuần</h3>
-            <div className="grid grid-cols-7 gap-2 rounded-xl border border-slate-200/80 bg-white/80 p-4">
+            <div className="grid grid-cols-7 gap-2 rounded-xl border border-slate-200/80 bg-white p-4">
               {progress.weeklyProgress.map((day, index) => (
                 <div key={`${day.day}-${index}`} className="text-center">
                   <div className="text-xs font-bold text-slate-500">{day.day}</div>
                   <div className={cn("my-2 mx-auto h-10 w-10 rounded-lg", day.completed ? "bg-brand-200" : "bg-slate-100")} />
-                  <div className="text-[11px] font-medium text-slate-400">{day.hours}h</div>
+                  <div className="text-xs font-medium text-slate-400">{day.hours}h</div>
                 </div>
               ))}
             </div>
@@ -881,8 +841,8 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
   return (
     <div className="space-y-8">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr),360px]">
-        <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-7 shadow-sm">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
             Phụ huynh
           </div>
           <div className="space-y-3">
@@ -893,8 +853,8 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Cảnh báo tổng hợp</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a_0%,#162033_100%)] p-6 text-white shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Cảnh báo tổng hợp</p>
           <div className="mt-4 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-sm text-white/65">Con cần ưu tiên</p>
@@ -916,15 +876,15 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard icon={Users} label="Số con đang theo dõi" value={report.summary.totalChildren} color="text-sky-600" bgColor="bg-sky-100" />
-        <StatCard icon={Activity} label="Hoạt động 7 ngày" value={report.summary.activeChildren7d} detail={`${Math.max(report.summary.totalChildren - report.summary.activeChildren7d, 0)} con cần nhắc nhở`} color="text-emerald-600" bgColor="bg-emerald-100" />
-        <StatCard icon={BookOpen} label="Bài tập chờ xử lý" value={report.summary.totalPendingAssignments} detail={`${report.summary.totalDueSoonAssignments} bài sắp đến hạn`} color="text-violet-600" bgColor="bg-violet-100" />
-        <StatCard icon={ShieldAlert} label="Quá hạn" value={report.summary.totalOverdueAssignments} detail={`${report.summary.childrenNeedingAttention} hồ sơ cần ưu tiên`} color="text-rose-600" bgColor="bg-rose-100" />
+        <StatCard icon={Users} label="Số con đang theo dõi" value={report.summary.totalChildren} variant="brand" />
+        <StatCard icon={Activity} label="Hoạt động 7 ngày" value={report.summary.activeChildren7d} sublabel={`${Math.max(report.summary.totalChildren - report.summary.activeChildren7d, 0)} con cần nhắc nhở`} variant="emerald" />
+        <StatCard icon={BookOpen} label="Bài tập chờ xử lý" value={report.summary.totalPendingAssignments} sublabel={`${report.summary.totalDueSoonAssignments} bài sắp đến hạn`} variant="violet" />
+        <StatCard icon={ShieldAlert} label="Quá hạn" value={report.summary.totalOverdueAssignments} sublabel={`${report.summary.childrenNeedingAttention} hồ sơ cần ưu tiên`} variant="rose" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr),minmax(0,1fr)]">
         <div className="space-y-6">
-          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <SectionTitle title="Cảnh báo ưu tiên" description="Tổng hợp các tín hiệu cần phụ huynh xử lý sớm nhất." />
               <div className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">{report.spotlightAlerts.length} cảnh báo</div>
@@ -958,7 +918,7 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <SectionTitle title="Theo dõi bài tập" description="Danh sách bài tập sắp đến hạn hoặc cần phụ huynh nhắc con xử lý." />
               <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{report.assignmentWatchlist.length} mục</div>
@@ -971,7 +931,7 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
                       <p className="truncate font-semibold text-slate-900">{assignment.title}</p>
                       <p className="truncate text-sm text-slate-500">{assignment.childName} • {assignment.lessonTitle || "Chưa gán bài học"}</p>
                     </div>
-                    <div className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">{getAssignmentStatusLabel(assignment.status)}</div>
+                    <div className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600">{getAssignmentStatusLabel(assignment.status)}</div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs">
                     <span className="rounded-full bg-slate-200/70 px-2.5 py-1 font-medium text-slate-700">Hạn nộp: {formatDueDate(assignment.dueDate)}</span>
@@ -991,7 +951,7 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <SectionTitle title="Tổng quan từng con" description="Tập trung vào nhịp học, bài tập tồn đọng và các chủ đề cần củng cố." />
             <div className="mt-5 space-y-3">
               {report.children.map((student) => (
@@ -1001,7 +961,7 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
                       <p className="truncate font-semibold text-slate-900">{student.fullName || student.email}</p>
                       <p className="mt-1 text-sm text-slate-500">{student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}</p>
                     </div>
-                    <div className={cn("rounded-full px-2.5 py-1 text-[11px] font-medium", student.alertSummary.level === "critical" ? "bg-rose-100 text-rose-700" : student.alertSummary.level === "warning" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700")}>
+                    <div className={cn("rounded-full px-2.5 py-1 text-xs font-medium", student.alertSummary.level === "critical" ? "bg-rose-100 text-rose-700" : student.alertSummary.level === "warning" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700")}>
                       {student.alertSummary.level === "critical" ? "Cần ưu tiên" : student.alertSummary.level === "warning" ? "Cần theo dõi" : "Ổn định"}
                     </div>
                   </div>
@@ -1032,7 +992,7 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
                   {!!student.weaknessSummary.topics.length && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {student.weaknessSummary.topics.map((topic) => (
-                        <span key={topic} className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700">{topic}</span>
+                        <span key={topic} className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">{topic}</span>
                       ))}
                     </div>
                   )}
@@ -1135,7 +1095,9 @@ export default function DashboardPage() {
       {user?.role !== "ADMIN" && (
         <div className="flex items-center justify-between">
           <div>
-            <BlockIcon icon={BookOpen} color="text-brand-600" bgColor="bg-brand-100" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-100">
+              <BookOpen className="h-5 w-5 text-brand-600" />
+            </div>
             <h1 className="mt-3 font-serif text-3xl font-bold text-slate-900">{pageTitle}</h1>
             <p className="text-slate-500">Không gian học tập cá nhân của bạn.</p>
           </div>

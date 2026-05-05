@@ -1144,7 +1144,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
   const isLastGuideStep = guideStepIndex === learningGuideSteps.length - 1;
 
   const getGuideHighlightClass = (index: number) => cn(
-    isGuideOpen && guideStepIndex === index && "relative z-[90] rounded-[28px] bg-white text-ink-900 ring-4 ring-amber-300 ring-offset-4 ring-offset-white shadow-2xl shadow-amber-950/30"
+    isGuideOpen && guideStepIndex === index && "relative z-[90] rounded-2xl bg-white text-ink-900 ring-4 ring-amber-300 ring-offset-4 ring-offset-white shadow-2xl shadow-amber-950/30"
   );
 
   const handleNextGuideStep = () => {
@@ -1218,8 +1218,8 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
       )}
 
       {completionQuiz && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-ink-900/60 p-4 backdrop-blur-sm">
-          <div className="mx-auto my-8 max-w-3xl rounded-[28px] border border-white/80 bg-white p-5 shadow-panel sm:p-6">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-ink-900/60 p-4 ">
+          <div className="mx-auto my-8 max-w-3xl rounded-2xl border border-white/80 bg-white p-5 shadow-panel sm:p-6">
             <div className="flex items-start justify-between gap-4 border-b border-paper-200 pb-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-600">Đánh giá cuối phiên</p>
@@ -1334,11 +1334,11 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
 
       {isGuideOpen && currentGuideStep && (
         <>
-          <div className="fixed inset-0 z-[80] bg-ink-900/70 backdrop-blur-[2px]" />
-          <div className="fixed left-1/2 top-16 z-[120] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 rounded-[28px] border-2 border-amber-300 bg-white p-5 text-ink-900 shadow-2xl shadow-ink-900/40 lg:left-auto lg:right-8 lg:top-20 lg:translate-x-0">
+          <div className="fixed inset-0 z-[80] bg-ink-900/70 -[2px]" />
+          <div className="fixed left-1/2 top-16 z-[120] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 rounded-2xl border-2 border-amber-300 bg-white p-5 text-ink-900 shadow-2xl shadow-ink-900/40 lg:left-auto lg:right-8 lg:top-20 lg:translate-x-0">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-700">Hướng dẫn sử dụng</p>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-700">Hướng dẫn sử dụng</p>
                 <h2 className="mt-1 text-xl font-semibold text-ink-900">{currentGuideStep.title}</h2>
               </div>
               <button
@@ -1395,7 +1395,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
       )}
 
       {/* Inline navigation - no header */}
-      <div className={cn("h-12 bg-white/90 border-b border-white/80 px-4 flex items-center justify-between shrink-0 backdrop-blur-sm", getGuideHighlightClass(4))}>
+      <div className={cn("h-12 bg-white border-b border-white/80 px-4 flex items-center justify-between shrink-0 ", getGuideHighlightClass(4))}>
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -1440,7 +1440,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
       {/* Main 3-Column Layout */}
       <div className="flex-1 flex flex-col overflow-auto lg:flex-row lg:overflow-hidden">
         {/* ==================== LEFT SIDEBAR ==================== */}
-        <div className={cn("max-h-64 w-full shrink-0 border-b border-white/80 bg-white/88 backdrop-blur-sm lg:max-h-none lg:w-72 lg:border-b-0 lg:border-r lg:flex lg:flex-col", getGuideHighlightClass(0))}>
+        <div className={cn("max-h-64 w-full shrink-0 border-b border-white/80 bg-white  lg:max-h-none lg:w-72 lg:border-b-0 lg:border-r lg:flex lg:flex-col", getGuideHighlightClass(0))}>
           {/* Sidebar Header */}
           <div className="p-4 border-b border-slate-100">
             <h2 className="text-sm font-semibold text-slate-900 mb-3">
@@ -1465,7 +1465,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                 key={tab}
                 onClick={() => setActiveFilter(tab)}
                 className={cn(
-                  "px-3 py-1 text-[10px] font-medium rounded transition-all",
+                  "px-3 py-1 text-xs font-medium rounded transition-all",
                   activeFilter === tab
                     ? "bg-brand-500 text-white"
                     : "text-slate-500 hover:bg-slate-100"
@@ -1488,7 +1488,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                     "p-3 border transition-all cursor-pointer",
                     lesson.id === params.lessonId
                       ? "border-brand-500 bg-brand-50"
-                      : "border-paper-200 bg-white/90 hover:border-brand-200"
+                      : "border-paper-200 bg-white hover:border-brand-200"
                   )}
                 >
                   <div className="flex items-center justify-between">
@@ -1496,7 +1496,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                       <div className="flex items-center gap-2">
                         <span
                           className={cn(
-                            "w-6 h-6 rounded flex items-center justify-center text-[10px] font-medium",
+                            "w-6 h-6 rounded flex items-center justify-center text-xs font-medium",
                             lesson.id === params.lessonId
                               ? "bg-brand-500 text-white"
                               : "bg-slate-100 text-slate-600"
@@ -1515,7 +1515,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                           {lesson.title}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-400 ml-8 mt-1">
+                      <div className="flex items-center gap-2 text-xs text-slate-400 ml-8 mt-1">
                         <Clock className="w-3 h-3" />
                         <span>{lesson.duration} phút</span>
                       </div>
@@ -1530,7 +1530,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         <div className="flex min-h-[520px] flex-1 flex-col overflow-hidden bg-paper-50/40 lg:min-h-0">
           <div className="flex-1 overflow-auto p-3 lg:p-4">
             {pdfUrl ? (
-              <div className={cn("flex min-h-[640px] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/96 shadow-soft lg:h-full", getGuideHighlightClass(1))}>
+              <div className={cn("flex min-h-[640px] flex-col overflow-hidden rounded-2xl border border-white/80 bg-white shadow-soft lg:h-full", getGuideHighlightClass(1))}>
                 <div className="flex items-center justify-between border-b border-paper-200 px-4 py-3">
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900">Tài liệu học tập</h3>
@@ -1568,7 +1568,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                 />
               </div>
             ) : (
-              <div className={cn("min-h-[420px] bg-white/96 border-dashed border-paper-300 rounded-[28px] flex flex-col items-center justify-center shadow-soft", getGuideHighlightClass(1))}>
+              <div className={cn("min-h-[420px] bg-white border-dashed border-paper-300 rounded-2xl flex flex-col items-center justify-center shadow-soft", getGuideHighlightClass(1))}>
                 <div className="w-16 h-16 bg-paper-50 flex items-center justify-center mb-4 rounded-full">
                   <FileText className="w-8 h-8 text-slate-400" />
                 </div>
@@ -1584,7 +1584,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
         </div>
 
         {/* ==================== RIGHT CHAT PANEL ==================== */}
-        <div className={cn("min-h-[520px] w-full shrink-0 border-t border-white/80 bg-white/92 backdrop-blur-sm lg:min-h-0 lg:w-80 lg:border-l lg:border-t-0 lg:flex lg:flex-col", getGuideHighlightClass(2))}>
+        <div className={cn("min-h-[520px] w-full shrink-0 border-t border-white/80 bg-white  lg:min-h-0 lg:w-80 lg:border-l lg:border-t-0 lg:flex lg:flex-col", getGuideHighlightClass(2))}>
           {/* Chat Header */}
           <div className="p-4 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1593,7 +1593,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-900">AI Tutor</p>
-                <p className="text-[10px] text-emerald-500">
+                <p className="text-xs text-emerald-500">
                   {studySessionActive ? "Đang học" : "Sẵn sàng"}
                 </p>
               </div>
@@ -1653,7 +1653,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                   >
                     <div
                       className={cn(
-                        "mb-1 px-1 text-[10px] font-bold uppercase tracking-[0.18em]",
+                        "mb-1 px-1 text-xs font-bold uppercase tracking-[0.18em]",
                         msg.role === "user"
                           ? "text-brand-500"
                           : assistantVariant === "question"
@@ -1687,7 +1687,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                         msg.content
                       )}
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1">
+                    <span className="text-xs text-slate-400 mt-1">
                       {msg.timestamp.toLocaleTimeString("vi-VN", {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -1721,14 +1721,14 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                 </p>
               </div>
             )}
-            <p className="text-[10px] text-amber-700">
+            <p className="text-xs text-amber-700">
               Chatbot có thể đưa ra thông tin không chính xác.
             </p>
           </div>
 
           {/* Input Area - Only shown after starting chat */}
           {messages.length > 0 && (
-            <div className="p-4 border-t border-paper-200 bg-white/96 animate-in slide-in-from-bottom-4 duration-300">
+            <div className="p-4 border-t border-paper-200 bg-white animate-in slide-in-from-bottom-4 duration-300">
               {/* Mode Toggle & AI Exercise Button */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -1780,7 +1780,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                 <div className="mb-3 rounded-2xl border border-brand-100 bg-brand-50/60 p-3">
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <p className="text-xs font-medium text-brand-800">Ky hieu toan hoc</p>
-                    <p className="text-[10px] text-brand-700/80">Cham de chen vao vi tri con tro</p>
+                    <p className="text-xs text-brand-700/80">Cham de chen vao vi tri con tro</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {mathSymbols.map((symbol) => (
@@ -1835,13 +1835,13 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
               </div>
               {currentExercise && (
                 <div className="mt-2 flex items-center justify-between">
-                  <p className="text-[10px] text-brand-700 flex items-center gap-1">
+                  <p className="text-xs text-brand-700 flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
                     Bạn đang trả lời bài tập AI. Trả lời đúng để nhận kim cương!
                   </p>
                   <button 
                     onClick={() => setCurrentExercise(null)}
-                    className="text-[10px] text-slate-400 hover:text-red-500 transition-colors"
+                    className="text-xs text-slate-400 hover:text-red-500 transition-colors"
                   >
                     Hủy bỏ
                   </button>

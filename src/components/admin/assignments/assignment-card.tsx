@@ -166,7 +166,7 @@ export function AssignmentCard({ assignment, detailBasePath = "/admin/assignment
               {assignment.lesson && <Badge variant="outline">{assignment.lesson.subjectName}</Badge>}
             </CardTitle>
           <div className="flex items-center gap-4 text-xs">
-            <Link href={`${detailBasePath}/${assignment.id}`} className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-200">
+            <Link href={`${detailBasePath}/${assignment.id}`} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-200">
               Mở chi tiết
             </Link>
             <span className="text-slate-500">{submittedCount} nộp</span>

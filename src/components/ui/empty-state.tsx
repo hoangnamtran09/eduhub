@@ -15,7 +15,7 @@ function EmptyState({ icon: Icon = Inbox, title, description, action, className 
   return (
     <div
       className={cn(
-        "rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-10 text-center",
+        "rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-10 text-center",
         className,
       )}
       role="status"

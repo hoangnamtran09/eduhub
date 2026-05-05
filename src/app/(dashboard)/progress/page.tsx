@@ -116,7 +116,7 @@ export default function ProgressPage() {
         <StatCard icon={Gem} value={String(data.stats.diamonds)} label="Kim cương" variant="violet" />
       </div>
 
-      <Card className="border-white/80 bg-white/94 shadow-soft">
+      <Card className="border-white/80 bg-white shadow-soft">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-brand-600" />
@@ -149,7 +149,7 @@ export default function ProgressPage() {
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {data.achievements.map((achievement) => (
-            <Card key={achievement.id} className={`border-white/80 bg-white/94 shadow-soft ${!achievement.unlocked ? "opacity-60" : ""}`}>
+            <Card key={achievement.id} className={`border-white/80 bg-white shadow-soft ${!achievement.unlocked ? "opacity-60" : ""}`}>
               <CardContent className="p-4 text-center">
                 <div className={`mb-2 text-4xl ${!achievement.unlocked ? "grayscale" : ""}`}>{achievement.icon}</div>
                 <h4 className="font-medium text-slate-900">{achievement.title}</h4>
@@ -170,7 +170,7 @@ export default function ProgressPage() {
       </div>
       )}
 
-      <Card className="border-white/80 bg-white/94 shadow-soft">
+      <Card className="border-white/80 bg-white shadow-soft">
         <CardHeader>
           <CardTitle>Hoạt động gần đây</CardTitle>
         </CardHeader>
@@ -183,7 +183,7 @@ export default function ProgressPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-slate-800">{activity.title}</p>
-                  <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">{activity.time}</p>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-wider text-slate-400">{activity.time}</p>
                 </div>
               </div>
             ))

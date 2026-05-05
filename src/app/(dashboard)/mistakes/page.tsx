@@ -239,10 +239,10 @@ export default function MistakesPage() {
     const allAnswered = quizAnswers.every((a) => a !== null);
     return (
       <div className="mx-auto max-w-3xl space-y-6 pb-8">
-        <div className="rounded-[28px] border border-slate-200/80 bg-white/90 p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-600">Bài ôn tập</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-600">Bài ôn tập</p>
               <h2 className="mt-1 text-xl font-bold text-slate-900">{activeQuiz.topic}</h2>
               {activeQuiz.lessonTitle && <p className="mt-1 text-sm text-slate-500">{activeQuiz.lessonTitle}</p>}
             </div>
@@ -253,7 +253,7 @@ export default function MistakesPage() {
         </div>
 
         {activeQuiz.questions.map((q, qIdx) => (
-          <div key={q.id} className="rounded-[24px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+          <div key={q.id} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <p className="text-sm font-bold text-slate-700">Câu {qIdx + 1}/{activeQuiz.questions.length}</p>
             <p className="mt-2 text-base text-slate-900">{q.question}</p>
             <div className="mt-4 grid gap-2">
@@ -290,7 +290,7 @@ export default function MistakesPage() {
     return (
       <div className="mx-auto max-w-3xl space-y-6 pb-8">
         <div className={cn(
-          "rounded-[28px] border p-6 shadow-sm text-center",
+          "rounded-2xl border p-6 shadow-sm text-center",
           quizResult.passed ? "border-emerald-200 bg-emerald-50" : "border-orange-200 bg-orange-50",
         )}>
           {quizResult.passed
@@ -313,7 +313,7 @@ export default function MistakesPage() {
 
         {quizResult.results.map((r, idx) => (
           <div key={r.questionId} className={cn(
-            "rounded-[24px] border p-5",
+            "rounded-2xl border p-5",
             r.isCorrect ? "border-emerald-200 bg-emerald-50/50" : "border-rose-200 bg-rose-50/50",
           )}>
             <div className="flex items-start gap-3">
@@ -356,7 +356,7 @@ export default function MistakesPage() {
   return (
     <div className="space-y-8 pb-8">
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr),360px]">
-        <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-sm">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-7 shadow-sm">
           <PageHeader
             label="Phân tích điểm yếu"
             labelVariant="rose"
@@ -379,8 +379,8 @@ export default function MistakesPage() {
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,#1f2937_0%,#111827_100%)] p-6 text-white shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Snapshot phân tích</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,#1f2937_0%,#111827_100%)] p-6 text-white shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Snapshot phân tích</p>
           <div className="mt-4 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-sm text-white/65">Vùng ưu tiên cao nhất</p>
@@ -403,7 +403,7 @@ export default function MistakesPage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-5">
-        <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Chủ đề yếu</p>
           <p className="mt-2 text-3xl font-semibold text-slate-900">{data.weaknesses.length}</p>
         </div>
@@ -419,13 +419,13 @@ export default function MistakesPage() {
           <p className="text-sm text-violet-600">Lần ôn tập</p>
           <p className="mt-2 text-3xl font-semibold text-violet-900">{remediationStats.totalAttempts}</p>
         </div>
-        <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Chuỗi học</p>
           <p className="mt-2 text-3xl font-semibold text-slate-900">{data.summary.streakDays}</p>
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Chủ đề cần tập trung</h2>
@@ -443,10 +443,10 @@ export default function MistakesPage() {
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-lg font-semibold text-slate-900">{item.topic}</h3>
-                      <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${severityBadge(item.severity)}`}>
+                      <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.12em] ${severityBadge(item.severity)}`}>
                         {item.severity}
                       </span>
-                      <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${statusClass(item.status)}`}>
+                      <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.12em] ${statusClass(item.status)}`}>
                         {statusLabel(item.status)}
                       </span>
                     </div>
@@ -559,7 +559,7 @@ export default function MistakesPage() {
                           {item.signalBreakdown.map((signal, index) => (
                             <div key={`${item.id}-${signal.source}-${index}`} className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3">
                               <div className="flex flex-wrap items-center justify-between gap-2">
-                                <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+                                <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600">
                                   {signalLabel(signal.source)}
                                 </span>
                                 <span className="text-xs font-medium text-slate-400">Trọng số {signal.weight}</span>
@@ -585,7 +585,7 @@ export default function MistakesPage() {
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Dấu vết lỗi sai gần đây</h2>
@@ -627,10 +627,10 @@ export default function MistakesPage() {
 
       <RemediationProgressSection />
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(15,23,42,0.96)_0%,rgba(16,58,74,0.94)_100%)] p-6 text-white shadow-sm">
+      <section className="rounded-2xl border border-slate-200/80 bg-[linear-gradient(135deg,rgba(15,23,42,0.96)_0%,rgba(16,58,74,0.94)_100%)] p-6 text-white shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Bước tiếp theo</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Bước tiếp theo</p>
             <h3 className="mt-2 text-2xl font-semibold">Chuyển các phát hiện này thành hành động học tập cụ thể</h3>
             <p className="mt-2 max-w-2xl text-sm text-white/70">Lộ trình cá nhân hóa sẽ sắp xếp thứ tự ôn tập, luyện tập và tự kiểm tra theo đúng các vùng bạn đang yếu nhất.</p>
           </div>
@@ -689,7 +689,7 @@ function RemediationProgressSection() {
 
   if (loading) {
     return (
-      <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" /> Đang tải báo cáo tiến bộ...
         </div>
@@ -703,7 +703,7 @@ function RemediationProgressSection() {
   const improved = topicProgress.filter((t) => t.bestScore != null && t.initialScore != null && t.bestScore > t.initialScore);
 
   return (
-    <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
       <div className="mb-5">
         <h2 className="text-lg font-semibold text-slate-900">Báo cáo tiến bộ khắc phục</h2>
         <p className="text-sm text-slate-500">Theo dõi hành trình ôn luyện và cải thiện điểm yếu theo thời gian.</p>
@@ -750,7 +750,7 @@ function RemediationProgressSection() {
                         : <Clock className="h-4 w-4 text-orange-400" />}
                       <span className="text-sm font-semibold text-slate-900">{t.topic}</span>
                       <span className={cn(
-                        "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase",
+                        "rounded-full border px-2 py-0.5 text-xs font-semibold uppercase",
                         isRemediated ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700",
                       )}>
                         {isRemediated ? "Khắc phục" : "Đang ôn"}

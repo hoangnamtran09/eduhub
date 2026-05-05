@@ -32,7 +32,7 @@ const markdownComponents = {
     ),
   hr: ({ node, ...props }: any) => <hr className="my-4 border-current/10" {...props} />,
   table: ({ node, ...props }: any) => (
-    <div className="my-3 overflow-x-auto rounded-xl border border-current/10 bg-white/70">
+    <div className="my-3 overflow-x-auto rounded-xl border border-current/10 bg-white">
       <table className="min-w-full text-left text-xs" {...props} />
     </div>
   ),

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
 import { 
   BookOpen, ChevronLeft, ChevronRight, PlayCircle, FileText, 
@@ -114,35 +115,30 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 lg:px-10">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Subject Header Section - Compact */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/94 p-6 rounded-[32px] border border-white/80 shadow-panel">
-          <div className="flex items-center gap-6">
-            <div className={cn(
-              "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg border-4 border-white shrink-0",
-              `bg-gradient-to-br ${subject.gradient}`
-            )}>
-              {subject.icon}
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Button 
-                  variant="link" 
+        {/* Subject Header */}
+        <div className="flex items-center gap-6 bg-white p-6 rounded-2xl border border-white/80 shadow-panel">
+          <div className={cn(
+            "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg border-4 border-white shrink-0",
+            `bg-gradient-to-br ${subject.gradient}`
+          )}>
+            {subject.icon}
+          </div>
+          <div className="flex-1">
+            <PageHeader
+              title={subject.name}
+              description={`${totalLessons} bài học đang chờ bạn`}
+              actions={
+                <Button
+                  variant="link"
                   onClick={() => router.push('/courses')}
                   className="h-auto p-0 text-slate-400 hover:text-brand-600 transition-all flex items-center gap-1"
                 >
                   <ArrowLeft className="w-3 h-3" />
-                  <span className="font-bold text-[10px] uppercase tracking-widest">Quay lại</span>
+                  <span className="font-bold text-xs uppercase tracking-widest">Quay lại</span>
                 </Button>
-              </div>
-              <h1 className="font-serif text-3xl font-semibold text-slate-900 tracking-tight leading-tight">
-                {subject.name}
-              </h1>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-tight mt-0.5">
-                {totalLessons} bài học đang chờ bạn
-              </p>
-            </div>
+              }
+            />
           </div>
-
         </div>
 
         {/* Content Grid */}
@@ -161,7 +157,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
                   
                   <div className="space-y-4">
                   {course.chapters.map((chapter, idx) => (
-                    <div key={chapter.id} className="bg-white/94 rounded-[28px] border border-white/80 shadow-soft overflow-hidden group hover:border-brand-200 transition-all">
+                    <div key={chapter.id} className="bg-white rounded-2xl border border-white/80 shadow-soft overflow-hidden group hover:border-brand-200 transition-all">
                       {/* Chapter Header */}
                       <div className="px-6 py-4 flex items-center justify-between bg-paper-50/60 border-b border-paper-200">
                         <div className="flex items-center gap-4">
@@ -200,12 +196,12 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
                                     {lesson.title}
                                   </h4>
                                   <div className="flex items-center gap-3 mt-1">
-                                    <span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-tight">
+                                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-tight">
                                       <BookOpen className="w-3.5 h-3.5" />
                                       Lý thuyết
                                     </span>
                                     <span className="w-1 h-1 rounded-full bg-slate-200" />
-                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-tight">
                                       {lesson.duration} phút
                                     </span>
                                   </div>
@@ -231,7 +227,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
                 </div>
               ))
             ) : (
-              <div className="text-center py-20 bg-white rounded-[32px] border border-slate-200 shadow-sm">
+              <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200">
                   <AlertCircle className="w-10 h-10" />
                 </div>

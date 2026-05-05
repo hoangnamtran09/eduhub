@@ -18,7 +18,7 @@ function SectionLabel({ variant = "brand", className, children, ...props }: Sect
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]",
         labelVariants[variant],
         className,
       )}

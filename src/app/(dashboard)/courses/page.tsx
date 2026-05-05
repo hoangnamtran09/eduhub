@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { 
   BookOpen, 
   Search, 
@@ -61,22 +62,10 @@ export default function CoursesPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 lg:px-10">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Compact Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded-lg bg-brand-50 text-brand-700 text-[9px] font-black uppercase tracking-[0.15em] border border-brand-100">
-                Kho kiến thức
-              </span>
-              <span className="w-1 h-1 rounded-full bg-slate-200" />
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">
-                {subjects.length} môn học
-              </span>
-            </div>
-            <h1 className="font-serif text-3xl font-semibold text-slate-900 tracking-tight">Khám phá môn học</h1>
-          </div>
-          
-          <div className="flex items-center gap-3">
+        <PageHeader
+          label="Kho kiến thức"
+          title="Khám phá môn học"
+          actions={
             <div className="relative group hidden sm:block">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-brand-500 transition-colors" />
               <Input
@@ -86,8 +75,8 @@ export default function CoursesPage() {
                 className="pl-10 h-10 w-60 bg-white border-slate-200 focus:ring-4 focus:ring-brand-500/5 transition-all rounded-xl text-xs font-bold"
               />
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* Subjects Grid - Optimized for space */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -97,14 +86,14 @@ export default function CoursesPage() {
               onClick={() => router.push(`/courses/${subject.id}`)}
               className="group cursor-pointer"
             >
-              <Card className="bg-white/94 rounded-[28px] border border-white/80 shadow-sm group-hover:shadow-2xl group-hover:shadow-slate-200 group-hover:border-brand-200 transition-all duration-500 overflow-hidden h-full flex flex-col">
+              <Card className="bg-white rounded-2xl border border-white/80 shadow-sm group-hover:shadow-2xl group-hover:shadow-slate-200 group-hover:border-brand-200 transition-all duration-500 overflow-hidden h-full flex flex-col">
                 {/* Compact Visual Header */}
                 <div className={cn(
                   "h-32 relative flex items-center justify-center text-4xl transition-transform duration-700 group-hover:scale-110",
                     `bg-gradient-to-br ${subject.gradient || "from-ink-800 via-brand-600 to-accent-500"}`
                   )}>
                   <span className="relative z-10 drop-shadow-lg">{subject.icon}</span>
-                  <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px] m-3 rounded-[20px] border border-white/10" />
+                  <div className="absolute inset-0 bg-white/5 m-3 rounded-2xl border border-white/10" />
                 </div>
 
                 <CardContent className="p-6 flex-1 flex flex-col">
@@ -112,7 +101,7 @@ export default function CoursesPage() {
                     <h3 className="text-lg font-bold text-slate-900 mb-1.5 group-hover:text-brand-600 transition-colors leading-snug">
                       {subject.name}
                     </h3>
-                    <p className="text-slate-500 text-[11px] font-medium line-clamp-2 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
+                    <p className="text-slate-500 text-xs font-medium line-clamp-2 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
                       {subject.description || "Học tập hiệu quả với các bài học được cấu trúc khoa học và sự hỗ trợ từ AI."}
                     </p>
                   </div>
@@ -121,12 +110,12 @@ export default function CoursesPage() {
                     <div className="flex items-center gap-3">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-slate-900">{subject.totalLessons}</span>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Bài học</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Bài học</span>
                       </div>
                       <div className="w-px h-5 bg-slate-100" />
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-slate-900">{subject.coursesCount}</span>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Khóa học</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Khóa học</span>
                       </div>
                     </div>
                     

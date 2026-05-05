@@ -102,7 +102,7 @@ function RoleLoginFormContent({ role, title, description, showGoogleLogin }: Rol
 
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
           <div className="mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-white/20  flex items-center justify-center mb-6">
               <GraduationCap className="w-8 h-8" />
             </div>
             <h1 className="font-serif text-4xl md:text-5xl font-bold mb-4 leading-tight">

@@ -182,7 +182,7 @@ export default function AdminAchievementsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[calc(100vh-48px)] items-center justify-center rounded-[32px] border border-white/80 bg-white/90 text-slate-600 shadow-panel">
+      <div className="flex min-h-[calc(100vh-48px)] items-center justify-center rounded-2xl border border-white/80 bg-white text-slate-600 shadow-panel">
         <div className="text-center">
           <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-slate-500" />
           <p>Đang tải danh sách thành tựu...</p>
@@ -192,8 +192,8 @@ export default function AdminAchievementsPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-48px)] rounded-[36px] border border-white/80 bg-paper-100/70 text-slate-900 shadow-panel backdrop-blur-sm">
-      <header className="border-b border-white/80 bg-white/88 px-6 py-5">
+    <div className="min-h-[calc(100vh-48px)] rounded-2xl border border-white/80 bg-paper-100/70 text-slate-900 shadow-panel ">
+      <header className="border-b border-white/80 bg-white px-6 py-5">
         <div>
           <h1 className="font-serif text-[30px] font-semibold tracking-tight text-slate-900">Quản lý thành tựu</h1>
           <p className="mt-1 text-sm text-slate-500">Admin có thể tạo thêm các cột mốc mở khóa hiển thị trong trang tiến độ và dashboard.</p>
@@ -317,7 +317,7 @@ export default function AdminAchievementsPage() {
                         <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-base font-semibold text-slate-900">{achievement.title}</h3>
                         {achievement.isActive && (
-                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700">Active</span>
+                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Active</span>
                         )}
                         </div>
                         <p className="mt-1 text-sm text-slate-600">{achievement.description}</p>
@@ -363,7 +363,7 @@ export default function AdminAchievementsPage() {
           </div>
 
           {!achievements.length && (
-            <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/80 p-10 text-center text-slate-500">
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
               <Sparkles className="mx-auto mb-3 h-6 w-6 text-slate-400" />
               Chưa có thành tựu nào trong hệ thống. Tạo thành tựu đầu tiên ở khối bên trái.
             </div>

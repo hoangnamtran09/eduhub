@@ -584,7 +584,7 @@ Hãy phản hồi như gia sư AI trong 3-5 câu: động viên, giải thích n
                   >
                     <div
                       className={cn(
-                        "mb-1 px-1 text-[10px] font-bold uppercase tracking-[0.18em]",
+                        "mb-1 px-1 text-xs font-bold uppercase tracking-[0.18em]",
                         msg.role === "user"
                           ? "text-blue-600"
                           : assistantVariant === "question"

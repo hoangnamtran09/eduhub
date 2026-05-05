@@ -13,7 +13,7 @@ interface StatCardProps {
 
 const variants: Record<string, { card: string; icon: string; value: string; label: string }> = {
   default: {
-    card: "border-slate-200/80 bg-white/90",
+    card: "border-slate-200/80 bg-white",
     icon: "bg-brand-50 text-brand-600",
     value: "text-slate-900",
     label: "text-slate-500",
@@ -54,10 +54,10 @@ function StatCard({ icon: Icon, value, label, sublabel, variant = "default", cla
   const v = variants[variant] || variants.default;
 
   return (
-    <div className={cn("rounded-3xl border p-5 shadow-sm", v.card, className)} role="group" aria-label={label}>
+    <div className={cn("rounded-xl border p-5 shadow-sm", v.card, className)} role="group" aria-label={label}>
       <div className="flex items-center gap-4">
         {Icon && (
-          <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl", v.icon)}>
+          <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", v.icon)}>
             <Icon className="h-5 w-5" aria-hidden="true" />
           </div>
         )}

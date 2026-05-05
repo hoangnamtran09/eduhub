@@ -235,7 +235,7 @@ export default function AdminStudentsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[calc(100vh-48px)] items-center justify-center rounded-[32px] border border-white/80 bg-white/90 text-slate-600 shadow-panel">
+      <div className="flex min-h-[calc(100vh-48px)] items-center justify-center rounded-2xl border border-white/80 bg-white text-slate-600 shadow-panel">
         <div className="text-center">
           <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-slate-500" />
           <p>Đang tải dữ liệu học sinh...</p>
@@ -246,17 +246,17 @@ export default function AdminStudentsPage() {
 
   return (
     <>
-      <div className="min-h-[calc(100vh-48px)] rounded-[30px] border border-white/80 bg-paper-100/70 text-slate-900 shadow-panel backdrop-blur-sm">
-        <header className="border-b border-white/80 bg-white/88 px-5 py-4">
+      <div className="min-h-[calc(100vh-48px)] rounded-[30px] border border-white/80 bg-paper-100/70 text-slate-900 shadow-panel ">
+        <header className="border-b border-white/80 bg-white px-5 py-4">
           <div>
-            <div className="mb-1.5 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-700">
+            <div className="mb-1.5 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">
               LMS Registry
             </div>
             <h1 className="font-serif text-[26px] font-semibold tracking-tight text-slate-900">Quản lý học sinh</h1>
           </div>
         </header>
 
-        <section className="border-b border-white/80 bg-white/88 px-5 py-3.5">
+        <section className="border-b border-white/80 bg-white px-5 py-3.5">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex w-full flex-col gap-2.5 xl:max-w-2xl xl:flex-row xl:items-center">
               <div className="relative w-full xl:max-w-md">
@@ -282,7 +282,7 @@ export default function AdminStudentsPage() {
                 </select>
               </div>
             </div>
-            <div className="text-[11px] text-slate-500">
+            <div className="text-xs text-slate-500">
               Bộ lọc hiện tại: <span className="font-medium text-slate-700">{selectedGrade === "all" ? "Tất cả khối lớp" : selectedGrade === "none" ? "Chưa phân lớp" : `Lớp ${selectedGrade}`}</span>
             </div>
           </div>
@@ -294,7 +294,7 @@ export default function AdminStudentsPage() {
               <h2 className="text-sm font-semibold text-slate-900">Danh sách học sinh</h2>
               <p className="text-xs text-slate-500">{filteredStudents.length} bản ghi phù hợp</p>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-500 shadow-soft">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500 shadow-soft">
               <Users className="h-4 w-4 text-slate-400" />
               <span>{parents.length} tài khoản phụ huynh có thể gắn</span>
             </div>
@@ -317,7 +317,7 @@ export default function AdminStudentsPage() {
                           <h3 className="text-sm font-semibold text-slate-900">
                             {student.fullName || "Chưa cập nhật tên"}
                           </h3>
-                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-600">
                             {student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}
                           </span>
                         </div>
@@ -326,7 +326,7 @@ export default function AdminStudentsPage() {
                           <MiniBadge label="Kim cương" value={student.diamonds} />
                           <MiniBadge label="Chuỗi học" value={student.profile?.streakDays || 0} />
                         </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                           <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 font-semibold text-slate-700">
                             Phụ huynh: {student.parent?.fullName || student.parent?.email || "Chưa gắn tài khoản"}
                           </span>
@@ -345,7 +345,7 @@ export default function AdminStudentsPage() {
                         <p className="mt-2 text-xs text-slate-600">
                           Thời gian học đã ghi nhận: <span className="font-semibold text-slate-900">{formatStudyTime(totalStudySeconds)}</span>
                         </p>
-                        <p className="mt-1.5 text-[11px] text-slate-400">
+                        <p className="mt-1.5 text-xs text-slate-400">
                           Tạo ngày {new Date(student.createdAt).toLocaleDateString("vi-VN")}
                           {student.profile?.lastActive
                             ? ` • Hoạt động gần nhất ${new Date(student.profile.lastActive).toLocaleDateString("vi-VN")}`
@@ -384,7 +384,7 @@ export default function AdminStudentsPage() {
             })}
 
             {!filteredStudents.length && (
-              <div className="rounded-[24px] border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-slate-500 shadow-soft">
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-slate-500 shadow-soft">
                 Không có học sinh nào phù hợp với bộ lọc hiện tại.
               </div>
             )}
@@ -393,8 +393,8 @@ export default function AdminStudentsPage() {
       </div>
 
       {editingStudentId && form && (
-        <div className="fixed inset-0 z-50 bg-slate-950/45 p-4 backdrop-blur-sm sm:p-6">
-          <div className="mx-auto flex h-full max-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-2xl sm:max-h-[calc(100vh-3rem)]">
+        <div className="fixed inset-0 z-50 bg-slate-950/45 p-4  sm:p-6">
+          <div className="mx-auto flex h-full max-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/80 bg-white shadow-2xl sm:max-h-[calc(100vh-3rem)]">
             <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Chỉnh sửa học sinh</div>
@@ -460,21 +460,21 @@ export default function AdminStudentsPage() {
                       <textarea
                         value={form.goals}
                         onChange={(event) => setForm((current) => current ? { ...current, goals: event.target.value } : current)}
-                        className="min-h-[128px] w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                        className="min-h-[128px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                       />
                     </Field>
                     <Field label="Điểm mạnh - mỗi dòng một ý">
                       <textarea
                         value={form.strengths}
                         onChange={(event) => setForm((current) => current ? { ...current, strengths: event.target.value } : current)}
-                        className="min-h-[128px] w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                        className="min-h-[128px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                       />
                     </Field>
                     <Field label="Cần cải thiện - mỗi dòng một ý">
                       <textarea
                         value={form.weaknesses}
                         onChange={(event) => setForm((current) => current ? { ...current, weaknesses: event.target.value } : current)}
-                        className="min-h-[128px] w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                        className="min-h-[128px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                       />
                     </Field>
                   </CardContent>
@@ -499,7 +499,7 @@ export default function AdminStudentsPage() {
                       </select>
                     </Field>
 
-                    <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                       {form.parentId
                         ? `Tai khoan dang chon: ${parents.find((parent) => parent.id === form.parentId)?.fullName || parents.find((parent) => parent.id === form.parentId)?.email || "Khong xac dinh"}`
                         : "Chon mot tai khoan phu huynh de cho phep phu huynh theo doi tien do, bai tap va canh bao hoc tap cua hoc sinh nay."}
@@ -526,8 +526,8 @@ export default function AdminStudentsPage() {
       )}
 
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/45 p-4 backdrop-blur-sm sm:p-6">
-          <div className="mx-auto flex w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-slate-950/45 p-4  sm:p-6">
+          <div className="mx-auto flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/80 bg-white shadow-2xl">
             <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Tạo tài khoản học sinh</div>
@@ -602,7 +602,7 @@ export default function AdminStudentsPage() {
                 </Field>
               </div>
 
-              <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <label className="flex items-start gap-3 text-sm text-slate-700">
                   <input
                     type="checkbox"
@@ -688,7 +688,7 @@ export default function AdminStudentsPage() {
 
 function MiniBadge({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600">
+    <div className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-600">
       <span className="font-semibold text-slate-900">{value}</span> {label}
     </div>
   );
