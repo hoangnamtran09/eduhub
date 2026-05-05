@@ -62,6 +62,7 @@ const parentNavItems = [
 ];
 
 const teacherNavItems = [
+  { href: "/teacher", label: "Tổng quan", icon: LayoutDashboard },
   { href: "/teacher/students", label: "Học sinh của tôi", icon: Library },
   { href: "/teacher/assignments", label: "Giao bài tập", icon: NotebookPen },
   { href: "/settings", label: "Cài đặt", icon: Settings },

@@ -14,16 +14,23 @@ export async function POST(request: Request) {
     const normalizedEmail = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     const password = body?.password;
     const fullName = typeof body?.fullName === "string" ? body.fullName.trim() : "";
-    const gradeLevel = Number(body.gradeLevel);
+    const role = body?.role === "PARENT" ? "PARENT" : "STUDENT";
+    const gradeLevel = role === "STUDENT" ? Number(body.gradeLevel) : null;
 
-    if (!normalizedEmail || !password || !fullName || !Number.isInteger(gradeLevel) || gradeLevel < 1 || gradeLevel > 12) {
+    if (!normalizedEmail || !password || !fullName) {
       return NextResponse.json(
-        { error: "Vui lòng điền đầy đủ thông tin và chọn lớp" },
+        { error: "Vui lòng điền đầy đủ thông tin" },
         { status: 400 }
       );
     }
 
-    // Check if user exists
+    if (role === "STUDENT" && (!Number.isInteger(gradeLevel) || (gradeLevel as number) < 1 || (gradeLevel as number) > 12)) {
+      return NextResponse.json(
+        { error: "Vui lòng chọn lớp" },
+        { status: 400 }
+      );
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
@@ -35,18 +42,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email: normalizedEmail,
         fullName,
-        role: "STUDENT",
+        role,
         gradeLevel,
         passwordHash: await hashPassword(password),
       },
     });
 
-    // Create student profile if role is student
     if (user.role === "STUDENT") {
       await prisma.studentProfile.create({
         data: {
@@ -55,11 +60,10 @@ export async function POST(request: Request) {
       });
     }
 
-    // Create JWT
-    const token = await createAuthToken({ 
-      userId: user.id, 
+    const token = await createAuthToken({
+      userId: user.id,
       email: user.email,
-      role: user.role 
+      role: user.role
     });
 
     await setAuthCookie(token);

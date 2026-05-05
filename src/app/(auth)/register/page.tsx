@@ -172,18 +172,26 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <select
-                  value={formData.gradeLevel}
-                  onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
-                  className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
-                  required
-                >
-                  {Array.from({ length: 12 }, (_, index) => index + 1).map((grade) => (
-                    <option key={grade} value={grade}>Lớp {grade}</option>
-                  ))}
-                </select>
-              </div>
+              {selectedRole === "STUDENT" && (
+                <div className="space-y-1.5">
+                  <select
+                    value={formData.gradeLevel}
+                    onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
+                    className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
+                    required
+                  >
+                    {Array.from({ length: 12 }, (_, index) => index + 1).map((grade) => (
+                      <option key={grade} value={grade}>Lớp {grade}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {selectedRole === "PARENT" && (
+                <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-sm text-blue-700">
+                  Bạn sẽ tạo tài khoản cho con sau khi đăng ký. Mỗi tài khoản con sẽ được tự động liên kết với bạn.
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <div className="relative">

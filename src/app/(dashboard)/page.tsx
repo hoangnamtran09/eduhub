@@ -19,10 +19,13 @@ import {
   Flame,
   Layers3,
   Loader2,
+  Mail,
   Play,
+  Plus,
   ShieldAlert,
   Target,
   TrendingUp,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -838,8 +841,96 @@ function StudentDashboard({ report, progress, hasAchievements }: { report: Stude
 }
 
 function ParentDashboard({ report }: { report: ParentReportData }) {
+  const [showCreateChild, setShowCreateChild] = useState(false);
+  const [childForm, setChildForm] = useState({ fullName: "", email: "", password: "", gradeLevel: "6" });
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+
+  const handleCreateChild = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    setCreateError("");
+    try {
+      const res = await fetch("/api/parent/create-child", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: childForm.fullName,
+          email: childForm.email,
+          password: childForm.password,
+          gradeLevel: Number(childForm.gradeLevel),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Không thể tạo tài khoản cho con");
+      window.location.reload();
+    } catch (err: any) {
+      setCreateError(err.message || "Lỗi không xác định");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
+      {showCreateChild && (
+        <div className="rounded-2xl border border-brand-200 bg-brand-50/30 p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-ink-900">Tạo tài khoản cho con</h3>
+              <p className="text-sm text-ink-500">Tài khoản con sẽ được tự động liên kết với bạn.</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => { setShowCreateChild(false); setCreateError(""); }}>
+              Hủy
+            </Button>
+          </div>
+          {createError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{createError}</div>
+          )}
+          <form onSubmit={handleCreateChild} className="grid gap-4 md:grid-cols-2">
+            <input
+              className="h-11 w-full rounded-xl border border-ink-200 bg-white px-4 text-sm text-ink-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-50"
+              placeholder="Họ tên con"
+              value={childForm.fullName}
+              onChange={(e) => setChildForm({ ...childForm, fullName: e.target.value })}
+              required
+            />
+            <input
+              type="email"
+              className="h-11 w-full rounded-xl border border-ink-200 bg-white px-4 text-sm text-ink-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-50"
+              placeholder="Email của con"
+              value={childForm.email}
+              onChange={(e) => setChildForm({ ...childForm, email: e.target.value })}
+              required
+            />
+            <input
+              type="password"
+              className="h-11 w-full rounded-xl border border-ink-200 bg-white px-4 text-sm text-ink-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-50"
+              placeholder="Mật khẩu (ít nhất 8 ký tự)"
+              value={childForm.password}
+              onChange={(e) => setChildForm({ ...childForm, password: e.target.value })}
+              required
+              minLength={8}
+            />
+            <select
+              className="h-11 w-full rounded-xl border border-ink-200 bg-white px-4 text-sm text-ink-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-50"
+              value={childForm.gradeLevel}
+              onChange={(e) => setChildForm({ ...childForm, gradeLevel: e.target.value })}
+              required
+            >
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((g) => (
+                <option key={g} value={g}>Lớp {g}</option>
+              ))}
+            </select>
+            <div className="md:col-span-2 flex justify-end">
+              <Button type="submit" disabled={creating} isLoading={creating}>
+                {creating ? "Đang tạo..." : "Tạo tài khoản cho con"}
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr),360px]">
         <div className="rounded-2xl border border-slate-200/80 bg-white p-7 shadow-sm">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
@@ -952,20 +1043,37 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
 
         <div className="space-y-6">
           <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-            <SectionTitle title="Tổng quan từng con" description="Tập trung vào nhịp học, bài tập tồn đọng và các chủ đề cần củng cố." />
+            <div className="flex items-center justify-between gap-4">
+              <SectionTitle title="Tổng quan từng con" description="Tập trung vào nhịp học, bài tập tồn đọng và các chủ đề cần củng cố." />
+              {report.children.length > 0 && (
+                <Button variant="outline" size="sm" onClick={() => setShowCreateChild(true)} leftIcon={<Plus className="h-4 w-4" />}>
+                  Thêm con
+                </Button>
+              )}
+            </div>
             <div className="mt-5 space-y-3">
+              {report.children.length === 0 && !showCreateChild && (
+                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-8 text-center">
+                  <UserPlus className="mx-auto h-10 w-10 text-slate-300" />
+                  <p className="mt-3 font-semibold text-slate-700">Bạn chưa có tài khoản con nào</p>
+                  <p className="mt-1 text-sm text-slate-500">Tạo tài khoản cho con để bắt đầu theo dõi tiến độ học tập.</p>
+                  <Button className="mt-4" onClick={() => setShowCreateChild(true)} leftIcon={<Plus className="h-4 w-4" />}>
+                    Tạo tài khoản cho con
+                  </Button>
+                </div>
+              )}
               {report.children.map((student) => (
-                <div key={student.id} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                <div key={student.id} className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-900">{student.fullName || student.email}</p>
+                    <Link href={`/child/${student.id}`} className="min-w-0 flex-1 group cursor-pointer">
+                      <p className="truncate font-semibold text-slate-900 group-hover:text-brand-600 transition-colors">{student.fullName || student.email}</p>
                       <p className="mt-1 text-sm text-slate-500">{student.gradeLevel ? `Lớp ${student.gradeLevel}` : "Chưa phân lớp"}</p>
-                    </div>
-                    <div className={cn("rounded-full px-2.5 py-1 text-xs font-medium", student.alertSummary.level === "critical" ? "bg-rose-100 text-rose-700" : student.alertSummary.level === "warning" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700")}>
+                    </Link>
+                    <div className={cn("rounded-full px-2.5 py-1 text-xs font-medium shrink-0", student.alertSummary.level === "critical" ? "bg-rose-100 text-rose-700" : student.alertSummary.level === "warning" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700")}>
                       {student.alertSummary.level === "critical" ? "Cần ưu tiên" : student.alertSummary.level === "warning" ? "Cần theo dõi" : "Ổn định"}
                     </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                  <Link href={`/child/${student.id}`} className="mt-4 grid grid-cols-2 gap-3 text-sm rounded-xl border border-transparent hover:border-brand-100 hover:bg-brand-50/50 p-2 -m-2 transition-all">
                     <div>
                       <p className="text-xs text-slate-500">Thời lượng học</p>
                       <p className="font-semibold text-slate-900">{formatStudyTime(student.totalStudySeconds, true)}</p>
@@ -982,13 +1090,21 @@ function ParentDashboard({ report }: { report: ParentReportData }) {
                       <p className="text-xs text-slate-500">Chủ đề yếu</p>
                       <p className="font-semibold text-slate-900">{student.weaknessSummary.count}</p>
                     </div>
+                  </Link>
+                  <div className="mt-3 flex items-center gap-2">
+                    <Link
+                      href={`/child/${student.id}`}
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-100"
+                    >
+                      Xem chi tiết <ArrowRight className="h-4 w-4" />
+                    </Link>
+                    <a
+                      href={`mailto:${student.email}?subject=${encodeURIComponent("Nhắc học hôm nay")}&body=${encodeURIComponent("Con vào EduHub hoàn thành bài tập và học một phiên ngắn hôm nay nhé.")}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 shrink-0"
+                    >
+                      <Mail className="h-4 w-4" /> Nhắn
+                    </a>
                   </div>
-                  <a
-                    href={`mailto:${student.email}?subject=${encodeURIComponent("Nhắc học hôm nay")}&body=${encodeURIComponent("Con vào EduHub hoàn thành bài tập và học một phiên ngắn hôm nay nhé.")}`}
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                  >
-                    Nhắn/nhắc con <ArrowRight className="h-4 w-4" />
-                  </a>
                   {!!student.weaknessSummary.topics.length && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {student.weaknessSummary.topics.map((topic) => (

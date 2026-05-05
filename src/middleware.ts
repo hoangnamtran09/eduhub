@@ -49,6 +49,12 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    if (pathname.startsWith("/child")) {
+      if (userRole !== "PARENT") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
+
     // Role-based dashboard protection
     return NextResponse.next();
   } catch (error) {

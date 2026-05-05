@@ -9,7 +9,7 @@ export default async function TeacherLayout({
   const authUser = await getAuthUser();
 
   if (!authUser) {
-    redirect("/login?callbackUrl=/teacher/students");
+    redirect("/login?callbackUrl=/teacher");
   }
 
   if (authUser.role !== "TEACHER") {
