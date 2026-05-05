@@ -208,7 +208,7 @@ export function Sidebar() {
       </div>
 
       <nav className="hidden space-y-2 px-3 py-5 lg:block" aria-label="Menu chính">
-        {!mounted || isAuthLoading
+        {!mounted || isAuthLoading || !user || isLoggingOut
           ? Array.from({ length: collapsed ? 5 : 6 }).map((_, index) => (
               <div
                 key={index}
@@ -366,6 +366,7 @@ export function Sidebar() {
         <ChevronLeft className={cn("h-4 w-4 text-white", collapsed && "rotate-180")} />
       </Button>
 
+      {user && !isLoggingOut && (
       <nav
         className="fixed bottom-0 left-0 right-0 z-40 flex justify-around gap-1 border-t border-white/10 bg-ink-900/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 text-white lg:hidden"
         role="navigation"
@@ -392,6 +393,7 @@ export function Sidebar() {
           );
         })}
       </nav>
+      )}
     </aside>
   );
 }
