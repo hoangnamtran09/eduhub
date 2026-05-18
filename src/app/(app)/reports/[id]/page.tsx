@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useState, use, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   ArrowLeft, Clock, Award, Gem, Flame,
-  TrendingUp, TrendingDown, Minus,
+  TrendingUp, TrendingDown, Minus, Loader2,
 } from "lucide-react";
-import { api } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
 
 interface ReportData {
   dailyStudy: { date: string; minutes: number }[];
@@ -78,8 +72,8 @@ function dayLabel(dateStr: string): string {
   return date.toLocaleDateString("vi-VN", { weekday: "short" });
 }
 
-export default function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ReportDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +82,9 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
     setLoading(true);
     setError(null);
     try {
-      const data = await api<ReportResponse>(`/api/reports/${id}`);
+      const res = await fetch(`/api/reports/${id}`);
+      if (!res.ok) throw new Error("Không thể tải báo cáo");
+      const data: ReportResponse = await res.json();
       setReport(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Đã xảy ra lỗi");
@@ -116,15 +112,8 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div className="space-y-5">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-8 w-72" />
-        <Skeleton className="h-5 w-96" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
-        </div>
-        <Skeleton className="h-64 rounded-xl" />
-        <Skeleton className="h-48 rounded-xl" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-7 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -226,18 +215,21 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
             <div className="lg:col-span-2 bg-white rounded-xl border p-5">
               <h3 className="text-sm font-semibold text-gray-700 mb-4">📊 Thời gian học theo ngày</h3>
               {data.dailyStudy.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={data.dailyStudy.map(d => ({ ...d, label: dayLabel(d.date) }))}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis dataKey="label" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} unit="ph" />
-                    <Tooltip
-                      formatter={(value: number) => [`${value} phút`, "Học tập"]}
-                      labelFormatter={(label: string) => `Ngày ${label}`}
-                    />
-                    <Bar dataKey="minutes" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="flex items-end justify-between gap-2 h-[220px]">
+                  {data.dailyStudy.map((d, i) => {
+                    const maxMin = Math.max(...data.dailyStudy.map(x => x.minutes), 1);
+                    const height = Math.max(8, (d.minutes / maxMin) * 100);
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                        <span className="text-[10px] text-gray-400">{d.minutes}ph</span>
+                        <div className="w-full flex-1 flex items-end">
+                          <div className="w-full rounded-t-lg bg-indigo-500 transition-all" style={{ height: `${height}%` }} />
+                        </div>
+                        <span className="text-[10px] text-gray-500">{dayLabel(d.date)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="h-[220px] flex items-center justify-center text-gray-400 text-sm">
                   Chưa có dữ liệu học tập trong tuần này
