@@ -12,8 +12,6 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  /** Changes whenever a local authentication action supersedes an in-flight restore. */
-  authVersion: number;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   logout: () => void;
@@ -25,25 +23,22 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: false,
       isAuthenticated: false,
-      authVersion: 0,
 
       setUser: (user) =>
-        set((state) => ({
+        set({
           user,
           isAuthenticated: !!user,
           isLoading: false,
-          authVersion: state.authVersion + 1,
-        })),
+        }),
 
       setLoading: (isLoading) => set({ isLoading }),
 
       logout: () =>
-        set((state) => ({
+        set({
           user: null,
           isAuthenticated: false,
           isLoading: false,
-          authVersion: state.authVersion + 1,
-        })),
+        }),
     }),
     {
       name: "eduhub-auth",

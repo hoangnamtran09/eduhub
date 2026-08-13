@@ -28,7 +28,6 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -149,25 +148,17 @@ export function Sidebar() {
     if (isLoggingOut) return;
 
     setIsLoggingOut(true);
+    logout();
+    router.replace("/login");
 
     try {
-      const response = await fetch("/api/auth/logout", {
+      await fetch("/api/auth/logout", {
         method: "POST",
       });
-
-      if (!response.ok) {
-        throw new Error("Logout request failed");
-      }
-
-      // Clear the local state only after the server has expired the cookie.
-      // This prevents a short-lived but still valid server session.
-      logout();
-      router.replace("/login");
-      router.refresh();
     } catch (error) {
       console.error("Logout failed:", error);
-      toast.error("Không thể đăng xuất. Vui lòng thử lại.");
     } finally {
+      router.refresh();
       setIsLoggingOut(false);
     }
   };
