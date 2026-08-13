@@ -41,7 +41,7 @@ const markdownComponents = {
   text: ({ children }: any) => <ChemistryText>{children}</ChemistryText>,
 };
 
-const remarkMathOptions = { singleDollarTextMath: false };
+const remarkMathOptions = { singleDollarTextMath: true };
 const rehypeKatexOptions = { strict: false, throwOnError: false };
 
 const vietnameseCharRegex = /[\u00C0-\u1EF9]/;

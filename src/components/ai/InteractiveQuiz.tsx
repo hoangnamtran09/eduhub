@@ -36,7 +36,7 @@ interface InteractiveQuizProps {
   onAnswered?: (payload: QuizAnswerPayload) => void;
 }
 
-const remarkMathOptions = { singleDollarTextMath: false };
+const remarkMathOptions = { singleDollarTextMath: true };
 const rehypeKatexOptions = { strict: false, throwOnError: false };
 
 const markdownComponents = {
