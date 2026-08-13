@@ -6,6 +6,7 @@ import { getJwtSecret } from "@/lib/auth/jwt-secret";
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
+  const callbackUrl = `${pathname}${request.nextUrl.search}`;
 
   // Public routes
   if (
@@ -22,7 +23,7 @@ export async function middleware(request: NextRequest) {
   // Redirect to login if no token
   if (!token) {
     const url = new URL("/login", request.url);
-    url.searchParams.set("callbackUrl", pathname);
+    url.searchParams.set("callbackUrl", callbackUrl);
     return NextResponse.redirect(url);
   }
 
@@ -87,7 +88,7 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     // Invalid token
     const url = new URL("/login", request.url);
-    url.searchParams.set("callbackUrl", pathname);
+    url.searchParams.set("callbackUrl", callbackUrl);
     return NextResponse.redirect(url);
   }
 }

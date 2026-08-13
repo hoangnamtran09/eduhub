@@ -29,6 +29,7 @@ describe("useAuthStore", () => {
       user: null,
       isLoading: true,
       isAuthenticated: false,
+      authVersion: 0,
     });
   });
 
@@ -38,6 +39,7 @@ describe("useAuthStore", () => {
     expect(useAuthStore.getState().user).toEqual(sampleUser);
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
     expect(useAuthStore.getState().isLoading).toBe(false);
+    expect(useAuthStore.getState().authVersion).toBe(1);
   });
 
   it("clears auth state on logout", () => {
@@ -47,6 +49,7 @@ describe("useAuthStore", () => {
     expect(useAuthStore.getState().user).toBeNull();
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
     expect(useAuthStore.getState().isLoading).toBe(false);
+    expect(useAuthStore.getState().authVersion).toBe(2);
   });
 
   it("updates the loading flag independently", () => {
