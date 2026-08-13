@@ -11,7 +11,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     const initAuth = async () => {
-      const authVersionAtStart = useAuthStore.getState().authVersion;
       setLoading(true);
 
       try {
@@ -20,9 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           credentials: "include",
         });
 
-        // A successful login/logout may have completed while this initial
-        // session restore was in flight. Do not overwrite that newer state.
-        if (cancelled || useAuthStore.getState().authVersion !== authVersionAtStart) return;
+        if (cancelled) return;
 
         if (response.ok) {
           const data = await response.json();
@@ -31,11 +28,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
         }
       } catch (error) {
-        if (cancelled || useAuthStore.getState().authVersion !== authVersionAtStart) return;
+        if (cancelled) return;
         console.error("Failed to fetch user:", error);
         setUser(null);
       } finally {
-        if (!cancelled && useAuthStore.getState().authVersion === authVersionAtStart) {
+        if (!cancelled) {
           setLoading(false);
         }
       }
