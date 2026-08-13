@@ -1147,25 +1147,23 @@ export default function DashboardPage() {
 
       setLoading(true);
       try {
-        const reportResponse = await fetch("/api/reports/study-time");
-        if (!reportResponse.ok) {
-          throw new Error("Failed to load study report");
-        }
-
-        const reportData = await reportResponse.json();
-        setReport(reportData);
-
-        if (reportData?.role === "STUDENT") {
-          const progressResponse = await fetch("/api/progress");
-          if (progressResponse.ok) {
-            const progressData = await progressResponse.json();
-            setProgress(progressData);
-          } else {
-            setProgress(null);
+        const reportPromise = fetch("/api/reports/study-time").then(async (response) => {
+          if (!response.ok) {
+            throw new Error("Failed to load study report");
           }
-        } else {
-          setProgress(null);
-        }
+          return response.json();
+        });
+
+        const progressPromise =
+          user.role === "STUDENT"
+            ? fetch("/api/progress")
+                .then(async (response) => (response.ok ? response.json() : null))
+                .catch(() => null)
+            : Promise.resolve(null);
+
+        const [reportData, progressData] = await Promise.all([reportPromise, progressPromise]);
+        setReport(reportData);
+        setProgress(progressData);
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
         setReport(null);

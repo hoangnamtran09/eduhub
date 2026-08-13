@@ -85,7 +85,6 @@ function RoleLoginFormContent({ role, title, description, showGoogleLogin }: Rol
 
       toast.success("Đăng nhập thành công!");
       router.push(redirectTarget);
-      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
     } finally {
