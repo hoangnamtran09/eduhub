@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
+import MathText from "@/components/ai/MathText";
 import { cn } from "@/lib/utils";
 
 type MistakeItem = {
@@ -255,7 +256,7 @@ export default function MistakesPage() {
         {activeQuiz.questions.map((q, qIdx) => (
           <div key={q.id} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <p className="text-sm font-bold text-slate-700">Câu {qIdx + 1}/{activeQuiz.questions.length}</p>
-            <p className="mt-2 text-base text-slate-900">{q.question}</p>
+            <MathText className="mt-2 text-base text-slate-900">{q.question}</MathText>
             <div className="mt-4 grid gap-2">
               {q.options.map((opt, optIdx) => (
                 <button
@@ -268,11 +269,11 @@ export default function MistakesPage() {
                       : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-slate-100",
                   )}
                 >
-                  {String.fromCharCode(65 + optIdx)}. {opt}
+                  {String.fromCharCode(65 + optIdx)}. <MathText inline>{opt}</MathText>
                 </button>
               ))}
             </div>
-            {q.hint && <p className="mt-3 text-xs text-slate-400">Gợi ý: {q.hint}</p>}
+            {q.hint && <p className="mt-3 text-xs text-slate-400">Gợi ý: <MathText inline>{q.hint}</MathText></p>}
           </div>
         ))}
 
@@ -320,7 +321,7 @@ export default function MistakesPage() {
               {r.isCorrect ? <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-500" /> : <XCircle className="mt-0.5 h-5 w-5 text-rose-500" />}
               <div className="flex-1">
                 <p className="text-sm font-bold text-slate-700">Câu {idx + 1}</p>
-                <p className="mt-1 text-sm text-slate-900">{r.question}</p>
+                <MathText className="mt-1 text-sm text-slate-900">{r.question}</MathText>
                 <div className="mt-3 grid gap-1">
                   {r.options.map((opt, oi) => (
                     <div key={oi} className={cn(
@@ -329,11 +330,11 @@ export default function MistakesPage() {
                       oi === r.userAnswer && !r.isCorrect ? "bg-rose-100 text-rose-700 line-through" :
                       "bg-slate-100 text-slate-600",
                     )}>
-                      {String.fromCharCode(65 + oi)}. {opt}
+                      {String.fromCharCode(65 + oi)}. <MathText inline>{opt}</MathText>
                     </div>
                   ))}
                 </div>
-                {r.explanation && <p className="mt-2 text-xs text-slate-500">{r.explanation}</p>}
+                {r.explanation && <MathText className="mt-2 text-xs text-slate-500">{r.explanation}</MathText>}
               </div>
             </div>
           </div>
@@ -520,7 +521,7 @@ export default function MistakesPage() {
                         {item.aiFeedback && (
                           <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-4">
                             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-cyan-700">Nhận xét AI</p>
-                            <p className="mt-2 text-sm text-slate-700">{item.aiFeedback}</p>
+                            <MathText className="mt-2 text-sm text-slate-700">{item.aiFeedback}</MathText>
                           </div>
                         )}
                         {!!getReviewExercises(item.reviewExercises).length && (
@@ -529,19 +530,19 @@ export default function MistakesPage() {
                             <div className="mt-3 space-y-2">
                               {getReviewExercises(item.reviewExercises).map((exercise, index) => (
                                 <div key={`${item.id}-review-${index}`} className="rounded-xl bg-white px-3 py-3 text-sm text-slate-700">
-                                  <p className="font-semibold text-slate-900">{exercise.title}</p>
-                                  <p className="mt-1">{exercise.question}</p>
+                                  <MathText className="font-semibold text-slate-900">{exercise.title}</MathText>
+                                  <MathText className="mt-1">{exercise.question}</MathText>
                                   {!!exercise.options.length && (
                                     <div className="mt-2 grid gap-1 sm:grid-cols-2">
                                       {exercise.options.map((option, optionIndex) => (
                                         <div key={`${item.id}-review-${index}-${optionIndex}`} className="rounded-lg border border-slate-100 bg-slate-50 px-2 py-1 text-xs">
-                                          {String.fromCharCode(65 + optionIndex)}. {option}
+                                          {String.fromCharCode(65 + optionIndex)}. <MathText inline>{option}</MathText>
                                         </div>
                                       ))}
                                     </div>
                                   )}
                                   {exercise.correctAnswer && <p className="mt-2 text-xs font-semibold text-emerald-700">Đáp án: {exercise.correctAnswer}</p>}
-                                  {exercise.hint && <p className="mt-1 text-xs text-slate-500">Gợi ý: {exercise.hint}</p>}
+                                  {exercise.hint && <p className="mt-1 text-xs text-slate-500">Gợi ý: <MathText inline>{exercise.hint}</MathText></p>}
                                 </div>
                               ))}
                             </div>
@@ -606,7 +607,7 @@ export default function MistakesPage() {
                 <p className="font-semibold text-slate-900">{item.topic}</p>
                 <p className="mt-1 text-sm text-slate-600">{item.note}</p>
                 {item.lessonTitle && <p className="mt-1 text-xs text-slate-500">Bài liên quan: {item.lessonTitle}</p>}
-                {item.aiFeedback && <p className="mt-1 text-xs text-cyan-700">AI: {item.aiFeedback}</p>}
+                {item.aiFeedback && <p className="mt-1 text-xs text-cyan-700">AI: <MathText inline>{item.aiFeedback}</MathText></p>}
                 <p className="mt-1 text-xs text-slate-400">{formatDate(item.createdAt)}</p>
               </div>
               <div className="rounded-2xl bg-white px-4 py-3 text-center shadow-sm">
